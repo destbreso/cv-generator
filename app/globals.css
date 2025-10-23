@@ -1,0 +1,278 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+@custom-variant pastel (&:is(.pastel *));
+
+:root {
+  /* Terminal-inspired light mode with softer, warmer colors */
+  /* Cream/beige background instead of pure white for reduced eye strain */
+  --background: oklch(0.96 0.01 85);
+  --foreground: oklch(0.25 0.08 142);
+  --card: oklch(0.98 0.008 85);
+  --card-foreground: oklch(0.25 0.08 142);
+  --popover: oklch(0.98 0.008 85);
+  --popover-foreground: oklch(0.25 0.08 142);
+  --primary: oklch(0.35 0.12 142);
+  --primary-foreground: oklch(0.98 0.008 85);
+  --secondary: oklch(0.92 0.01 85);
+  --secondary-foreground: oklch(0.25 0.08 142);
+  --muted: oklch(0.88 0.012 85);
+  --muted-foreground: oklch(0.45 0.06 142);
+  --accent: oklch(0.55 0.12 60);
+  --accent-foreground: oklch(0.98 0.008 85);
+  --destructive: oklch(0.5 0.2 25);
+  --destructive-foreground: oklch(0.98 0.008 85);
+  --border: oklch(0.8 0.02 142);
+  --input: oklch(0.94 0.01 85);
+  --ring: oklch(0.35 0.12 142);
+  --chart-1: oklch(0.45 0.15 142);
+  --chart-2: oklch(0.55 0.12 60);
+  --chart-3: oklch(0.5 0.15 200);
+  --chart-4: oklch(0.55 0.15 300);
+  --chart-5: oklch(0.52 0.14 30);
+  --radius: 0.25rem;
+  --sidebar: oklch(0.94 0.01 85);
+  --sidebar-foreground: oklch(0.25 0.08 142);
+  --sidebar-primary: oklch(0.35 0.12 142);
+  --sidebar-primary-foreground: oklch(0.98 0.008 85);
+  --sidebar-accent: oklch(0.92 0.01 85);
+  --sidebar-accent-foreground: oklch(0.25 0.08 142);
+  --sidebar-border: oklch(0.8 0.02 142);
+  --sidebar-ring: oklch(0.35 0.12 142);
+}
+
+.dark {
+  /* Terminal/Bash color scheme - pure black background with classic terminal green */
+  --background: oklch(0.1 0 0);
+  --foreground: oklch(0.85 0.12 142);
+  --card: oklch(0.15 0 0);
+  --card-foreground: oklch(0.85 0.12 142);
+  --popover: oklch(0.12 0 0);
+  --popover-foreground: oklch(0.85 0.12 142);
+  --primary: oklch(0.85 0.12 142);
+  --primary-foreground: oklch(0.1 0 0);
+  --secondary: oklch(0.2 0 0);
+  --secondary-foreground: oklch(0.85 0.12 142);
+  --muted: oklch(0.25 0 0);
+  --muted-foreground: oklch(0.55 0.08 142);
+  --accent: oklch(0.75 0.15 60);
+  --accent-foreground: oklch(0.1 0 0);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.95 0 0);
+  --border: oklch(0.3 0.08 142);
+  --input: oklch(0.18 0 0);
+  --ring: oklch(0.85 0.12 142);
+  --chart-1: oklch(0.75 0.15 142);
+  --chart-2: oklch(0.75 0.15 60);
+  --chart-3: oklch(0.65 0.18 200);
+  --chart-4: oklch(0.7 0.2 300);
+  --chart-5: oklch(0.6 0.18 30);
+  --sidebar: oklch(0.12 0 0);
+  --sidebar-foreground: oklch(0.85 0.12 142);
+  --sidebar-primary: oklch(0.85 0.12 142);
+  --sidebar-primary-foreground: oklch(0.1 0 0);
+  --sidebar-accent: oklch(0.2 0 0);
+  --sidebar-accent-foreground: oklch(0.85 0.12 142);
+  --sidebar-border: oklch(0.25 0.08 142);
+  --sidebar-ring: oklch(0.85 0.12 142);
+}
+
+/* Added new pastel minimalist theme with soft colors and rounded corners */
+.pastel {
+  /* Pastel Minimalist theme - soft, clean, modern with gentle colors */
+  --background: oklch(0.98 0.01 270); /* Soft lavender-tinted white */
+  --foreground: oklch(0.3 0.04 260); /* Deep purple-gray for text */
+  --card: oklch(0.99 0.008 280); /* Almost white with slight purple tint */
+  --card-foreground: oklch(0.3 0.04 260);
+  --popover: oklch(0.99 0.008 280);
+  --popover-foreground: oklch(0.3 0.04 260);
+  --primary: oklch(0.7 0.12 280); /* Soft purple */
+  --primary-foreground: oklch(0.99 0.008 280);
+  --secondary: oklch(0.92 0.04 200); /* Soft blue */
+  --secondary-foreground: oklch(0.3 0.04 260);
+  --muted: oklch(0.94 0.02 270); /* Very light lavender */
+  --muted-foreground: oklch(0.5 0.03 260); /* Medium purple-gray */
+  --accent: oklch(0.8 0.1 340); /* Soft pink */
+  --accent-foreground: oklch(0.3 0.04 260);
+  --destructive: oklch(0.65 0.15 15); /* Soft coral red */
+  --destructive-foreground: oklch(0.99 0.008 280);
+  --border: oklch(0.88 0.03 270); /* Soft lavender border */
+  --input: oklch(0.96 0.015 270); /* Light lavender input */
+  --ring: oklch(0.7 0.12 280); /* Purple focus ring */
+  --chart-1: oklch(0.7 0.12 280); /* Soft purple */
+  --chart-2: oklch(0.75 0.1 200); /* Soft blue */
+  --chart-3: oklch(0.8 0.1 340); /* Soft pink */
+  --chart-4: oklch(0.75 0.1 160); /* Soft mint */
+  --chart-5: oklch(0.78 0.1 60); /* Soft peach */
+  --radius: 1rem; /* Larger radius for softer, more rounded appearance */
+  --sidebar: oklch(0.96 0.015 270);
+  --sidebar-foreground: oklch(0.3 0.04 260);
+  --sidebar-primary: oklch(0.7 0.12 280);
+  --sidebar-primary-foreground: oklch(0.99 0.008 280);
+  --sidebar-accent: oklch(0.92 0.04 200);
+  --sidebar-accent-foreground: oklch(0.3 0.04 260);
+  --sidebar-border: oklch(0.88 0.03 270);
+  --sidebar-ring: oklch(0.7 0.12 280);
+}
+
+@theme inline {
+  /* Use different fonts based on theme - monospace for terminal, sans-serif for pastel */
+  --font-sans: "Geist", "Geist Fallback";
+  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground transition-colors duration-300;
+  }
+
+  /* Apply monospace font only for terminal themes */
+  :root:not(.pastel) body {
+    font-family: var(--font-mono);
+  }
+
+  /* Apply sans-serif font for pastel theme */
+  .pastel body {
+    font-family: var(--font-sans);
+  }
+}
+
+/* Terminal-style text selection */
+::selection {
+  background: oklch(0.85 0.12 142 / 0.3);
+  color: oklch(0.95 0 0);
+}
+
+.dark ::selection {
+  background: oklch(0.85 0.12 142 / 0.3);
+  color: oklch(0.95 0 0);
+}
+
+/* Pastel theme text selection with soft purple */
+.pastel ::selection {
+  background: oklch(0.7 0.12 280 / 0.3);
+  color: oklch(0.3 0.04 260);
+}
+
+/* Terminal-style scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border-radius: 2px;
+}
+
+/* Rounded scrollbar for pastel theme */
+.pastel ::-webkit-scrollbar-thumb {
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+@keyframes blink {
+  0%,
+  50%,
+  100% {
+    opacity: 1;
+  }
+  25%,
+  75% {
+    opacity: 0;
+  }
+}
+
+.animate-blink {
+  animation: blink 2s step-start infinite;
+}
+
+@keyframes loading {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Add smooth fade animation for pastel theme */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.pastel .animate-slide-in {
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
