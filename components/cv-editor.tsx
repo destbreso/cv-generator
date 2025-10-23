@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
-import { Plus, Trash2, Save } from "lucide-react"
+import { Plus, Trash2, Save, Download, Upload } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 const defaultCVData: CVData = {
@@ -85,6 +85,53 @@ export function CVEditor({ onDataChange }: CVEditorProps) {
     })
   }
 
+  const handleExportJSON = () => {
+    const dataStr = JSON.stringify(cvData, null, 2)
+    const dataBlob = new Blob([dataStr], { type: "application/json" })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `cv-data-${Date.now()}.json`
+    link.click()
+    URL.revokeObjectURL(url)
+    toast({
+      title: "> JSON exported",
+      description: "CV data exported successfully",
+    })
+  }
+
+  const handleImportJSON = () => {
+    const input = document.createElement("input")
+    input.type = "file"
+    input.accept = ".json"
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (file) {
+        const reader = new FileReader()
+        reader.onload = (event) => {
+          try {
+            const imported = JSON.parse(event.target?.result as string) as CVData
+            setCVData(imported)
+            onDataChange(imported)
+            saveCVData(imported)
+            toast({
+              title: "> JSON imported",
+              description: "CV data loaded successfully",
+            })
+          } catch (error) {
+            toast({
+              title: "> Import failed",
+              description: "Invalid JSON file",
+              variant: "destructive",
+            })
+          }
+        }
+        reader.readAsText(file)
+      }
+    }
+    input.click()
+  }
+
   const updatePersonalInfo = (field: keyof CVData["personalInfo"], value: string) => {
     setCVData((prev) => ({
       ...prev,
@@ -152,14 +199,85 @@ export function CVEditor({ onDataChange }: CVEditorProps) {
     }))
   }
 
+  const addEducation = () => {
+    setCVData((prev) => ({
+      ...prev,
+      education: [
+        ...prev.education,
+        {
+          id: Date.now().toString(),
+          institution: "",
+          degree: "",
+          field: "",
+          startDate: "",
+          endDate: "",
+        },
+      ],
+    }))
+  }
+
+  const removeEducation = (id: string) => {
+    setCVData((prev) => ({
+      ...prev,
+      education: prev.education.filter((edu) => edu.id !== id),
+    }))
+  }
+
+  const updateEducation = (id: string, field: string, value: string) => {
+    setCVData((prev) => ({
+      ...prev,
+      education: prev.education.map((edu) => (edu.id === id ? { ...edu, [field]: value } : edu)),
+    }))
+  }
+
+  const addProject = () => {
+    setCVData((prev) => ({
+      ...prev,
+      projects: [
+        ...prev.projects,
+        {
+          id: Date.now().toString(),
+          name: "",
+          description: "",
+          technologies: [],
+          url: "",
+        },
+      ],
+    }))
+  }
+
+  const removeProject = (id: string) => {
+    setCVData((prev) => ({
+      ...prev,
+      projects: prev.projects.filter((proj) => proj.id !== id),
+    }))
+  }
+
+  const updateProject = (id: string, field: string, value: string | string[]) => {
+    setCVData((prev) => ({
+      ...prev,
+      projects: prev.projects.map((proj) => (proj.id === id ? { ...proj, [field]: value } : proj)),
+    }))
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-foreground">{">"} Edit CV Data</h2>
-        <Button onClick={handleSave} className="gap-2">
-          <Save className="h-4 w-4" />
-          Save
-        </Button>
+        <h2 className="text-lg font-bold text-foreground">{">"} Edit CV Metadata</h2>
+        <div className="flex gap-2">
+          <Button onClick={handleImportJSON} variant="outline" size="sm" className="gap-2 bg-transparent">
+            <Upload className="h-4 w-4" />
+            Import JSON
+          </Button>
+          <Button onClick={handleExportJSON} variant="outline" size="sm" className="gap-2 bg-transparent">
+            <Download className="h-4 w-4" />
+            Export JSON
+          </Button>
+          <Button onClick={handleSave} size="sm" className="gap-2">
+            <Save className="h-4 w-4" />
+            Save
+          </Button>
+        </div>
       </div>
 
       <Card className="p-4 space-y-4 bg-card border-border">
@@ -322,6 +440,117 @@ export function CVEditor({ onDataChange }: CVEditorProps) {
                 )
               }
               rows={2}
+              className="bg-input border-border"
+            />
+          </div>
+        ))}
+      </Card>
+
+      <Card className="p-4 space-y-4 bg-card border-border">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-primary">{">"} Education</h3>
+          <Button onClick={addEducation} size="sm" variant="outline" className="gap-2 bg-transparent">
+            <Plus className="h-4 w-4" />
+            Add
+          </Button>
+        </div>
+        {cvData.education.map((edu) => (
+          <div key={edu.id} className="space-y-3 p-3 border border-border rounded bg-secondary/50">
+            <div className="flex justify-end">
+              <Button
+                onClick={() => removeEducation(edu.id)}
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <Input
+                placeholder="Institution"
+                value={edu.institution}
+                onChange={(e) => updateEducation(edu.id, "institution", e.target.value)}
+                className="bg-input border-border"
+              />
+              <Input
+                placeholder="Degree"
+                value={edu.degree}
+                onChange={(e) => updateEducation(edu.id, "degree", e.target.value)}
+                className="bg-input border-border"
+              />
+              <Input
+                placeholder="Field of Study"
+                value={edu.field}
+                onChange={(e) => updateEducation(edu.id, "field", e.target.value)}
+                className="bg-input border-border"
+              />
+              <Input
+                placeholder="Start Date (YYYY)"
+                value={edu.startDate}
+                onChange={(e) => updateEducation(edu.id, "startDate", e.target.value)}
+                className="bg-input border-border"
+              />
+              <Input
+                placeholder="End Date (YYYY)"
+                value={edu.endDate}
+                onChange={(e) => updateEducation(edu.id, "endDate", e.target.value)}
+                className="bg-input border-border"
+              />
+            </div>
+          </div>
+        ))}
+      </Card>
+
+      <Card className="p-4 space-y-4 bg-card border-border">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-primary">{">"} Projects</h3>
+          <Button onClick={addProject} size="sm" variant="outline" className="gap-2 bg-transparent">
+            <Plus className="h-4 w-4" />
+            Add
+          </Button>
+        </div>
+        {cvData.projects.map((proj) => (
+          <div key={proj.id} className="space-y-3 p-3 border border-border rounded bg-secondary/50">
+            <div className="flex justify-end">
+              <Button
+                onClick={() => removeProject(proj.id)}
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+            <Input
+              placeholder="Project Name"
+              value={proj.name}
+              onChange={(e) => updateProject(proj.id, "name", e.target.value)}
+              className="bg-input border-border"
+            />
+            <Textarea
+              placeholder="Description"
+              value={proj.description}
+              onChange={(e) => updateProject(proj.id, "description", e.target.value)}
+              rows={3}
+              className="bg-input border-border"
+            />
+            <Input
+              placeholder="Technologies (comma-separated)"
+              value={proj.technologies.join(", ")}
+              onChange={(e) =>
+                updateProject(
+                  proj.id,
+                  "technologies",
+                  e.target.value.split(",").map((s) => s.trim()),
+                )
+              }
+              className="bg-input border-border"
+            />
+            <Input
+              placeholder="URL (optional)"
+              value={proj.url || ""}
+              onChange={(e) => updateProject(proj.id, "url", e.target.value)}
               className="bg-input border-border"
             />
           </div>

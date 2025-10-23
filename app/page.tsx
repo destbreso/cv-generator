@@ -44,19 +44,11 @@ export default function Home() {
           </TabsList>
 
           <TabsContent value="editor" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <CVEditor onDataChange={setCVData} />
-              {cvData && <CVPreview cvData={cvData} template={selectedTemplate} />}
-            </div>
+            <CVEditor onDataChange={setCVData} />
           </TabsContent>
 
           <TabsContent value="templates">
             <TemplateGallery onTemplateSelect={setSelectedTemplate} />
-            {cvData && (
-              <div className="mt-6">
-                <CVPreview cvData={cvData} template={selectedTemplate} />
-              </div>
-            )}
           </TabsContent>
 
           <TabsContent value="generate" className="space-y-6">
@@ -68,13 +60,8 @@ export default function Home() {
                 )}
               </div>
               <div>
-                {generatedContent && (
-                  <div className="space-y-4">
-                    <h3 className="font-bold text-primary text-lg">{">"} Generated Content</h3>
-                    <div className="p-4 bg-card border border-border rounded font-mono text-sm whitespace-pre-wrap max-h-[600px] overflow-auto">
-                      {generatedContent}
-                    </div>
-                  </div>
+                {cvData && generatedContent && (
+                  <CVPreview cvData={cvData} template={selectedTemplate} generatedContent={generatedContent} />
                 )}
               </div>
             </div>
