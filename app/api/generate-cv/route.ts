@@ -3,24 +3,25 @@ import type { CVData } from "@/lib/types"
 
 export async function POST(request: NextRequest) {
   try {
-    const { cvData, context } = await request.json()
+    const { cvData, context, llmConfig } = await request.json()
 
-    // Load LLM config from request or use defaults
-    const llmConfig = {
-      endpoint: "http://localhost:11434/api/generate",
-      model: "llama2",
-      apiKey: "",
+    if (!llmConfig || !llmConfig.baseUrl || !llmConfig.model) {
+      return new Response(JSON.stringify({ error: "LLM configuration is required" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      })
     }
 
-    // Try to get config from localStorage (sent in request)
-    const configHeader = request.headers.get("x-llm-config")
-    if (configHeader) {
-      const parsedConfig = JSON.parse(configHeader)
-      Object.assign(llmConfig, parsedConfig)
-    }
+    console.log("[v0] Generating CV with config:", {
+      baseUrl: llmConfig.baseUrl,
+      model: llmConfig.model,
+    })
 
     // Build the prompt
     const prompt = buildPrompt(cvData, context)
+
+    const generateEndpoint = `${llmConfig.baseUrl}/api/generate`
+    console.log("[v0] Calling Ollama at:", generateEndpoint)
 
     // Call LLM API
     const headers: Record<string, string> = {
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
       headers["Authorization"] = `Bearer ${llmConfig.apiKey}`
     }
 
-    const response = await fetch(llmConfig.endpoint, {
+    const response = await fetch(generateEndpoint, {
       method: "POST",
       headers,
       body: JSON.stringify({
@@ -41,8 +42,12 @@ export async function POST(request: NextRequest) {
       }),
     })
 
+    console.log("[v0] Ollama response status:", response.status)
+
     if (!response.ok) {
-      throw new Error("LLM request failed")
+      const errorText = await response.text()
+      console.error("[v0] Ollama error response:", errorText)
+      throw new Error(`LLM request failed: ${response.status} - ${errorText}`)
     }
 
     // Stream the response

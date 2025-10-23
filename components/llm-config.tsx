@@ -35,7 +35,10 @@ export function LLMConfigPanel() {
   useEffect(() => {
     const loaded = loadLLMConfig()
     if (loaded) {
-      setConfig(loaded)
+      setConfig({
+        ...loaded,
+        apiKey: loaded.apiKey || "",
+      })
     }
   }, [])
 
@@ -48,6 +51,15 @@ export function LLMConfigPanel() {
   }
 
   const handleTest = async () => {
+    if (!config.baseUrl || config.baseUrl.trim() === "") {
+      toast({
+        title: "> Base URL required",
+        description: "Please enter a valid Ollama base URL",
+        variant: "destructive",
+      })
+      return
+    }
+
     setTesting(true)
     setConnectionStatus("idle")
     setErrorMessage("")
@@ -68,7 +80,6 @@ export function LLMConfigPanel() {
           title: "> Connection successful",
           description: data.message,
         })
-        // Automatically load models after successful connection
         await loadModels()
       } else {
         setConnectionStatus("error")
@@ -135,9 +146,9 @@ export function LLMConfigPanel() {
   }
 
   const endpoints = {
-    health: `${config.baseUrl}/api/tags`,
-    generate: `${config.baseUrl}/api/generate`,
-    chat: `${config.baseUrl}/api/chat`,
+    health: `${config.baseUrl || "http://localhost:11434"}/api/tags`,
+    generate: `${config.baseUrl || "http://localhost:11434"}/api/generate`,
+    chat: `${config.baseUrl || "http://localhost:11434"}/api/chat`,
   }
 
   return (
@@ -266,7 +277,7 @@ export function LLMConfigPanel() {
             id="apiKey"
             type="password"
             placeholder="Not required for local Ollama"
-            value={config.apiKey || ""}
+            value={config.apiKey}
             onChange={(e) => setConfig((prev) => ({ ...prev, apiKey: e.target.value }))}
             className="bg-input border-border font-mono text-sm"
           />
@@ -313,7 +324,12 @@ export function LLMConfigPanel() {
         )}
 
         <div className="flex gap-2">
-          <Button onClick={handleTest} variant="outline" className="gap-2 bg-transparent" disabled={testing}>
+          <Button
+            onClick={handleTest}
+            variant="outline"
+            className="gap-2 bg-transparent"
+            disabled={testing || !config.baseUrl}
+          >
             {testing ? <Loader2 className="h-4 w-4 animate-spin" /> : <TestTube className="h-4 w-4" />}
             {testing ? "Testing..." : "Test Connection"}
           </Button>

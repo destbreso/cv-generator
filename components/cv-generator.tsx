@@ -32,6 +32,16 @@ export function CVGenerator({ cvData, templateId, onGenerated }: CVGeneratorProp
       return
     }
 
+    const savedConfig = localStorage.getItem("llm-config")
+    if (!savedConfig) {
+      toast({
+        title: "> LLM not configured",
+        description: "Please configure your LLM connection first",
+        variant: "destructive",
+      })
+      return
+    }
+
     setGenerating(true)
     setProgress("Connecting to LLM...")
 
@@ -42,6 +52,7 @@ export function CVGenerator({ cvData, templateId, onGenerated }: CVGeneratorProp
         body: JSON.stringify({
           cvData,
           context,
+          llmConfig: JSON.parse(savedConfig),
         }),
       })
 
