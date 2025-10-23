@@ -2,22 +2,43 @@ import { type NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
   try {
-    const { endpoint } = await request.json()
+    const { baseUrl } = await request.json()
 
-    const baseUrl = endpoint.replace(/\/api\/.*$/, "")
-    const modelsEndpoint = `${baseUrl}/api/tags`
+    if (!baseUrl) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Base URL is required",
+        },
+        { status: 400 },
+      )
+    }
+
+    // Clean the base URL and construct the tags endpoint
+    const cleanBaseUrl = baseUrl.replace(/\/+$/, "").replace(/\/api.*$/, "")
+    const modelsEndpoint = `${cleanBaseUrl}/api/tags`
+
+    console.log("[v0] Fetching models from:", modelsEndpoint)
 
     const response = await fetch(modelsEndpoint, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
+      signal: AbortSignal.timeout(5000),
     })
+
+    console.log("[v0] Models response status:", response.status)
 
     if (response.ok) {
       const data = await response.json()
-      // Ollama returns models in { models: [...] } format
       const models = data.models || []
+
+      console.log(
+        "[v0] Found models:",
+        models.map((m: any) => m.name),
+      )
+
       return NextResponse.json({
         success: true,
         models: models.map((m: any) => ({
@@ -27,10 +48,38 @@ export async function POST(request: NextRequest) {
         })),
       })
     } else {
-      return NextResponse.json({ success: false, error: "Failed to fetch models" }, { status: 500 })
+      const errorText = await response.text()
+      console.error("[v0] Failed to fetch models:", errorText)
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Failed to fetch models: ${response.status}`,
+          details: errorText,
+        },
+        { status: response.status },
+      )
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("[v0] List models error:", error)
-    return NextResponse.json({ success: false, error: String(error) }, { status: 500 })
+
+    if (error.name === "TimeoutError" || error.name === "AbortError") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Timeout fetching models",
+          details: "Ollama is not responding",
+        },
+        { status: 408 },
+      )
+    }
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: error.message || "Unknown error",
+        details: String(error),
+      },
+      { status: 500 },
+    )
   }
 }

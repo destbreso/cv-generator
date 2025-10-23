@@ -4,59 +4,109 @@ export async function POST(request: NextRequest) {
   try {
     const { endpoint, model, apiKey } = await request.json()
 
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    }
+    console.log("[v0] Testing LLM connection:", { endpoint, model })
 
-    if (apiKey) {
-      headers["Authorization"] = `Bearer ${apiKey}`
-    }
+    const baseUrl = endpoint.replace(/\/api\/.*$/, "")
+    const healthEndpoint = `${baseUrl}/api/tags`
 
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10s timeout
+    console.log("[v0] Checking Ollama health at:", healthEndpoint)
 
     try {
-      const response = await fetch(endpoint, {
+      const healthResponse = await fetch(healthEndpoint, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        signal: AbortSignal.timeout(5000),
+      })
+
+      console.log("[v0] Health check response status:", healthResponse.status)
+
+      if (!healthResponse.ok) {
+        const errorText = await healthResponse.text()
+        console.error("[v0] Health check failed:", errorText)
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Ollama health check failed: ${healthResponse.status} - ${errorText}`,
+          },
+          { status: healthResponse.status },
+        )
+      }
+
+      const healthData = await healthResponse.json()
+      console.log(
+        "[v0] Available models:",
+        healthData.models?.map((m: any) => m.name),
+      )
+
+      console.log("[v0] Testing generation with model:", model)
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      }
+
+      if (apiKey) {
+        headers["Authorization"] = `Bearer ${apiKey}`
+      }
+
+      const genResponse = await fetch(endpoint, {
         method: "POST",
         headers,
         body: JSON.stringify({
           model,
-          prompt: "Hello",
+          prompt: "Say 'test' and nothing else.",
           stream: false,
         }),
-        signal: controller.signal,
+        signal: AbortSignal.timeout(15000),
       })
 
-      clearTimeout(timeoutId)
+      console.log("[v0] Generation response status:", genResponse.status)
 
-      if (response.ok) {
-        const data = await response.json()
+      if (genResponse.ok) {
+        const data = await genResponse.json()
+        console.log("[v0] Generation successful")
         return NextResponse.json({
           success: true,
-          message: "Connection successful",
+          message: "Connection successful - Ollama is responding",
           model: data.model || model,
         })
       } else {
-        const errorText = await response.text()
+        const errorText = await genResponse.text()
+        console.error("[v0] Generation failed:", errorText)
         return NextResponse.json(
           {
             success: false,
-            error: `HTTP ${response.status}: ${errorText}`,
+            error: `Generation test failed: ${genResponse.status} - ${errorText}`,
           },
-          { status: response.status },
+          { status: genResponse.status },
         )
       }
     } catch (fetchError: any) {
-      clearTimeout(timeoutId)
-      if (fetchError.name === "AbortError") {
+      console.error("[v0] Fetch error:", fetchError)
+
+      if (fetchError.name === "TimeoutError" || fetchError.name === "AbortError") {
         return NextResponse.json(
           {
             success: false,
-            error: "Connection timeout - is Ollama running?",
+            error:
+              "Connection timeout - Ollama might be slow or not responding. Check if Ollama is running on localhost:11434",
           },
           { status: 408 },
         )
       }
+
+      if (fetchError.cause?.code === "ECONNREFUSED") {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Connection refused - Ollama is not accessible at the specified endpoint. Make sure Ollama is running.",
+          },
+          { status: 503 },
+        )
+      }
+
       throw fetchError
     }
   } catch (error: any) {
@@ -64,7 +114,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Connection failed",
+        error: `Connection failed: ${error.message || String(error)}`,
+        details: error.cause ? String(error.cause) : undefined,
       },
       { status: 500 },
     )

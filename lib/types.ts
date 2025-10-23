@@ -65,8 +65,18 @@ export interface CVIteration {
   generatedContent: string
 }
 
+export interface OllamaConfig {
+  baseUrl: string // e.g., http://localhost:11434
+  model: string
+  endpoints: {
+    health: string // /api/tags - to check connection and list models
+    generate: string // /api/generate - to generate text
+    chat: string // /api/chat - for chat completions (optional)
+  }
+}
+
 export interface LLMConfig {
-  endpoint: string
+  baseUrl: string // Base URL without path
   model: string
   apiKey?: string
 }
