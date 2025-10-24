@@ -80,3 +80,28 @@ export interface LLMConfig {
   model: string
   apiKey?: string
 }
+
+export interface ColorPalette {
+  id: string
+  name: string
+  primary: string
+  secondary: string
+  accent: string
+  background: string
+  text: string
+  textSecondary: string
+}
+
+export interface TemplateCustomization {
+  templateId: string
+  colorPalette: ColorPalette
+  fontFamily: string
+  fontSize: {
+    base: number
+    heading: number
+  }
+  spacing: {
+    section: number
+    item: number
+  }
+}
