@@ -13,7 +13,7 @@ import { saveIteration } from "@/lib/storage"
 interface CVGeneratorProps {
   cvData: CVData
   templateId: string
-  onGenerated: (content: string) => void
+  onGenerated: (content: string, generatedCVData?: CVData) => void
 }
 
 export function CVGenerator({ cvData, templateId, onGenerated }: CVGeneratorProps) {
@@ -93,7 +93,20 @@ export function CVGenerator({ cvData, templateId, onGenerated }: CVGeneratorProp
         }
       }
 
-      // Save iteration
+      let generatedCVData: CVData | undefined
+      try {
+        // Try to parse the generated content as JSON
+        const parsed = JSON.parse(generatedContent)
+        // Validate it has the expected structure
+        if (parsed.personalInfo && parsed.summary && parsed.experience) {
+          generatedCVData = parsed as CVData
+          console.log("[v0] Successfully parsed generated CV data")
+        }
+      } catch (e) {
+        console.warn("[v0] Could not parse generated content as CVData:", e)
+      }
+
+      // Save iteration with structured data
       const iteration = {
         id: Date.now().toString(),
         timestamp: Date.now(),
@@ -101,14 +114,17 @@ export function CVGenerator({ cvData, templateId, onGenerated }: CVGeneratorProp
         context,
         templateId,
         generatedContent,
+        generatedCVData, // Save structured data
       }
       saveIteration(iteration)
 
-      onGenerated(generatedContent)
+      onGenerated(generatedContent, generatedCVData)
 
       toast({
         title: "> CV generated",
-        description: "Your CV has been optimized by AI",
+        description: generatedCVData
+          ? "Your CV has been optimized and structured data extracted"
+          : "Your CV has been optimized by AI",
       })
     } catch (error) {
       console.error("[v0] Generation error:", error)
@@ -161,14 +177,17 @@ export function CVGenerator({ cvData, templateId, onGenerated }: CVGeneratorProp
 
         <div className="p-3 bg-secondary/50 border border-border rounded text-xs space-y-1">
           <p className="text-muted-foreground">
-            <span className="text-primary font-bold">{">"}</span> The AI will analyze your CV data and the job context
+            <span className="text-primary font-bold">{">"}</span> The AI uses your CV metadata as the source of truth
           </p>
           <p className="text-muted-foreground">
-            <span className="text-primary font-bold">{">"}</span> It will optimize descriptions, highlight relevant
-            skills
+            <span className="text-primary font-bold">{">"}</span> Job context guides optimization and emphasis
           </p>
           <p className="text-muted-foreground">
-            <span className="text-primary font-bold">{">"}</span> Results are saved to version history for comparison
+            <span className="text-primary font-bold">{">"}</span> Generated CV maintains the same JSON structure
+          </p>
+          <p className="text-muted-foreground">
+            <span className="text-primary font-bold">{">"}</span> Results can be loaded back into the editor for
+            refinement
           </p>
         </div>
       </div>

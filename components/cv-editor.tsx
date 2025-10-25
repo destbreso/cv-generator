@@ -60,21 +60,27 @@ const defaultCVData: CVData = {
 
 interface CVEditorProps {
   onDataChange: (data: CVData) => void
+  initialData?: CVData | null
 }
 
-export function CVEditor({ onDataChange }: CVEditorProps) {
+export function CVEditor({ onDataChange, initialData }: CVEditorProps) {
   const [cvData, setCVData] = useState<CVData>(defaultCVData)
   const { toast } = useToast()
 
   useEffect(() => {
-    const loaded = loadCVData()
-    if (loaded) {
-      setCVData(loaded)
-      onDataChange(loaded)
+    if (initialData) {
+      setCVData(initialData)
+      onDataChange(initialData)
     } else {
-      onDataChange(defaultCVData)
+      const loaded = loadCVData()
+      if (loaded) {
+        setCVData(loaded)
+        onDataChange(loaded)
+      } else {
+        onDataChange(defaultCVData)
+      }
     }
-  }, [])
+  }, [initialData])
 
   const handleSave = () => {
     saveCVData(cvData)

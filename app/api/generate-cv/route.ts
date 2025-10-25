@@ -17,13 +17,11 @@ export async function POST(request: NextRequest) {
       model: llmConfig.model,
     })
 
-    // Build the prompt
-    const prompt = buildPrompt(cvData, context)
+    const prompt = buildPrompt(cvData, context, llmConfig.systemPrompt)
 
     const generateEndpoint = `${llmConfig.baseUrl}/api/generate`
     console.log("[v0] Calling Ollama at:", generateEndpoint)
 
-    // Call LLM API
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     }
@@ -39,6 +37,7 @@ export async function POST(request: NextRequest) {
         model: llmConfig.model,
         prompt,
         stream: true,
+        format: "json",
       }),
     })
 
@@ -109,21 +108,16 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function buildPrompt(cvData: CVData, context: string): string {
-  return `You are a professional CV writer. Optimize the following CV data for this context:
+function buildPrompt(cvData: CVData, context: string, systemPrompt?: string): string {
+  const defaultPrompt = `You are a professional CV optimization assistant. Return ONLY valid JSON matching the CVData structure.`
 
-CONTEXT:
+  return `${systemPrompt || defaultPrompt}
+
+JOB CONTEXT:
 ${context}
 
-CV DATA:
+CURRENT CV DATA (Source of Truth):
 ${JSON.stringify(cvData, null, 2)}
 
-INSTRUCTIONS:
-1. Rewrite the summary to match the job context
-2. Optimize experience descriptions to highlight relevant skills
-3. Reorder and emphasize skills that match the context
-4. Keep all factual information accurate
-5. Return the optimized CV data in the same JSON structure
-
-OPTIMIZED CV:`
+Generate an optimized CV in JSON format matching the exact structure above. Return ONLY the JSON object, no additional text.`
 }

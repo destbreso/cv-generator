@@ -17,13 +17,20 @@ export default function Home() {
   const [cvData, setCVData] = useState<CVData | null>(null)
   const [selectedTemplate, setSelectedTemplate] = useState<CVTemplate>(loadTemplates()[0])
   const [generatedContent, setGeneratedContent] = useState<string>("")
+  const [generatedCVData, setGeneratedCVData] = useState<CVData | null>(null)
+  const [activeTab, setActiveTab] = useState("editor")
+
+  const handleLoadIteration = (data: CVData) => {
+    setCVData(data)
+    setActiveTab("editor")
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <TerminalHeader />
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="editor" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 bg-muted">
             <TabsTrigger value="editor" className="gap-2">
               <FileText className="h-4 w-4" />
@@ -44,7 +51,7 @@ export default function Home() {
           </TabsList>
 
           <TabsContent value="editor" className="space-y-6">
-            <CVEditor onDataChange={setCVData} />
+            <CVEditor onDataChange={setCVData} initialData={cvData} />
           </TabsContent>
 
           <TabsContent value="templates">
@@ -56,19 +63,30 @@ export default function Home() {
               <div className="space-y-6">
                 <LLMConfigPanel />
                 {cvData && (
-                  <CVGenerator cvData={cvData} templateId={selectedTemplate.id} onGenerated={setGeneratedContent} />
+                  <CVGenerator
+                    cvData={cvData}
+                    templateId={selectedTemplate.id}
+                    onGenerated={(content, cvData) => {
+                      setGeneratedContent(content)
+                      setGeneratedCVData(cvData || null)
+                    }}
+                  />
                 )}
               </div>
               <div>
                 {cvData && generatedContent && (
-                  <CVPreview cvData={cvData} template={selectedTemplate} generatedContent={generatedContent} />
+                  <CVPreview
+                    cvData={generatedCVData || cvData}
+                    template={selectedTemplate}
+                    generatedContent={generatedContent}
+                  />
                 )}
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="history">
-            <VersionHistory />
+            <VersionHistory onLoadIteration={handleLoadIteration} />
           </TabsContent>
         </Tabs>
       </main>

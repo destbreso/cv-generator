@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { CVIteration } from "@/lib/types"
+import type { CVIteration, CVData } from "@/lib/types"
 import { loadIterations, loadTemplates } from "@/lib/storage"
 import { generateDiff } from "@/lib/diff-utils"
 import { exportAsHTML, exportAsMarkdown } from "@/lib/export-utils"
@@ -9,10 +9,14 @@ import { DiffViewer } from "@/components/diff-viewer"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { GitCompare, Calendar, FileText, Download } from "lucide-react"
+import { GitCompare, Calendar, FileText, Download, Upload } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
-export function VersionHistory() {
+interface VersionHistoryProps {
+  onLoadIteration?: (cvData: CVData) => void
+}
+
+export function VersionHistory({ onLoadIteration }: VersionHistoryProps) {
   const [iterations, setIterations] = useState<CVIteration[]>([])
   const [selectedOld, setSelectedOld] = useState<string>("")
   const [selectedNew, setSelectedNew] = useState<string>("")
@@ -48,6 +52,19 @@ export function VersionHistory() {
       toast({
         title: "> Markdown exported",
         description: "Iteration exported as Markdown",
+      })
+    }
+  }
+
+  const handleLoadIntoEditor = (iteration: CVIteration) => {
+    // Prefer generated structured data if available, otherwise use original
+    const dataToLoad = iteration.generatedCVData || iteration.cvData
+
+    if (onLoadIteration) {
+      onLoadIteration(dataToLoad)
+      toast({
+        title: "> Loaded into editor",
+        description: "Iteration data loaded. You can now edit and refine it.",
       })
     }
   }
@@ -156,6 +173,15 @@ export function VersionHistory() {
                 <div className="flex gap-2">
                   <Button
                     size="sm"
+                    variant="outline"
+                    onClick={() => handleLoadIntoEditor(iteration)}
+                    className="h-8 gap-1 bg-primary/10 hover:bg-primary/20 border-primary/30"
+                  >
+                    <Upload className="h-3 w-3" />
+                    Load
+                  </Button>
+                  <Button
+                    size="sm"
                     variant="ghost"
                     onClick={() => handleExportIteration(iteration, "html")}
                     className="h-8 gap-1"
@@ -174,7 +200,10 @@ export function VersionHistory() {
                   </Button>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground mb-1">Template: {iteration.templateId}</p>
+              <p className="text-xs text-muted-foreground mb-1">
+                Template: {iteration.templateId}
+                {iteration.generatedCVData && <span className="ml-2 text-primary">• Structured data available</span>}
+              </p>
               <p className="text-sm text-muted-foreground font-mono">{iteration.context}</p>
             </div>
           ))}

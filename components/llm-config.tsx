@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react"
 import type { LLMConfig } from "@/lib/types"
-import { saveLLMConfig, loadLLMConfig } from "@/lib/storage"
+import { saveLLMConfig, loadLLMConfig, DEFAULT_SYSTEM_PROMPT } from "@/lib/storage"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Save, TestTube, RefreshCw, CheckCircle2, XCircle, Loader2, AlertCircle, Info } from "lucide-react"
+import { Save, TestTube, RefreshCw, CheckCircle2, XCircle, Loader2, AlertCircle, Info, RotateCcw } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 interface AvailableModel {
@@ -22,6 +23,7 @@ export function LLMConfigPanel() {
     baseUrl: "http://localhost:11434",
     model: "llama2",
     apiKey: "",
+    systemPrompt: DEFAULT_SYSTEM_PROMPT,
   })
   const [testing, setTesting] = useState(false)
   const [loadingModels, setLoadingModels] = useState(false)
@@ -38,6 +40,7 @@ export function LLMConfigPanel() {
       setConfig({
         ...loaded,
         apiKey: loaded.apiKey || "",
+        systemPrompt: loaded.systemPrompt || DEFAULT_SYSTEM_PROMPT,
       })
     }
   }, [])
@@ -149,6 +152,14 @@ export function LLMConfigPanel() {
     health: `${config.baseUrl || "http://localhost:11434"}/api/tags`,
     generate: `${config.baseUrl || "http://localhost:11434"}/api/generate`,
     chat: `${config.baseUrl || "http://localhost:11434"}/api/chat`,
+  }
+
+  const resetSystemPrompt = () => {
+    setConfig((prev) => ({ ...prev, systemPrompt: DEFAULT_SYSTEM_PROMPT }))
+    toast({
+      title: "> Prompt reset",
+      description: "System prompt has been reset to default",
+    })
   }
 
   return (
@@ -282,6 +293,29 @@ export function LLMConfigPanel() {
             className="bg-input border-border font-mono text-sm"
           />
           <p className="text-xs text-muted-foreground">Only needed for cloud APIs (OpenAI, Anthropic, etc.)</p>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="systemPrompt" className="text-foreground">
+              System Prompt
+            </Label>
+            <Button variant="ghost" size="sm" onClick={resetSystemPrompt} className="h-6 px-2 text-xs">
+              <RotateCcw className="h-3 w-3 mr-1" />
+              Reset to Default
+            </Button>
+          </div>
+          <Textarea
+            id="systemPrompt"
+            placeholder="Enter system prompt for CV generation..."
+            value={config.systemPrompt}
+            onChange={(e) => setConfig((prev) => ({ ...prev, systemPrompt: e.target.value }))}
+            rows={8}
+            className="bg-input border-border font-mono text-xs"
+          />
+          <p className="text-xs text-muted-foreground">
+            Instructions for the AI on how to optimize CVs. Must request JSON output matching CVData structure.
+          </p>
         </div>
 
         {errorMessage && (

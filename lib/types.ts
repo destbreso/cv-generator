@@ -63,6 +63,7 @@ export interface CVIteration {
   context: string
   templateId: string
   generatedContent: string
+  generatedCVData?: CVData // Added structured generated CV data
 }
 
 export interface OllamaConfig {
@@ -79,6 +80,7 @@ export interface LLMConfig {
   baseUrl: string // Base URL without path
   model: string
   apiKey?: string
+  systemPrompt?: string // Added configurable system prompt for CV generation
 }
 
 export interface ColorPalette {
