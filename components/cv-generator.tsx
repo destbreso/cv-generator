@@ -1,26 +1,30 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import type { CVData } from "@/lib/types"
-import { Card } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Sparkles, Loader2 } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { saveIteration } from "@/lib/storage"
+import { useState } from "react";
+import type { CVData } from "@/lib/types";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Sparkles, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { saveIteration } from "@/lib/storage";
 
 interface CVGeneratorProps {
-  cvData: CVData
-  templateId: string
-  onGenerated: (content: string, generatedCVData?: CVData) => void
+  cvData: CVData;
+  templateId: string;
+  onGenerated: (content: string, generatedCVData?: CVData) => void;
 }
 
-export function CVGenerator({ cvData, templateId, onGenerated }: CVGeneratorProps) {
-  const [context, setContext] = useState("")
-  const [generating, setGenerating] = useState(false)
-  const [progress, setProgress] = useState("")
-  const { toast } = useToast()
+export function CVGenerator({
+  cvData,
+  templateId,
+  onGenerated,
+}: CVGeneratorProps) {
+  const [context, setContext] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [progress, setProgress] = useState("");
+  const { toast } = useToast();
 
   const handleGenerate = async () => {
     if (!context.trim()) {
@@ -28,22 +32,22 @@ export function CVGenerator({ cvData, templateId, onGenerated }: CVGeneratorProp
         title: "> Context required",
         description: "Please provide context for CV generation",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    const savedConfig = localStorage.getItem("llm-config")
+    const savedConfig = localStorage.getItem("llm-config");
     if (!savedConfig) {
       toast({
         title: "> LLM not configured",
         description: "Please configure your LLM connection first",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setGenerating(true)
-    setProgress("Connecting to LLM...")
+    setGenerating(true);
+    setProgress("Connecting to LLM...");
 
     try {
       const response = await fetch("/api/generate-cv", {
@@ -54,36 +58,36 @@ export function CVGenerator({ cvData, templateId, onGenerated }: CVGeneratorProp
           context,
           llmConfig: JSON.parse(savedConfig),
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Generation failed")
+        throw new Error("Generation failed");
       }
 
-      const reader = response.body?.getReader()
-      const decoder = new TextDecoder()
-      let generatedContent = ""
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let generatedContent = "";
 
       if (reader) {
-        setProgress("Generating CV content...")
+        setProgress("Generating CV content...");
 
         while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
+          const { done, value } = await reader.read();
+          if (done) break;
 
-          const chunk = decoder.decode(value)
-          const lines = chunk.split("\n")
+          const chunk = decoder.decode(value);
+          const lines = chunk.split("\n");
 
           for (const line of lines) {
             if (line.startsWith("data: ")) {
-              const data = line.slice(6)
+              const data = line.slice(6);
               if (data === "[DONE]") {
-                break
+                break;
               }
               try {
-                const parsed = JSON.parse(data)
+                const parsed = JSON.parse(data);
                 if (parsed.content) {
-                  generatedContent += parsed.content
+                  generatedContent += parsed.content;
                 }
               } catch (e) {
                 // Skip invalid JSON
@@ -93,17 +97,17 @@ export function CVGenerator({ cvData, templateId, onGenerated }: CVGeneratorProp
         }
       }
 
-      let generatedCVData: CVData | undefined
+      let generatedCVData: CVData | undefined;
       try {
         // Try to parse the generated content as JSON
-        const parsed = JSON.parse(generatedContent)
+        const parsed = JSON.parse(generatedContent);
         // Validate it has the expected structure
         if (parsed.personalInfo && parsed.summary && parsed.experience) {
-          generatedCVData = parsed as CVData
-          console.log("[v0] Successfully parsed generated CV data")
+          generatedCVData = parsed as CVData;
+          console.log("[v0] Successfully parsed generated CV data");
         }
       } catch (e) {
-        console.warn("[v0] Could not parse generated content as CVData:", e)
+        console.warn("[v0] Could not parse generated content as CVData:", e);
       }
 
       // Save iteration with structured data
@@ -115,29 +119,29 @@ export function CVGenerator({ cvData, templateId, onGenerated }: CVGeneratorProp
         templateId,
         generatedContent,
         generatedCVData, // Save structured data
-      }
-      saveIteration(iteration)
+      };
+      saveIteration(iteration);
 
-      onGenerated(generatedContent, generatedCVData)
+      onGenerated(generatedContent, generatedCVData);
 
       toast({
         title: "> CV generated",
         description: generatedCVData
           ? "Your CV has been optimized and structured data extracted"
           : "Your CV has been optimized by AI",
-      })
+      });
     } catch (error) {
-      console.error("[v0] Generation error:", error)
+      console.error("[v0] Generation error:", error);
       toast({
         title: "> Generation failed",
         description: "Could not generate CV. Check your LLM configuration.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setGenerating(false)
-      setProgress("")
+      setGenerating(false);
+      setProgress("");
     }
-  }
+  };
 
   return (
     <Card className="p-6 space-y-4 bg-card border-border">
@@ -161,7 +165,11 @@ export function CVGenerator({ cvData, templateId, onGenerated }: CVGeneratorProp
           </p>
         </div>
 
-        <Button onClick={handleGenerate} disabled={generating} className="w-full gap-2">
+        <Button
+          onClick={handleGenerate}
+          disabled={generating}
+          className="w-full gap-2"
+        >
           {generating ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -177,20 +185,23 @@ export function CVGenerator({ cvData, templateId, onGenerated }: CVGeneratorProp
 
         <div className="p-3 bg-secondary/50 border border-border rounded text-xs space-y-1">
           <p className="text-muted-foreground">
-            <span className="text-primary font-bold">{">"}</span> The AI uses your CV metadata as the source of truth
+            <span className="text-primary font-bold">{">"}</span> The AI uses
+            your CV metadata as the source of truth
           </p>
           <p className="text-muted-foreground">
-            <span className="text-primary font-bold">{">"}</span> Job context guides optimization and emphasis
+            <span className="text-primary font-bold">{">"}</span> Job context
+            guides optimization and emphasis
           </p>
           <p className="text-muted-foreground">
-            <span className="text-primary font-bold">{">"}</span> Generated CV maintains the same JSON structure
+            <span className="text-primary font-bold">{">"}</span> Generated CV
+            maintains the same JSON structure
           </p>
           <p className="text-muted-foreground">
-            <span className="text-primary font-bold">{">"}</span> Results can be loaded back into the editor for
-            refinement
+            <span className="text-primary font-bold">{">"}</span> Results can be
+            loaded back into the editor for refinement
           </p>
         </div>
       </div>
     </Card>
-  )
+  );
 }
