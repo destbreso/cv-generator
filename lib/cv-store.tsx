@@ -450,6 +450,10 @@ export interface CVAppState {
   generatedCVData: CVData | null;
   jobContext: string;
 
+  // LinkedIn Import
+  isImportingLinkedIn: boolean;
+  linkedInImportStatus: string;
+
   // History
   iterations: CVIteration[];
 
@@ -486,7 +490,9 @@ type CVAction =
   | { type: "LOAD_STATE"; payload: Partial<CVAppState> }
   | { type: "LOAD_SAMPLE_DATA" }
   | { type: "CLEAR_DATA" }
-  | { type: "APPLY_GENERATED" };
+  | { type: "APPLY_GENERATED" }
+  | { type: "SET_IMPORTING_LINKEDIN"; payload: boolean }
+  | { type: "SET_LINKEDIN_IMPORT_STATUS"; payload: string };
 
 // Initial state
 const initialState: CVAppState = {
@@ -509,6 +515,8 @@ const initialState: CVAppState = {
   generatedContent: "",
   generatedCVData: null,
   jobContext: "",
+  isImportingLinkedIn: false,
+  linkedInImportStatus: "",
   iterations: [],
   panels: {
     showSidebar: true,
@@ -678,6 +686,16 @@ function cvReducer(state: CVAppState, action: CVAction): CVAppState {
         panels: { ...state.panels, activePanel: "editor" },
       };
 
+    case "SET_IMPORTING_LINKEDIN":
+      return {
+        ...state,
+        isImportingLinkedIn: action.payload,
+        linkedInImportStatus: action.payload ? "Preparing…" : "",
+      };
+
+    case "SET_LINKEDIN_IMPORT_STATUS":
+      return { ...state, linkedInImportStatus: action.payload };
+
     default:
       return state;
   }
@@ -697,6 +715,7 @@ interface CVContextType {
   loadModels: () => Promise<void>;
   generateCV: () => Promise<void>;
   applyGeneratedData: () => void;
+  importFromLinkedIn: (file: File) => Promise<void>;
 }
 
 const CVContext = createContext<CVContextType | null>(null);
@@ -993,6 +1012,126 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "APPLY_GENERATED" });
   }, []);
 
+  const importFromLinkedIn = useCallback(
+    async (file: File) => {
+      dispatch({ type: "SET_IMPORTING_LINKEDIN", payload: true });
+      dispatch({
+        type: "SET_LINKEDIN_IMPORT_STATUS",
+        payload: "Extracting text from PDF\u2026",
+      });
+
+      try {
+        const formData = new FormData();
+        formData.append("pdf", file);
+        formData.append("baseUrl", state.aiConfig.baseUrl);
+        formData.append("model", state.aiConfig.model);
+        if (state.aiConfig.apiKey) {
+          formData.append("apiKey", state.aiConfig.apiKey);
+        }
+
+        const response = await fetch("/api/parse-linkedin-pdf", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorBody = await response.text();
+          console.error("LinkedIn import failed:", response.status, errorBody);
+          throw new Error("Import failed");
+        }
+
+        // Read SSE stream
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error("No response body");
+
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let importedData: CVData | null = null;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+
+          const messages = buffer.split("\n\n");
+          buffer = messages.pop() || "";
+
+          for (const msg of messages) {
+            const line = msg.trim();
+            if (!line.startsWith("data: ")) continue;
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.status === "extracting") {
+                dispatch({
+                  type: "SET_LINKEDIN_IMPORT_STATUS",
+                  payload: "AI is analyzing your LinkedIn profile\u2026",
+                });
+              } else if (data.status === "progress") {
+                dispatch({
+                  type: "SET_LINKEDIN_IMPORT_STATUS",
+                  payload: `Structuring CV data\u2026 (${data.chunks} chunks)`,
+                });
+              } else if (data.status === "done" && data.cvData) {
+                importedData = data.cvData as CVData;
+              } else if (data.status === "error") {
+                throw new Error(data.error || "Failed to parse LinkedIn data");
+              }
+            } catch (e) {
+              if (
+                e instanceof Error &&
+                e.message !== "Import failed" &&
+                !e.message.includes("Failed to parse")
+              ) {
+                // JSON parse error, skip
+              } else {
+                throw e;
+              }
+            }
+          }
+        }
+
+        // Process remaining buffer
+        if (buffer.trim()) {
+          const line = buffer.trim();
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.status === "done" && data.cvData) {
+                importedData = data.cvData as CVData;
+              }
+            } catch {
+              // skip
+            }
+          }
+        }
+
+        if (importedData) {
+          dispatch({ type: "SET_CV_DATA", payload: importedData });
+          dispatch({
+            type: "SET_LINKEDIN_IMPORT_STATUS",
+            payload: "Import complete!",
+          });
+          console.log("[cv-store] LinkedIn import successful");
+        } else {
+          throw new Error("No structured data received from parser");
+        }
+      } catch (error) {
+        console.error("LinkedIn import error:", error);
+        dispatch({
+          type: "SET_LINKEDIN_IMPORT_STATUS",
+          payload: `Error: ${error instanceof Error ? error.message : "Import failed"}`,
+        });
+      } finally {
+        // Keep status visible briefly, then clear
+        setTimeout(() => {
+          dispatch({ type: "SET_IMPORTING_LINKEDIN", payload: false });
+        }, 2000);
+      }
+    },
+    [state.aiConfig],
+  );
+
   return (
     <CVContext.Provider
       value={{
@@ -1007,6 +1146,7 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
         loadModels,
         generateCV,
         applyGeneratedData,
+        importFromLinkedIn,
       }}
     >
       {children}

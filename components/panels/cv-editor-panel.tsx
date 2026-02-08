@@ -43,6 +43,7 @@ import {
   Eraser,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LinkedInImportDialog } from "@/components/linkedin-import-dialog";
 
 export function CVEditorPanel() {
   const { state, dispatch, updateField, setCVData } = useCVStore();
@@ -127,6 +128,7 @@ export function CVEditorPanel() {
             <Upload className="h-4 w-4 mr-2" />
             Import
           </Button>
+          <LinkedInImportDialog />
           <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
             Export

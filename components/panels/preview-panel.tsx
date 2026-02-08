@@ -116,6 +116,7 @@ export function PreviewPanel() {
     selectedPaletteId,
     selectedLayoutId,
     isGenerating,
+    isImportingLinkedIn,
   } = state;
 
   const [viewMode, setViewMode] = useState<"preview" | "json" | "raw">(
@@ -313,7 +314,7 @@ export function PreviewPanel() {
       {/* Content */}
       <ScrollArea className="flex-1">
         <div className="p-4">
-          {viewMode === "preview" && isGenerating && (
+          {viewMode === "preview" && (isGenerating || isImportingLinkedIn) && (
             <Card
               className="bg-white shadow-lg mx-auto overflow-hidden"
               style={{
@@ -323,11 +324,16 @@ export function PreviewPanel() {
                 transformOrigin: "top center",
               }}
             >
-              <GeneratingSkeleton palette={palette} />
+              <GeneratingSkeleton
+                palette={palette}
+                message={
+                  isImportingLinkedIn ? "Importing from LinkedIn…" : undefined
+                }
+              />
             </Card>
           )}
 
-          {viewMode === "preview" && !isGenerating && (
+          {viewMode === "preview" && !isGenerating && !isImportingLinkedIn && (
             <Card
               className="bg-white shadow-lg mx-auto overflow-hidden"
               style={{
@@ -372,7 +378,13 @@ export function PreviewPanel() {
 
 /* ─── Generation Skeleton ─── */
 
-function GeneratingSkeleton({ palette }: { palette: TemplatePaletteColors }) {
+function GeneratingSkeleton({
+  palette,
+  message,
+}: {
+  palette: TemplatePaletteColors;
+  message?: string;
+}) {
   return (
     <div className="p-8 space-y-6 relative">
       {/* Shimmer overlay */}
@@ -389,57 +401,114 @@ function GeneratingSkeleton({ palette }: { palette: TemplatePaletteColors }) {
       <div className="flex items-center justify-center gap-2 py-3">
         <div
           className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium"
-          style={{ backgroundColor: `${palette.accent}12`, color: palette.accent }}
+          style={{
+            backgroundColor: `${palette.accent}12`,
+            color: palette.accent,
+          }}
         >
           <Loader2 className="h-4 w-4 animate-spin" />
           <Sparkles className="h-3.5 w-3.5" />
-          AI is optimizing your CV…
+          {message || "AI is optimizing your CV…"}
         </div>
       </div>
 
       {/* Header skeleton */}
       <header className="text-center space-y-3">
         <div className="flex flex-col items-center gap-2">
-          <div className="h-8 w-64 rounded animate-pulse" style={{ backgroundColor: `${palette.primary}12` }} />
-          <div className="h-4 w-44 rounded animate-pulse" style={{ backgroundColor: `${palette.accent}15` }} />
+          <div
+            className="h-8 w-64 rounded animate-pulse"
+            style={{ backgroundColor: `${palette.primary}12` }}
+          />
+          <div
+            className="h-4 w-44 rounded animate-pulse"
+            style={{ backgroundColor: `${palette.accent}15` }}
+          />
         </div>
         <div className="flex items-center justify-center gap-3 mt-2">
-          <div className="h-3 w-32 rounded animate-pulse" style={{ backgroundColor: `${palette.secondary}12` }} />
+          <div
+            className="h-3 w-32 rounded animate-pulse"
+            style={{ backgroundColor: `${palette.secondary}12` }}
+          />
           <span style={{ color: `${palette.secondary}30` }}>•</span>
-          <div className="h-3 w-24 rounded animate-pulse" style={{ backgroundColor: `${palette.secondary}12` }} />
+          <div
+            className="h-3 w-24 rounded animate-pulse"
+            style={{ backgroundColor: `${palette.secondary}12` }}
+          />
           <span style={{ color: `${palette.secondary}30` }}>•</span>
-          <div className="h-3 w-28 rounded animate-pulse" style={{ backgroundColor: `${palette.secondary}12` }} />
+          <div
+            className="h-3 w-28 rounded animate-pulse"
+            style={{ backgroundColor: `${palette.secondary}12` }}
+          />
         </div>
       </header>
 
       {/* Summary skeleton */}
       <section className="space-y-2">
-        <div className="h-5 w-48 rounded animate-pulse" style={{ backgroundColor: `${palette.primary}12` }} />
-        <div className="h-px w-full" style={{ backgroundColor: `${palette.accent}20` }} />
+        <div
+          className="h-5 w-48 rounded animate-pulse"
+          style={{ backgroundColor: `${palette.primary}12` }}
+        />
+        <div
+          className="h-px w-full"
+          style={{ backgroundColor: `${palette.accent}20` }}
+        />
         <div className="space-y-2 pt-1">
-          <div className="h-3 w-full rounded animate-pulse" style={{ backgroundColor: `${palette.secondary}10` }} />
-          <div className="h-3 w-[92%] rounded animate-pulse" style={{ backgroundColor: `${palette.secondary}10` }} />
-          <div className="h-3 w-[85%] rounded animate-pulse" style={{ backgroundColor: `${palette.secondary}10` }} />
+          <div
+            className="h-3 w-full rounded animate-pulse"
+            style={{ backgroundColor: `${palette.secondary}10` }}
+          />
+          <div
+            className="h-3 w-[92%] rounded animate-pulse"
+            style={{ backgroundColor: `${palette.secondary}10` }}
+          />
+          <div
+            className="h-3 w-[85%] rounded animate-pulse"
+            style={{ backgroundColor: `${palette.secondary}10` }}
+          />
         </div>
       </section>
 
       {/* Experience skeleton */}
       <section className="space-y-2">
-        <div className="h-5 w-40 rounded animate-pulse" style={{ backgroundColor: `${palette.primary}12` }} />
-        <div className="h-px w-full" style={{ backgroundColor: `${palette.accent}20` }} />
+        <div
+          className="h-5 w-40 rounded animate-pulse"
+          style={{ backgroundColor: `${palette.primary}12` }}
+        />
+        <div
+          className="h-px w-full"
+          style={{ backgroundColor: `${palette.accent}20` }}
+        />
         {[1, 2].map((i) => (
           <div key={i} className="space-y-2 pt-2">
             <div className="flex justify-between">
               <div className="space-y-1.5 flex-1">
-                <div className="h-4 w-52 rounded animate-pulse" style={{ backgroundColor: `${palette.primary}12` }} />
-                <div className="h-3 w-36 rounded animate-pulse" style={{ backgroundColor: `${palette.secondary}10` }} />
+                <div
+                  className="h-4 w-52 rounded animate-pulse"
+                  style={{ backgroundColor: `${palette.primary}12` }}
+                />
+                <div
+                  className="h-3 w-36 rounded animate-pulse"
+                  style={{ backgroundColor: `${palette.secondary}10` }}
+                />
               </div>
-              <div className="h-3 w-28 rounded animate-pulse" style={{ backgroundColor: `${palette.accent}12` }} />
+              <div
+                className="h-3 w-28 rounded animate-pulse"
+                style={{ backgroundColor: `${palette.accent}12` }}
+              />
             </div>
             <div className="space-y-1.5">
-              <div className="h-3 w-full rounded animate-pulse" style={{ backgroundColor: `${palette.secondary}08` }} />
-              <div className="h-3 w-[90%] rounded animate-pulse" style={{ backgroundColor: `${palette.secondary}08` }} />
-              <div className="h-3 w-[75%] rounded animate-pulse" style={{ backgroundColor: `${palette.secondary}08` }} />
+              <div
+                className="h-3 w-full rounded animate-pulse"
+                style={{ backgroundColor: `${palette.secondary}08` }}
+              />
+              <div
+                className="h-3 w-[90%] rounded animate-pulse"
+                style={{ backgroundColor: `${palette.secondary}08` }}
+              />
+              <div
+                className="h-3 w-[75%] rounded animate-pulse"
+                style={{ backgroundColor: `${palette.secondary}08` }}
+              />
             </div>
           </div>
         ))}
@@ -447,25 +516,49 @@ function GeneratingSkeleton({ palette }: { palette: TemplatePaletteColors }) {
 
       {/* Education skeleton */}
       <section className="space-y-2">
-        <div className="h-5 w-32 rounded animate-pulse" style={{ backgroundColor: `${palette.primary}12` }} />
-        <div className="h-px w-full" style={{ backgroundColor: `${palette.accent}20` }} />
+        <div
+          className="h-5 w-32 rounded animate-pulse"
+          style={{ backgroundColor: `${palette.primary}12` }}
+        />
+        <div
+          className="h-px w-full"
+          style={{ backgroundColor: `${palette.accent}20` }}
+        />
         <div className="flex justify-between pt-2">
           <div className="space-y-1.5">
-            <div className="h-4 w-56 rounded animate-pulse" style={{ backgroundColor: `${palette.primary}12` }} />
-            <div className="h-3 w-40 rounded animate-pulse" style={{ backgroundColor: `${palette.secondary}10` }} />
+            <div
+              className="h-4 w-56 rounded animate-pulse"
+              style={{ backgroundColor: `${palette.primary}12` }}
+            />
+            <div
+              className="h-3 w-40 rounded animate-pulse"
+              style={{ backgroundColor: `${palette.secondary}10` }}
+            />
           </div>
-          <div className="h-3 w-28 rounded animate-pulse" style={{ backgroundColor: `${palette.accent}12` }} />
+          <div
+            className="h-3 w-28 rounded animate-pulse"
+            style={{ backgroundColor: `${palette.accent}12` }}
+          />
         </div>
       </section>
 
       {/* Skills skeleton */}
       <section className="space-y-2">
-        <div className="h-5 w-24 rounded animate-pulse" style={{ backgroundColor: `${palette.primary}12` }} />
-        <div className="h-px w-full" style={{ backgroundColor: `${palette.accent}20` }} />
+        <div
+          className="h-5 w-24 rounded animate-pulse"
+          style={{ backgroundColor: `${palette.primary}12` }}
+        />
+        <div
+          className="h-px w-full"
+          style={{ backgroundColor: `${palette.accent}20` }}
+        />
         <div className="space-y-2 pt-1">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex gap-2 items-center">
-              <div className="h-3 w-24 rounded animate-pulse" style={{ backgroundColor: `${palette.primary}10` }} />
+              <div
+                className="h-3 w-24 rounded animate-pulse"
+                style={{ backgroundColor: `${palette.primary}10` }}
+              />
               <div className="flex gap-1.5 flex-wrap flex-1">
                 {Array.from({ length: 4 + i }).map((_, j) => (
                   <div
