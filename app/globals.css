@@ -285,3 +285,17 @@ html.modern {
     transform: translateX(200%);
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Page Simulation – Paginated preview with proper margins
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Make sections avoid breaking across visual pages when printed */
+@media print {
+  section {
+    break-inside: avoid;
+  }
+  header {
+    break-inside: avoid;
+  }
+}

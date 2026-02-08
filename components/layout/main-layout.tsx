@@ -292,36 +292,45 @@ export function MainLayout({ className }: MainLayoutProps) {
                 }
                 className="flex-1 flex flex-col"
               >
-                <div className="border-b border-border px-4">
-                  <TabsList className="h-12 bg-transparent p-0 gap-4">
-                    <TabsTrigger
-                      value="editor"
-                      className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 h-12"
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      Editor
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="templates"
-                      className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 h-12"
-                    >
-                      <Palette className="h-4 w-4 mr-2" />
-                      Templates
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="history"
-                      className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 h-12"
-                    >
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Generate
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="export"
-                      className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 h-12"
-                    >
-                      <History className="h-4 w-4 mr-2" />
-                      History
-                    </TabsTrigger>
+                <div className="border-b border-border px-2">
+                  <TabsList className="h-11 bg-transparent p-0 gap-1">
+                    {[
+                      {
+                        value: "editor" as const,
+                        icon: FileText,
+                        label: "Editor",
+                      },
+                      {
+                        value: "templates" as const,
+                        icon: Palette,
+                        label: "Templates",
+                      },
+                      {
+                        value: "history" as const,
+                        icon: Sparkles,
+                        label: "Generate",
+                      },
+                      {
+                        value: "export" as const,
+                        icon: History,
+                        label: "History",
+                      },
+                    ].map((tab) => (
+                      <TabsTrigger
+                        key={tab.value}
+                        value={tab.value}
+                        className={cn(
+                          "relative h-11 px-3 rounded-none bg-transparent shadow-none transition-colors duration-200",
+                          "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                          "data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none",
+                          "after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:h-[2px] after:rounded-full after:transition-all after:duration-300",
+                          "after:bg-primary data-[state=active]:after:w-[calc(100%-12px)] after:w-0",
+                        )}
+                      >
+                        <tab.icon className="h-3.5 w-3.5 mr-1.5" />
+                        <span className="text-xs font-medium">{tab.label}</span>
+                      </TabsTrigger>
+                    ))}
                   </TabsList>
                 </div>
 
@@ -379,22 +388,33 @@ function SidebarButton({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button
-          variant={active ? "secondary" : "ghost"}
-          size="icon"
+        <button
           className={cn(
-            "w-10 h-10 relative",
-            active && "bg-primary/10 text-primary",
+            "w-10 h-10 relative flex items-center justify-center rounded-lg transition-all duration-200",
+            "text-muted-foreground hover:text-foreground hover:bg-muted/60",
+            active && [
+              "text-primary bg-primary/10 hover:bg-primary/15 hover:text-primary",
+              "ring-1 ring-primary/20",
+            ],
           )}
           onClick={onClick}
         >
-          <Icon className="h-4 w-4" />
+          {/* Active left indicator */}
+          {active && (
+            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-primary" />
+          )}
+          <Icon
+            className={cn(
+              "h-4 w-4 transition-transform duration-200",
+              active && "scale-110",
+            )}
+          />
           {badge && (
-            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 h-4 min-w-4 px-0.5 rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center animate-pulse">
               {badge}
             </span>
           )}
-        </Button>
+        </button>
       </TooltipTrigger>
       <TooltipContent side="right">{label}</TooltipContent>
     </Tooltip>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useMemo } from "react";
+import { useRef, useState, useMemo, useEffect, useCallback } from "react";
 import {
   useCVStore,
   COLOR_PALETTES,
@@ -9,7 +9,6 @@ import {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Eye,
   Code,
@@ -22,6 +21,8 @@ import {
   Check,
   Loader2,
   Sparkles,
+  LayoutGrid,
+  Rows3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CVData } from "@/lib/types";
@@ -106,6 +107,38 @@ function getTemplateStyles(templateId: string) {
   return styles[templateId] || styles.minimal;
 }
 
+/* ─── Page format definitions ─── */
+
+type PageFormat = "a4" | "letter";
+
+const PAGE_FORMATS: Record<
+  PageFormat,
+  { label: string; widthMm: number; heightMm: number; css: string }
+> = {
+  a4: { label: "A4", widthMm: 210, heightMm: 297, css: "A4" },
+  letter: { label: "Letter", widthMm: 215.9, heightMm: 279.4, css: "letter" },
+};
+
+/* ─── mm → px helper (computed once) ─── */
+let _mmToPx: number | null = null;
+function mmToPx(mm: number): number {
+  if (_mmToPx === null) {
+    const el = document.createElement("div");
+    el.style.width = "100mm";
+    el.style.position = "absolute";
+    el.style.visibility = "hidden";
+    document.body.appendChild(el);
+    _mmToPx = el.offsetWidth / 100;
+    document.body.removeChild(el);
+  }
+  return mm * _mmToPx;
+}
+
+/* ─── Page margins (mm) ─── */
+const PAGE_MARGIN_TOP = 12;
+const PAGE_MARGIN_BOTTOM = 14;
+const PAGE_MARGIN_SIDE = 0; // side margins handled by CVPreviewContent padding
+
 export function PreviewPanel() {
   const { state } = useCVStore();
   const {
@@ -122,9 +155,17 @@ export function PreviewPanel() {
   const [viewMode, setViewMode] = useState<"preview" | "json" | "raw">(
     "preview",
   );
-  const [zoom, setZoom] = useState(100);
+  const [zoom, setZoom] = useState(80);
   const [copied, setCopied] = useState(false);
-  const previewRef = useRef<HTMLDivElement>(null);
+  const [pageFormat, setPageFormat] = useState<PageFormat>("a4");
+  const [previewLayout, setPreviewLayout] = useState<"scroll" | "grid">(
+    "scroll",
+  );
+  const [pageCount, setPageCount] = useState(1);
+
+  // Hidden off-screen container to measure total content height
+  const measureRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const displayData = generatedCVData || cvData;
   const palette = useMemo(
@@ -138,85 +179,321 @@ export function PreviewPanel() {
     [selectedTemplateId],
   );
 
+  const fmt = PAGE_FORMATS[pageFormat];
+  const pageWidthPx = useMemo(() => mmToPx(fmt.widthMm), [fmt.widthMm]);
+  const pageHeightPx = useMemo(() => mmToPx(fmt.heightMm), [fmt.heightMm]);
+  const contentHeightPx = useMemo(
+    () => pageHeightPx - mmToPx(PAGE_MARGIN_TOP) - mmToPx(PAGE_MARGIN_BOTTOM),
+    [pageHeightPx],
+  );
+
+  // Measure content and compute page count
+  const calculatePages = useCallback(() => {
+    if (!measureRef.current) return;
+    const totalH = measureRef.current.scrollHeight;
+    const pages = Math.max(1, Math.ceil(totalH / contentHeightPx));
+    setPageCount(pages);
+  }, [contentHeightPx]);
+
+  useEffect(() => {
+    const node = measureRef.current;
+    if (!node) return;
+    // Initial calculation with a small delay for rendering
+    const timer = setTimeout(calculatePages, 50);
+    const ro = new ResizeObserver(() => calculatePages());
+    ro.observe(node);
+    return () => {
+      clearTimeout(timer);
+      ro.disconnect();
+    };
+  }, [
+    calculatePages,
+    displayData,
+    selectedTemplateId,
+    selectedLayoutId,
+    pageFormat,
+  ]);
+
   const handleCopy = async () => {
     const content =
       viewMode === "json"
         ? JSON.stringify(displayData, null, 2)
         : generatedContent || JSON.stringify(displayData, null, 2);
-
     await navigator.clipboard.writeText(content);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleExportPDF = () => {
-    if (!previewRef.current) return;
+  /* ── Build standalone CSS from current template/palette ── */
+  const buildExportStyles = () => {
+    const ts = templateStyles;
+    const p = palette;
 
+    const fontMap: Record<string, string> = {
+      "font-sans":
+        "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+      "font-serif": "Georgia, 'Times New Roman', Times, serif",
+      "font-mono":
+        "'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', 'Courier New', monospace",
+    };
+    const bodyFont = fontMap[ts.bodyFont] || fontMap["font-sans"];
+    const headerFont = fontMap[ts.headerFont] || bodyFont;
+
+    const borderMap: Record<string, string> = {
+      "border-b": `1px solid ${p.accent}`,
+      "border-b-2": `2px solid ${p.accent}`,
+      "border-b-4": `4px solid ${p.accent}`,
+      "border-b border-dashed": `1px dashed ${p.accent}`,
+    };
+    const sectionBorder = ts.accentBar
+      ? borderMap[ts.borderStyle] || `2px solid ${p.accent}`
+      : `1px solid ${p.secondary}66`;
+
+    const headerAlign = ts.headerLayout === "center" ? "center" : "left";
+
+    const titleSizeMap: Record<string, string> = {};
+    if (ts.sectionTitleStyle.includes("text-sm"))
+      titleSizeMap.fontSize = "0.875rem";
+    else if (ts.sectionTitleStyle.includes("text-base"))
+      titleSizeMap.fontSize = "1rem";
+    else titleSizeMap.fontSize = "0.875rem";
+
+    const titleWeight = ts.sectionTitleStyle.includes("font-black")
+      ? "900"
+      : ts.sectionTitleStyle.includes("font-bold")
+        ? "700"
+        : "600";
+
+    const titleTransform = ts.sectionTitleStyle.includes("uppercase")
+      ? "uppercase"
+      : "none";
+    const titleTracking = ts.sectionTitleStyle.includes("tracking-[0.2em]")
+      ? "0.2em"
+      : ts.sectionTitleStyle.includes("tracking-widest")
+        ? "0.1em"
+        : ts.sectionTitleStyle.includes("tracking-wide")
+          ? "0.05em"
+          : "normal";
+
+    const pageSizeCss = fmt.css;
+    const pageW = `${fmt.widthMm}mm`;
+
+    return `
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      /* Force browsers to print background colors and images */
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
+
+      body {
+        font-family: ${bodyFont};
+        line-height: 1.6;
+        color: ${p.primary};
+        background: #ffffff;
+      }
+
+      .cv-root {
+        max-width: ${pageW};
+        margin: 0 auto;
+        background: #ffffff;
+      }
+
+      .cv-root > div[style*="display: flex"],
+      .cv-root > div.flex { display: flex !important; }
+
+      /* Preserve all inline background-color styles */
+      [style*="background-color"],
+      [style*="backgroundColor"],
+      [style*="background:"] {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      header { text-align: ${headerAlign}; }
+      header h1 {
+        font-family: ${headerFont};
+        font-weight: 700;
+        font-size: 1.875rem;
+        line-height: 1.2;
+        color: ${p.primary};
+      }
+      header p { margin-top: 0.125rem; }
+
+      h2 {
+        font-family: ${ts.bodyFont === "font-mono" ? fontMap["font-mono"] : bodyFont};
+        font-size: ${titleSizeMap.fontSize};
+        font-weight: ${titleWeight};
+        text-transform: ${titleTransform};
+        letter-spacing: ${titleTracking};
+        color: ${p.primary};
+        border-bottom: ${sectionBorder};
+        padding-bottom: 0.25rem;
+        margin-bottom: 0.75rem;
+      }
+
+      h3 { font-weight: 500; color: ${p.primary}; }
+      p, li, span { font-size: 0.875rem; }
+      a { color: ${p.accent}; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      ul { padding-left: 1.25rem; }
+      li { margin-bottom: 0.25rem; }
+
+      span[style*="background"],
+      div[style*="background"] {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      span[style*="background"] {
+        display: inline-block;
+        padding: 0.125rem 0.5rem;
+        border-radius: ${ts.chipStyle.includes("rounded-full") ? "9999px" : ts.chipStyle.includes("rounded-lg") ? "0.5rem" : "0.25rem"};
+        font-size: 0.75rem;
+        margin: 0.125rem;
+      }
+
+      .skeleton { display: none !important; }
+      .animate-pulse { animation: none !important; }
+
+      section { margin-bottom: 1.25rem; break-inside: avoid; }
+      header { break-inside: avoid; }
+      .space-y-5 > * + * { margin-top: 1.25rem; }
+      .space-y-4 > * + * { margin-top: 1rem; }
+      .space-y-3 > * + * { margin-top: 0.75rem; }
+      .space-y-2 > * + * { margin-top: 0.5rem; }
+      .space-y-1 > * + * { margin-top: 0.25rem; }
+      .space-y-1\\.5 > * + * { margin-top: 0.375rem; }
+
+      .flex { display: flex; }
+      .flex-1 { flex: 1 1 0%; }
+      .flex-col { flex-direction: column; }
+      .flex-wrap { flex-wrap: wrap; }
+      .items-center { align-items: center; }
+      .items-start { align-items: flex-start; }
+      .justify-between { justify-content: space-between; }
+      .justify-center { justify-content: center; }
+      .gap-1 { gap: 0.25rem; }
+      .gap-1\\.5 { gap: 0.375rem; }
+      .gap-2 { gap: 0.5rem; }
+      .gap-3 { gap: 0.75rem; }
+      .gap-4 { gap: 1rem; }
+      .gap-6 { gap: 1.5rem; }
+      .gap-x-6 { column-gap: 1.5rem; }
+      .gap-y-1 { row-gap: 0.25rem; }
+      .shrink-0 { flex-shrink: 0; }
+
+      .grid { display: grid; }
+      .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+      .p-5 { padding: 1.25rem; }
+      .p-6 { padding: 1.5rem; }
+      .p-8 { padding: 2rem; }
+      .px-1 { padding-left: 0.25rem; padding-right: 0.25rem; }
+      .px-1\\.5 { padding-left: 0.375rem; padding-right: 0.375rem; }
+      .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+      .py-0\\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+      .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+      .mt-1 { margin-top: 0.25rem; }
+      .mt-2 { margin-top: 0.5rem; }
+      .mt-6 { margin-top: 1.5rem; }
+      .mb-1 { margin-bottom: 0.25rem; }
+      .mb-2 { margin-bottom: 0.5rem; }
+      .mb-3 { margin-bottom: 0.75rem; }
+      .pb-1 { padding-bottom: 0.25rem; }
+      .min-h-full { min-height: 100%; }
+      .min-w-\\[100px\\] { min-width: 100px; }
+      .min-w-\\[120px\\] { min-width: 120px; }
+      .w-full { width: 100%; }
+
+      .border { border: 1px solid ${p.secondary}30; }
+      .border-r { border-right: 1px solid ${p.secondary}20; }
+      .border-l { border-left: 1px solid ${p.secondary}20; }
+      .border-b { border-bottom: 1px solid ${p.secondary}20; }
+      .border-dashed { border-style: dashed; }
+
+      .text-\\[10px\\] { font-size: 10px; }
+      .text-xs { font-size: 0.75rem; line-height: 1rem; }
+      .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+      .text-base { font-size: 1rem; line-height: 1.5rem; }
+      .text-lg { font-size: 1.125rem; }
+      .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+      .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+      .font-medium { font-weight: 500; }
+      .font-semibold { font-weight: 600; }
+      .font-bold { font-weight: 700; }
+      .font-black { font-weight: 900; }
+      .font-sans { font-family: ${fontMap["font-sans"]}; }
+      .font-serif { font-family: ${fontMap["font-serif"]}; }
+      .font-mono { font-family: ${fontMap["font-mono"]}; }
+      .italic { font-style: italic; }
+      .uppercase { text-transform: uppercase; }
+      .tracking-widest { letter-spacing: 0.1em; }
+      .tracking-wide { letter-spacing: 0.05em; }
+      .tracking-\\[0\\.2em\\] { letter-spacing: 0.2em; }
+      .leading-relaxed { line-height: 1.625; }
+      .list-disc { list-style-type: disc; }
+      .list-inside { list-style-position: inside; }
+      .hover\\:underline:hover { text-decoration: underline; }
+
+      .rounded { border-radius: 0.25rem; }
+      .rounded-full { border-radius: 9999px; }
+      .rounded-lg { border-radius: 0.5rem; }
+
+      .cv-root > div { min-height: 100%; }
+
+      h3.text-xs {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 0.5rem;
+      }
+
+      @media print {
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+        body { background: white; margin: 0; }
+        @page { margin: ${PAGE_MARGIN_TOP}mm ${PAGE_MARGIN_SIDE || 10}mm ${PAGE_MARGIN_BOTTOM}mm; size: ${pageSizeCss}; }
+        .cv-root { max-width: 100%; box-shadow: none; }
+      }
+    `;
+  };
+
+  const buildFullHTML = (innerHtml: string) => {
+    const name = displayData.personalInfo.name || "Untitled";
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CV - ${name}</title>
+  <style>${buildExportStyles()}</style>
+</head>
+<body>
+  <div class="cv-root">${innerHtml}</div>
+</body>
+</html>`;
+  };
+
+  const handleExportPDF = () => {
+    if (!measureRef.current) return;
+    const html = measureRef.current.innerHTML;
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
-
-    const html = previewRef.current.innerHTML;
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>CV - ${displayData.personalInfo.name || "Untitled"}</title>
-          <style>
-            body { 
-              font-family: system-ui, -apple-system, sans-serif; 
-              padding: 40px;
-              max-width: 800px;
-              margin: 0 auto;
-              color: #1a1a1a;
-              line-height: 1.6;
-            }
-            h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-            h2 { 
-              font-size: 1.25rem; 
-              margin-top: 1.5rem;
-              padding-bottom: 0.5rem;
-              border-bottom: 2px solid #e5e5e5;
-            }
-            .skeleton { display: none; }
-            .contact-info { color: #666; font-size: 0.9rem; }
-            .contact-info span { margin-right: 1rem; }
-            @media print {
-              body { padding: 20px; }
-              @page { margin: 1cm; }
-            }
-          </style>
-        </head>
-        <body>${html}</body>
-      </html>
-    `);
+    printWindow.document.write(buildFullHTML(html));
     printWindow.document.close();
-    setTimeout(() => printWindow.print(), 250);
+    setTimeout(() => printWindow.print(), 300);
   };
 
   const handleExportHTML = () => {
-    const html = previewRef.current?.innerHTML || "";
-    const fullHTML = `<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>CV - ${displayData.personalInfo.name || "Untitled"}</title>
-    <style>
-      body { 
-        font-family: system-ui, -apple-system, sans-serif; 
-        padding: 40px;
-        max-width: 800px;
-        margin: 0 auto;
-        color: #1a1a1a;
-        line-height: 1.6;
-      }
-      h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-      h2 { font-size: 1.25rem; margin-top: 1.5rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e5e5e5; }
-      .skeleton { display: none; }
-    </style>
-  </head>
-  <body>${html}</body>
-</html>`;
-
+    const html = measureRef.current?.innerHTML || "";
+    const fullHTML = buildFullHTML(html);
     const blob = new Blob([fullHTML], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -226,9 +503,17 @@ export function PreviewPanel() {
     URL.revokeObjectURL(url);
   };
 
+  /* ── Page array for rendering ── */
+  const pages = useMemo(
+    () => Array.from({ length: pageCount }, (_, i) => i),
+    [pageCount],
+  );
+
+  const gridScale = zoom / 100;
+
   return (
     <div className="h-full flex flex-col">
-      {/* Header */}
+      {/* Header / Toolbar */}
       <div className="h-12 border-b border-border px-4 flex items-center justify-between bg-card/50">
         <div className="flex items-center gap-4">
           <h2 className="font-medium text-sm">Preview</h2>
@@ -258,11 +543,43 @@ export function PreviewPanel() {
         <div className="flex items-center gap-1">
           {viewMode === "preview" && (
             <>
+              {/* Format selector */}
+              <select
+                className="h-7 text-xs rounded border border-border bg-background px-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                value={pageFormat}
+                onChange={(e) => setPageFormat(e.target.value as PageFormat)}
+              >
+                <option value="a4">A4</option>
+                <option value="letter">Letter</option>
+              </select>
+
+              <div className="w-px h-4 bg-border mx-0.5" />
+
+              {/* Layout toggle */}
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => setZoom(Math.max(50, zoom - 10))}
+                onClick={() =>
+                  setPreviewLayout((l) => (l === "scroll" ? "grid" : "scroll"))
+                }
+                title={previewLayout === "scroll" ? "Grid view" : "Scroll view"}
+              >
+                {previewLayout === "scroll" ? (
+                  <LayoutGrid className="h-4 w-4" />
+                ) : (
+                  <Rows3 className="h-4 w-4" />
+                )}
+              </Button>
+
+              <div className="w-px h-4 bg-border mx-0.5" />
+
+              {/* Zoom */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setZoom(Math.max(30, zoom - 10))}
               >
                 <ZoomOut className="h-4 w-4" />
               </Button>
@@ -277,6 +594,15 @@ export function PreviewPanel() {
               >
                 <ZoomIn className="h-4 w-4" />
               </Button>
+
+              {pageCount > 0 && (
+                <>
+                  <div className="w-px h-4 bg-border mx-0.5" />
+                  <span className="text-xs text-muted-foreground">
+                    {pageCount} pg
+                  </span>
+                </>
+              )}
             </>
           )}
           <div className="w-px h-4 bg-border mx-1" />
@@ -311,48 +637,141 @@ export function PreviewPanel() {
         </div>
       </div>
 
-      {/* Content */}
-      <ScrollArea className="flex-1">
-        <div className="p-4">
-          {viewMode === "preview" && (isGenerating || isImportingLinkedIn) && (
-            <Card
-              className="bg-white shadow-lg mx-auto overflow-hidden"
-              style={{
-                width: `${(8.5 * zoom) / 100}in`,
-                minHeight: `${(11 * zoom) / 100}in`,
-                transform: `scale(${zoom / 100})`,
-                transformOrigin: "top center",
-              }}
-            >
-              <GeneratingSkeleton
-                palette={palette}
-                message={
-                  isImportingLinkedIn ? "Importing from LinkedIn…" : undefined
-                }
-              />
-            </Card>
-          )}
+      {/* Hidden measurement container – renders content at full page width off-screen */}
+      <div
+        ref={measureRef}
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          left: "-99999px",
+          top: 0,
+          width: `${fmt.widthMm}mm`,
+          visibility: "hidden",
+          pointerEvents: "none",
+        }}
+      >
+        <CVPreviewContent
+          data={displayData}
+          palette={palette}
+          templateId={selectedTemplateId}
+          layoutId={selectedLayoutId}
+          templateStyles={templateStyles}
+        />
+      </div>
 
-          {viewMode === "preview" && !isGenerating && !isImportingLinkedIn && (
-            <Card
-              className="bg-white shadow-lg mx-auto overflow-hidden"
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto" ref={scrollContainerRef}>
+        <div
+          className="p-6"
+          style={{
+            background:
+              viewMode === "preview"
+                ? "repeating-conic-gradient(#80808015 0% 25%, transparent 0% 50%) 0 0 / 20px 20px"
+                : undefined,
+          }}
+        >
+          {/* ── PREVIEW: Generating / importing skeleton ── */}
+          {viewMode === "preview" && (isGenerating || isImportingLinkedIn) && (
+            <div
+              className="mx-auto flex flex-col items-center gap-6"
               style={{
-                width: `${(8.5 * zoom) / 100}in`,
-                minHeight: `${(11 * zoom) / 100}in`,
-                transform: `scale(${zoom / 100})`,
-                transformOrigin: "top center",
+                width: `${pageWidthPx * gridScale + 4}px`,
               }}
             >
-              <div ref={previewRef} style={{ color: palette.primary }}>
-                <CVPreviewContent
-                  data={displayData}
+              {/* Single skeleton page */}
+              <div
+                className="bg-white shadow-[0_2px_8px_rgba(0,0,0,0.12),0_0_0_1px_rgba(0,0,0,0.05)] overflow-hidden relative"
+                style={{
+                  width: `${pageWidthPx}px`,
+                  height: `${pageHeightPx}px`,
+                  transform: `scale(${gridScale})`,
+                  transformOrigin: "top left",
+                }}
+              >
+                <GeneratingSkeleton
                   palette={palette}
-                  templateId={selectedTemplateId}
-                  layoutId={selectedLayoutId}
-                  templateStyles={templateStyles}
+                  message={
+                    isImportingLinkedIn ? "Importing from LinkedIn…" : undefined
+                  }
                 />
               </div>
-            </Card>
+            </div>
+          )}
+
+          {/* ── PREVIEW: Paginated pages ── */}
+          {viewMode === "preview" && !isGenerating && !isImportingLinkedIn && (
+            <div
+              className={cn(
+                "mx-auto",
+                previewLayout === "grid"
+                  ? "flex flex-wrap justify-center gap-6"
+                  : "flex flex-col items-center gap-4",
+              )}
+            >
+              {pages.map((pageIdx) => {
+                const scale = gridScale;
+                const marginTopPx = mmToPx(PAGE_MARGIN_TOP);
+                const marginBottomPx = mmToPx(PAGE_MARGIN_BOTTOM);
+
+                return (
+                  <div
+                    key={pageIdx}
+                    className="relative"
+                    style={{
+                      width: `${pageWidthPx * scale}px`,
+                      height: `${pageHeightPx * scale}px`,
+                    }}
+                  >
+                    {/* Scaled page */}
+                    <div
+                      className="absolute top-0 left-0 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.12),0_0_0_1px_rgba(0,0,0,0.05)] overflow-hidden"
+                      style={{
+                        width: `${pageWidthPx}px`,
+                        height: `${pageHeightPx}px`,
+                        transform: `scale(${scale})`,
+                        transformOrigin: "top left",
+                        paddingTop: `${marginTopPx}px`,
+                        paddingBottom: `${marginBottomPx}px`,
+                        boxSizing: "border-box",
+                      }}
+                    >
+                      {/* Content area – clips to safe zone between margins */}
+                      <div
+                        style={{
+                          height: `${contentHeightPx}px`,
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div
+                          style={{
+                            marginTop: `-${pageIdx * contentHeightPx}px`,
+                          }}
+                        >
+                          <CVPreviewContent
+                            data={displayData}
+                            palette={palette}
+                            templateId={selectedTemplateId}
+                            layoutId={selectedLayoutId}
+                            templateStyles={templateStyles}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Page number label */}
+                    <span
+                      className="absolute bottom-1 right-2 text-[10px] text-muted-foreground/60 select-none"
+                      style={{
+                        transform: `scale(${1 / scale})`,
+                        transformOrigin: "bottom right",
+                      }}
+                    >
+                      {pageIdx + 1} / {pageCount}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           )}
 
           {viewMode === "json" && (
@@ -371,7 +790,7 @@ export function PreviewPanel() {
             </Card>
           )}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }
@@ -1293,24 +1712,11 @@ function CVHeader({
   templateId: string;
 }) {
   const isCreative = templateId === "creative";
-  const hasHeaderBg =
-    templateId === "modern" ||
-    templateId === "creative" ||
-    templateId === "tech";
 
   return (
     <header
       className={cn("transition-all", templateStyles.headerStyle)}
-      style={{
-        ...(hasHeaderBg
-          ? {
-              backgroundColor: palette.primary,
-              color: "#ffffff",
-              padding: "24px 32px",
-              margin: "-1px -1px 0 -1px",
-            }
-          : { padding: "0" }),
-      }}
+      style={{ padding: "0" }}
     >
       {data.personalInfo.name ? (
         <>
@@ -1320,7 +1726,7 @@ function CVHeader({
               templateStyles.headerFont,
               isCreative ? "text-4xl" : "text-3xl",
             )}
-            style={{ color: hasHeaderBg ? "#ffffff" : palette.primary }}
+            style={{ color: palette.primary }}
           >
             {data.personalInfo.name}
           </h1>
@@ -1328,7 +1734,7 @@ function CVHeader({
             <p
               className="text-base mt-0.5"
               style={{
-                color: hasHeaderBg ? `rgba(255,255,255,0.8)` : palette.accent,
+                color: palette.accent,
               }}
             >
               {data.personalInfo.title}
@@ -1349,7 +1755,7 @@ function CVHeader({
         <div
           className="mt-2 flex items-center flex-wrap gap-3 text-sm"
           style={{
-            color: hasHeaderBg ? "rgba(255,255,255,0.7)" : palette.secondary,
+            color: palette.secondary,
             justifyContent:
               templateStyles.headerLayout === "center"
                 ? "center"
@@ -1388,7 +1794,7 @@ function CVHeader({
         <div
           className="mt-1 flex items-center flex-wrap gap-3 text-sm"
           style={{
-            color: hasHeaderBg ? "rgba(255,255,255,0.6)" : palette.secondary,
+            color: palette.secondary,
             justifyContent:
               templateStyles.headerLayout === "center"
                 ? "center"
@@ -1399,7 +1805,7 @@ function CVHeader({
             <a
               href={`https://${data.personalInfo.linkedin}`}
               className="hover:underline"
-              style={{ color: hasHeaderBg ? "#ffffff" : palette.accent }}
+              style={{ color: palette.accent }}
             >
               LinkedIn
             </a>
@@ -1408,7 +1814,7 @@ function CVHeader({
             <a
               href={`https://${data.personalInfo.github}`}
               className="hover:underline"
-              style={{ color: hasHeaderBg ? "#ffffff" : palette.accent }}
+              style={{ color: palette.accent }}
             >
               GitHub
             </a>
@@ -1417,7 +1823,7 @@ function CVHeader({
             <a
               href={data.personalInfo.website}
               className="hover:underline"
-              style={{ color: hasHeaderBg ? "#ffffff" : palette.accent }}
+              style={{ color: palette.accent }}
             >
               Website
             </a>
@@ -1426,7 +1832,7 @@ function CVHeader({
             <a
               href={data.personalInfo.portfolio}
               className="hover:underline"
-              style={{ color: hasHeaderBg ? "#ffffff" : palette.accent }}
+              style={{ color: palette.accent }}
             >
               Portfolio
             </a>
