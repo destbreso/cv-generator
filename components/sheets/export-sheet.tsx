@@ -68,19 +68,11 @@ export function ExportSheet() {
   };
 
   const exportHTML = () => {
-    const html = generateHTML(displayData);
-    const blob = new Blob([html], { type: "text/html" });
-    downloadBlob(blob, `${filename}.html`);
+    window.dispatchEvent(new CustomEvent("cv-export-html", { detail: { filename } }));
   };
 
   const exportPDF = () => {
-    const html = generateHTML(displayData);
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
-
-    printWindow.document.write(html);
-    printWindow.document.close();
-    setTimeout(() => printWindow.print(), 250);
+    window.dispatchEvent(new CustomEvent("cv-export-pdf"));
   };
 
   const exportMarkdown = () => {

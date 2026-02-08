@@ -413,12 +413,15 @@ export function PreviewPanel() {
 
       body {
         font-family: ${bodyFont};
-        line-height: 1.6;
+        line-height: 1.5;
         color: ${p.primary};
         background: #ffffff;
+        width: ${pageW};
+        margin: 0 auto;
       }
 
       .cv-root {
+        width: ${pageW};
         max-width: ${pageW};
         margin: 0 auto;
         background: #ffffff;
@@ -481,14 +484,18 @@ export function PreviewPanel() {
       .skeleton { display: none !important; }
       .animate-pulse { animation: none !important; }
 
-      section { margin-bottom: 1.25rem; break-inside: avoid; }
-      header { break-inside: avoid; }
+      section { margin-bottom: 1.25rem; }
+      .space-y-6 > * + * { margin-top: 1.5rem; }
       .space-y-5 > * + * { margin-top: 1.25rem; }
       .space-y-4 > * + * { margin-top: 1rem; }
       .space-y-3 > * + * { margin-top: 0.75rem; }
       .space-y-2 > * + * { margin-top: 0.5rem; }
       .space-y-1 > * + * { margin-top: 0.25rem; }
       .space-y-1\\.5 > * + * { margin-top: 0.375rem; }
+      .space-y-0\\.5 > * + * { margin-top: 0.125rem; }
+
+      .text-center { text-align: center; }
+      .text-left { text-align: left; }
 
       .flex { display: flex; }
       .flex-1 { flex: 1 1 0%; }
@@ -520,9 +527,11 @@ export function PreviewPanel() {
       .px-2\\.5 { padding-left: 0.625rem; padding-right: 0.625rem; }
       .py-0\\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
       .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+      .mt-0\\.5 { margin-top: 0.125rem; }
       .mt-1 { margin-top: 0.25rem; }
       .mt-2 { margin-top: 0.5rem; }
       .mt-6 { margin-top: 1.5rem; }
+      .ml-1 { margin-left: 0.25rem; }
       .mb-1 { margin-bottom: 0.25rem; }
       .mb-2 { margin-bottom: 0.5rem; }
       .mb-3 { margin-bottom: 0.75rem; }
@@ -530,6 +539,7 @@ export function PreviewPanel() {
       .min-h-full { min-height: 100%; }
       .min-w-\\[100px\\] { min-width: 100px; }
       .min-w-\\[120px\\] { min-width: 120px; }
+      .min-w-\\[220px\\] { min-width: 220px; }
       .w-full { width: 100%; }
 
       .border { border: 1px solid ${p.secondary}30; }
@@ -582,16 +592,17 @@ export function PreviewPanel() {
           print-color-adjust: exact !important;
           color-adjust: exact !important;
         }
-        body { background: white; margin: 0; }
-        @page { margin: ${PAGE_MARGIN_TOP}mm ${PAGE_MARGIN_SIDE || 10}mm ${PAGE_MARGIN_BOTTOM}mm; size: ${pageSizeCss}; }
+        body { background: white; margin: 0; padding: 0; }
+        @page { margin: 8mm 0 8mm 0; size: ${pageSizeCss}; }
         .cv-root { max-width: 100%; box-shadow: none; }
       }
     `;
   };
 
-  const buildFullHTML = (innerHtml: string) => {
-    const name = displayData.personalInfo.name || "Untitled";
-    return `<!DOCTYPE html>
+  const buildFullHTML = useCallback(
+    (innerHtml: string) => {
+      const name = displayData.personalInfo.name || "Untitled";
+      return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -603,9 +614,12 @@ export function PreviewPanel() {
   <div class="cv-root">${innerHtml}</div>
 </body>
 </html>`;
-  };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [displayData.personalInfo.name, palette, templateStyles, fmt],
+  );
 
-  const handleExportPDF = () => {
+  const handleExportPDF = useCallback(() => {
     if (!measureRef.current) return;
     const html = measureRef.current.innerHTML;
     const printWindow = window.open("", "_blank");
@@ -613,19 +627,40 @@ export function PreviewPanel() {
     printWindow.document.write(buildFullHTML(html));
     printWindow.document.close();
     setTimeout(() => printWindow.print(), 300);
-  };
+  }, [buildFullHTML]);
 
-  const handleExportHTML = () => {
-    const html = measureRef.current?.innerHTML || "";
-    const fullHTML = buildFullHTML(html);
-    const blob = new Blob([fullHTML], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `cv-${(displayData.personalInfo.name || "untitled").replace(/\s+/g, "-").toLowerCase()}-${Date.now()}.html`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
+  const handleExportHTML = useCallback(
+    (customFilename?: string) => {
+      const html = measureRef.current?.innerHTML || "";
+      const fullHTML = buildFullHTML(html);
+      const blob = new Blob([fullHTML], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const name =
+        customFilename ||
+        `cv-${(displayData.personalInfo.name || "untitled").replace(/\s+/g, "-").toLowerCase()}-${Date.now()}`;
+      link.download = `${name}.html`;
+      link.click();
+      URL.revokeObjectURL(url);
+    },
+    [buildFullHTML, displayData.personalInfo.name],
+  );
+
+  // Listen for export events from ExportSheet
+  useEffect(() => {
+    const onExportPDF = () => handleExportPDF();
+    const onExportHTML = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      handleExportHTML(detail?.filename);
+    };
+    window.addEventListener("cv-export-pdf", onExportPDF);
+    window.addEventListener("cv-export-html", onExportHTML);
+    return () => {
+      window.removeEventListener("cv-export-pdf", onExportPDF);
+      window.removeEventListener("cv-export-html", onExportHTML);
+    };
+  }, [handleExportPDF, handleExportHTML]);
 
   /* ── Page array for rendering ── */
   const pages = useMemo(
@@ -746,7 +781,7 @@ export function PreviewPanel() {
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={handleExportHTML}
+            onClick={() => handleExportHTML()}
           >
             <Download className="h-4 w-4" />
           </Button>
@@ -754,7 +789,7 @@ export function PreviewPanel() {
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={handleExportPDF}
+            onClick={() => handleExportPDF()}
           >
             <Printer className="h-4 w-4" />
           </Button>
