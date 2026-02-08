@@ -1472,7 +1472,7 @@ function MainContent({
                     {exp.description}
                   </p>
                 )}
-                {exp.achievements.length > 0 && (
+                {exp.achievements?.length > 0 && (
                   <ul
                     className="mt-2 list-disc list-inside text-sm space-y-1"
                     style={{ color: palette.secondary }}
@@ -2110,7 +2110,7 @@ function CVPreviewContent({
                           {exp.description}
                         </p>
                       )}
-                      {exp.achievements.length > 0 && (
+                      {exp.achievements?.length > 0 && (
                         <ul
                           className="mt-1 list-disc list-inside text-xs space-y-0.5"
                           style={{ color: palette.secondary }}
