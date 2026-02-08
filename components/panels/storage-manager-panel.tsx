@@ -117,11 +117,15 @@ export function StorageManagerPanel() {
   const handleDeleteKey = (key: string) => {
     deleteStorageKey(key);
     refresh();
+    // Reload app state so in-memory data reflects the deletion
+    loadFromStorage();
   };
 
   const handleDeleteSelected = () => {
     selectedKeys.forEach((key) => deleteStorageKey(key));
     refresh();
+    // Reload app state so in-memory data reflects the deletion
+    loadFromStorage();
   };
 
   const handleClearAll = () => {
