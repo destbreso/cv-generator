@@ -1,12 +1,14 @@
 export interface CVData {
   personalInfo: {
     name: string
+    title?: string
     email: string
     phone: string
     location: string
     website?: string
     linkedin?: string
     github?: string
+    portfolio?: string
   }
   summary: string
   experience: Array<{
@@ -32,6 +34,11 @@ export interface CVData {
     category: string
     items: string[]
   }>
+  languages: Array<{
+    id: string
+    language: string
+    proficiency: 'native' | 'fluent' | 'advanced' | 'intermediate' | 'basic'
+  }>
   projects: Array<{
     id: string
     name: string
@@ -46,6 +53,30 @@ export interface CVData {
     date: string
     url?: string
   }>
+  publications: Array<{
+    id: string
+    title: string
+    publisher: string
+    date: string
+    url?: string
+    description?: string
+  }>
+  volunteerWork: Array<{
+    id: string
+    organization: string
+    role: string
+    startDate: string
+    endDate: string
+    description: string
+  }>
+  awards: Array<{
+    id: string
+    title: string
+    issuer: string
+    date: string
+    description?: string
+  }>
+  interests: string[]
 }
 
 export interface CVTemplate {
@@ -106,4 +137,11 @@ export interface TemplateCustomization {
     section: number
     item: number
   }
+}
+
+export interface CVLayout {
+  id: string
+  name: string
+  description: string
+  structure: "single" | "sidebar-left" | "sidebar-right" | "split"
 }

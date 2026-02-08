@@ -2,11 +2,13 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
-@custom-variant pastel (&:is(.pastel *));
+@custom-variant modern (&:is(.modern *));
 
+/* ═══════════════════════════════════════════════════════════════
+   THEME: Console Light
+   Terminal-inspired light mode — warm cream bg, green monospace
+   ═══════════════════════════════════════════════════════════════ */
 :root {
-  /* Terminal-inspired light mode with softer, warmer colors */
-  /* Cream/beige background instead of pure white for reduced eye strain */
   --background: oklch(0.96 0.01 85);
   --foreground: oklch(0.25 0.08 142);
   --card: oklch(0.98 0.008 85);
@@ -40,10 +42,14 @@
   --sidebar-accent-foreground: oklch(0.25 0.08 142);
   --sidebar-border: oklch(0.8 0.02 142);
   --sidebar-ring: oklch(0.35 0.12 142);
+  --theme-font: var(--font-mono);
 }
 
-.dark {
-  /* Terminal/Bash color scheme - pure black background with classic terminal green */
+/* ═══════════════════════════════════════════════════════════════
+   THEME: Console Dark
+   Terminal black background, bright green text, hacker aesthetic
+   ═══════════════════════════════════════════════════════════════ */
+html.dark {
   --background: oklch(0.1 0 0);
   --foreground: oklch(0.85 0.12 142);
   --card: oklch(0.15 0 0);
@@ -68,6 +74,7 @@
   --chart-3: oklch(0.65 0.18 200);
   --chart-4: oklch(0.7 0.2 300);
   --chart-5: oklch(0.6 0.18 30);
+  --radius: 0.25rem;
   --sidebar: oklch(0.12 0 0);
   --sidebar-foreground: oklch(0.85 0.12 142);
   --sidebar-primary: oklch(0.85 0.12 142);
@@ -76,48 +83,52 @@
   --sidebar-accent-foreground: oklch(0.85 0.12 142);
   --sidebar-border: oklch(0.25 0.08 142);
   --sidebar-ring: oklch(0.85 0.12 142);
+  --theme-font: var(--font-mono);
 }
 
-/* Added new pastel minimalist theme with soft colors and rounded corners */
-.pastel {
-  /* Pastel Minimalist theme - soft, clean, modern with gentle colors */
-  --background: oklch(0.98 0.01 270); /* Soft lavender-tinted white */
-  --foreground: oklch(0.3 0.04 260); /* Deep purple-gray for text */
-  --card: oklch(0.99 0.008 280); /* Almost white with slight purple tint */
-  --card-foreground: oklch(0.3 0.04 260);
-  --popover: oklch(0.99 0.008 280);
-  --popover-foreground: oklch(0.3 0.04 260);
-  --primary: oklch(0.7 0.12 280); /* Soft purple */
-  --primary-foreground: oklch(0.99 0.008 280);
-  --secondary: oklch(0.92 0.04 200); /* Soft blue */
-  --secondary-foreground: oklch(0.3 0.04 260);
-  --muted: oklch(0.94 0.02 270); /* Very light lavender */
-  --muted-foreground: oklch(0.5 0.03 260); /* Medium purple-gray */
-  --accent: oklch(0.8 0.1 340); /* Soft pink */
-  --accent-foreground: oklch(0.3 0.04 260);
-  --destructive: oklch(0.65 0.15 15); /* Soft coral red */
-  --destructive-foreground: oklch(0.99 0.008 280);
-  --border: oklch(0.88 0.03 270); /* Soft lavender border */
-  --input: oklch(0.96 0.015 270); /* Light lavender input */
-  --ring: oklch(0.7 0.12 280); /* Purple focus ring */
-  --chart-1: oklch(0.7 0.12 280); /* Soft purple */
-  --chart-2: oklch(0.75 0.1 200); /* Soft blue */
-  --chart-3: oklch(0.8 0.1 340); /* Soft pink */
-  --chart-4: oklch(0.75 0.1 160); /* Soft mint */
-  --chart-5: oklch(0.78 0.1 60); /* Soft peach */
-  --radius: 1rem; /* Larger radius for softer, more rounded appearance */
-  --sidebar: oklch(0.96 0.015 270);
-  --sidebar-foreground: oklch(0.3 0.04 260);
-  --sidebar-primary: oklch(0.7 0.12 280);
-  --sidebar-primary-foreground: oklch(0.99 0.008 280);
-  --sidebar-accent: oklch(0.92 0.04 200);
-  --sidebar-accent-foreground: oklch(0.3 0.04 260);
-  --sidebar-border: oklch(0.88 0.03 270);
-  --sidebar-ring: oklch(0.7 0.12 280);
+/* ═══════════════════════════════════════════════════════════════
+   THEME: Modern
+   Clean, professional, sans-serif. Neutral slate palette with
+   a blue accent — feels like a polished SaaS product.
+   ═══════════════════════════════════════════════════════════════ */
+html.modern {
+  --background: oklch(0.985 0.002 265);
+  --foreground: oklch(0.22 0.02 265);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.02 265);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.02 265);
+  --primary: oklch(0.55 0.18 260);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.95 0.005 265);
+  --secondary-foreground: oklch(0.35 0.02 265);
+  --muted: oklch(0.94 0.005 265);
+  --muted-foreground: oklch(0.5 0.015 265);
+  --accent: oklch(0.92 0.01 265);
+  --accent-foreground: oklch(0.22 0.02 265);
+  --destructive: oklch(0.55 0.2 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.9 0.005 265);
+  --input: oklch(0.965 0.003 265);
+  --ring: oklch(0.55 0.18 260);
+  --chart-1: oklch(0.55 0.18 260);
+  --chart-2: oklch(0.65 0.15 170);
+  --chart-3: oklch(0.6 0.16 310);
+  --chart-4: oklch(0.7 0.14 60);
+  --chart-5: oklch(0.55 0.15 20);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.975 0.003 265);
+  --sidebar-foreground: oklch(0.22 0.02 265);
+  --sidebar-primary: oklch(0.55 0.18 260);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.95 0.005 265);
+  --sidebar-accent-foreground: oklch(0.22 0.02 265);
+  --sidebar-border: oklch(0.9 0.005 265);
+  --sidebar-ring: oklch(0.55 0.18 260);
+  --theme-font: var(--font-sans);
 }
 
 @theme inline {
-  /* Use different fonts based on theme - monospace for terminal, sans-serif for pastel */
   --font-sans: "Geist", "Geist Fallback";
   --font-mono: "Geist Mono", "Geist Mono Fallback";
   --color-background: var(--background);
@@ -164,20 +175,11 @@
   }
   body {
     @apply bg-background text-foreground transition-colors duration-300;
-  }
-
-  /* Apply monospace font only for terminal themes */
-  :root:not(.pastel) body {
-    font-family: var(--font-mono);
-  }
-
-  /* Apply sans-serif font for pastel theme */
-  .pastel body {
-    font-family: var(--font-sans);
+    font-family: var(--theme-font);
   }
 }
 
-/* Terminal-style text selection */
+/* Text selection — console themes (green tint) */
 ::selection {
   background: oklch(0.85 0.12 142 / 0.3);
   color: oklch(0.95 0 0);
@@ -188,10 +190,10 @@
   color: oklch(0.95 0 0);
 }
 
-/* Pastel theme text selection with soft purple */
-.pastel ::selection {
-  background: oklch(0.7 0.12 280 / 0.3);
-  color: oklch(0.3 0.04 260);
+/* Text selection — modern theme (blue tint) */
+.modern ::selection {
+  background: oklch(0.55 0.18 260 / 0.25);
+  color: oklch(0.15 0.02 265);
 }
 
 /* Terminal-style scrollbar */
@@ -209,8 +211,8 @@
   border-radius: 2px;
 }
 
-/* Rounded scrollbar for pastel theme */
-.pastel ::-webkit-scrollbar-thumb {
+/* Rounded scrollbar for modern theme */
+.modern ::-webkit-scrollbar-thumb {
   border-radius: 6px;
 }
 
@@ -261,7 +263,7 @@
   animation: slideIn 0.3s ease-out;
 }
 
-/* Add smooth fade animation for pastel theme */
+/* Smooth fade animation for modern theme */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -273,6 +275,13 @@
   }
 }
 
-.pastel .animate-slide-in {
+.modern .animate-slide-in {
   animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Shimmer animation for skeleton loading */
+@keyframes shimmer {
+  100% {
+    transform: translateX(200%);
+  }
 }

@@ -1,95 +1,12 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import type { CVData, CVTemplate } from "@/lib/types"
-import { TerminalHeader } from "@/components/terminal-header"
-import { CVEditor } from "@/components/cv-editor"
-import { TemplateGallery } from "@/components/template-gallery"
-import { CVPreview } from "@/components/cv-preview"
-import { LLMConfigPanel } from "@/components/llm-config"
-import { CVGenerator } from "@/components/cv-generator"
-import { VersionHistory } from "@/components/version-history"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Sparkles, History, Settings, FileText } from "lucide-react"
-import { loadTemplates } from "@/lib/storage"
+import { CVStoreProvider } from "@/lib/cv-store";
+import { MainLayout } from "@/components/layout/main-layout";
 
 export default function Home() {
-  const [cvData, setCVData] = useState<CVData | null>(null)
-  const [selectedTemplate, setSelectedTemplate] = useState<CVTemplate>(loadTemplates()[0])
-  const [generatedContent, setGeneratedContent] = useState<string>("")
-  const [generatedCVData, setGeneratedCVData] = useState<CVData | null>(null)
-  const [activeTab, setActiveTab] = useState("editor")
-
-  const handleLoadIteration = (data: CVData) => {
-    setCVData(data)
-    setActiveTab("editor")
-  }
-
   return (
-    <div className="min-h-screen bg-background">
-      <TerminalHeader />
-
-      <main className="container mx-auto px-4 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-muted">
-            <TabsTrigger value="editor" className="gap-2">
-              <FileText className="h-4 w-4" />
-              Editor
-            </TabsTrigger>
-            <TabsTrigger value="templates" className="gap-2">
-              <Settings className="h-4 w-4" />
-              Templates
-            </TabsTrigger>
-            <TabsTrigger value="generate" className="gap-2">
-              <Sparkles className="h-4 w-4" />
-              Generate
-            </TabsTrigger>
-            <TabsTrigger value="history" className="gap-2">
-              <History className="h-4 w-4" />
-              History
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="editor" className="space-y-6">
-            <CVEditor onDataChange={setCVData} initialData={cvData} />
-          </TabsContent>
-
-          <TabsContent value="templates">
-            <TemplateGallery onTemplateSelect={setSelectedTemplate} />
-          </TabsContent>
-
-          <TabsContent value="generate" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-6">
-                <LLMConfigPanel />
-                {cvData && (
-                  <CVGenerator
-                    cvData={cvData}
-                    templateId={selectedTemplate.id}
-                    onGenerated={(content, cvData) => {
-                      setGeneratedContent(content)
-                      setGeneratedCVData(cvData || null)
-                    }}
-                  />
-                )}
-              </div>
-              <div>
-                {cvData && generatedContent && (
-                  <CVPreview
-                    cvData={generatedCVData || cvData}
-                    template={selectedTemplate}
-                    generatedContent={generatedContent}
-                  />
-                )}
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="history">
-            <VersionHistory onLoadIteration={handleLoadIteration} />
-          </TabsContent>
-        </Tabs>
-      </main>
-    </div>
-  )
+    <CVStoreProvider>
+      <MainLayout />
+    </CVStoreProvider>
+  );
 }
