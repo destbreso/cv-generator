@@ -15,7 +15,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Tooltip,
   TooltipContent,
@@ -290,7 +289,7 @@ export function MainLayout({ className }: MainLayoutProps) {
                     payload: v as typeof panels.activePanel,
                   })
                 }
-                className="flex-1 flex flex-col"
+                className="flex-1 flex flex-col min-h-0"
               >
                 <div className="border-b border-border px-2">
                   <TabsList className="h-11 bg-transparent p-0 gap-1">
@@ -334,20 +333,20 @@ export function MainLayout({ className }: MainLayoutProps) {
                   </TabsList>
                 </div>
 
-                <ScrollArea className="flex-1">
-                  <TabsContent value="editor" className="m-0 p-4 h-full">
+                <div className="flex-1 overflow-y-auto">
+                  <TabsContent value="editor" className="m-0 p-4">
                     <CVEditorPanel />
                   </TabsContent>
-                  <TabsContent value="templates" className="m-0 p-4 h-full">
+                  <TabsContent value="templates" className="m-0 p-4">
                     <TemplatePanel />
                   </TabsContent>
-                  <TabsContent value="history" className="m-0 p-4 h-full">
+                  <TabsContent value="history" className="m-0 p-4">
                     <GeneratePanel />
                   </TabsContent>
-                  <TabsContent value="export" className="m-0 p-4 h-full">
+                  <TabsContent value="export" className="m-0 p-4">
                     <HistoryPanel />
                   </TabsContent>
-                </ScrollArea>
+                </div>
               </Tabs>
             </ResizablePanel>
 
