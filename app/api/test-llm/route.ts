@@ -4,12 +4,12 @@ export async function POST(request: NextRequest) {
   try {
     const { endpoint, model, apiKey } = await request.json()
 
-    console.log("[v0] Testing LLM connection:", { endpoint, model })
+    console.log("[cv-gen] Testing LLM connection:", { endpoint, model })
 
     const baseUrl = endpoint.replace(/\/api\/.*$/, "")
     const healthEndpoint = `${baseUrl}/api/tags`
 
-    console.log("[v0] Checking Ollama health at:", healthEndpoint)
+    console.log("[cv-gen] Checking Ollama health at:", healthEndpoint)
 
     try {
       const healthResponse = await fetch(healthEndpoint, {
@@ -20,11 +20,11 @@ export async function POST(request: NextRequest) {
         signal: AbortSignal.timeout(5000),
       })
 
-      console.log("[v0] Health check response status:", healthResponse.status)
+      console.log("[cv-gen] Health check response status:", healthResponse.status)
 
       if (!healthResponse.ok) {
         const errorText = await healthResponse.text()
-        console.error("[v0] Health check failed:", errorText)
+        console.error("[cv-gen] Health check failed:", errorText)
         return NextResponse.json(
           {
             success: false,
@@ -36,11 +36,11 @@ export async function POST(request: NextRequest) {
 
       const healthData = await healthResponse.json()
       console.log(
-        "[v0] Available models:",
+        "[cv-gen] Available models:",
         healthData.models?.map((m: any) => m.name),
       )
 
-      console.log("[v0] Testing generation with model:", model)
+      console.log("[cv-gen] Testing generation with model:", model)
 
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -61,11 +61,11 @@ export async function POST(request: NextRequest) {
         signal: AbortSignal.timeout(15000),
       })
 
-      console.log("[v0] Generation response status:", genResponse.status)
+      console.log("[cv-gen] Generation response status:", genResponse.status)
 
       if (genResponse.ok) {
         const data = await genResponse.json()
-        console.log("[v0] Generation successful")
+        console.log("[cv-gen] Generation successful")
         return NextResponse.json({
           success: true,
           message: "Connection successful - Ollama is responding",
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
         })
       } else {
         const errorText = await genResponse.text()
-        console.error("[v0] Generation failed:", errorText)
+        console.error("[cv-gen] Generation failed:", errorText)
         return NextResponse.json(
           {
             success: false,
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
         )
       }
     } catch (fetchError: any) {
-      console.error("[v0] Fetch error:", fetchError)
+      console.error("[cv-gen] Fetch error:", fetchError)
 
       if (fetchError.name === "TimeoutError" || fetchError.name === "AbortError") {
         return NextResponse.json(
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       throw fetchError
     }
   } catch (error: any) {
-    console.error("[v0] LLM test error:", error)
+    console.error("[cv-gen] LLM test error:", error)
     return NextResponse.json(
       {
         success: false,

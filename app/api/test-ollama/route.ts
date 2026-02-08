@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     const cleanBaseUrl = baseUrl.replace(/\/+$/, "").replace(/\/api.*$/, "")
     const healthEndpoint = `${cleanBaseUrl}/api/tags`
 
-    console.log("[v0] Testing Ollama connection at:", healthEndpoint)
+    console.log("[cv-gen] Testing Ollama connection at:", healthEndpoint)
 
     const response = await fetch(healthEndpoint, {
       method: "GET",
@@ -28,11 +28,11 @@ export async function POST(request: NextRequest) {
       signal: AbortSignal.timeout(5000),
     })
 
-    console.log("[v0] Ollama response status:", response.status)
+    console.log("[cv-gen] Ollama response status:", response.status)
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error("[v0] Ollama connection failed:", errorText)
+      console.error("[cv-gen] Ollama connection failed:", errorText)
       return NextResponse.json(
         {
           success: false,
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     const data = await response.json()
     const modelCount = data.models?.length || 0
 
-    console.log("[v0] Ollama is alive! Found", modelCount, "models")
+    console.log("[cv-gen] Ollama is alive! Found", modelCount, "models")
 
     return NextResponse.json({
       success: true,
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       modelCount,
     })
   } catch (error: any) {
-    console.error("[v0] Ollama test error:", error)
+    console.error("[cv-gen] Ollama test error:", error)
 
     if (error.name === "TimeoutError" || error.name === "AbortError") {
       return NextResponse.json(

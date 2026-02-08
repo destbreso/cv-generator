@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     const cleanBaseUrl = baseUrl.replace(/\/+$/, "").replace(/\/api.*$/, "")
     const modelsEndpoint = `${cleanBaseUrl}/api/tags`
 
-    console.log("[v0] Fetching models from:", modelsEndpoint)
+    console.log("[cv-gen] Fetching models from:", modelsEndpoint)
 
     const response = await fetch(modelsEndpoint, {
       method: "GET",
@@ -28,14 +28,14 @@ export async function POST(request: NextRequest) {
       signal: AbortSignal.timeout(5000),
     })
 
-    console.log("[v0] Models response status:", response.status)
+    console.log("[cv-gen] Models response status:", response.status)
 
     if (response.ok) {
       const data = await response.json()
       const models = data.models || []
 
       console.log(
-        "[v0] Found models:",
+        "[cv-gen] Found models:",
         models.map((m: any) => m.name),
       )
 
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       })
     } else {
       const errorText = await response.text()
-      console.error("[v0] Failed to fetch models:", errorText)
+      console.error("[cv-gen] Failed to fetch models:", errorText)
       return NextResponse.json(
         {
           success: false,
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       )
     }
   } catch (error: any) {
-    console.error("[v0] List models error:", error)
+    console.error("[cv-gen] List models error:", error)
 
     if (error.name === "TimeoutError" || error.name === "AbortError") {
       return NextResponse.json(

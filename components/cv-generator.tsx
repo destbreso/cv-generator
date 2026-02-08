@@ -100,10 +100,10 @@ export function CVGenerator({ cvData, templateId, onGenerated }: CVGeneratorProp
         // Validate it has the expected structure
         if (parsed.personalInfo && parsed.summary && parsed.experience) {
           generatedCVData = parsed as CVData
-          console.log("[v0] Successfully parsed generated CV data")
+          console.log("[cv-gen] Successfully parsed generated CV data")
         }
       } catch (e) {
-        console.warn("[v0] Could not parse generated content as CVData:", e)
+        console.warn("[cv-gen] Could not parse generated content as CVData:", e)
       }
 
       // Save iteration with structured data
@@ -127,7 +127,7 @@ export function CVGenerator({ cvData, templateId, onGenerated }: CVGeneratorProp
           : "Your CV has been optimized by AI",
       })
     } catch (error) {
-      console.error("[v0] Generation error:", error)
+      console.error("[cv-gen] Generation error:", error)
       toast({
         title: "> Generation failed",
         description: "Could not generate CV. Check your LLM configuration.",
