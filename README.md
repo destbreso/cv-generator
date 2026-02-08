@@ -10,6 +10,30 @@ An open-source, privacy-first CV/resume builder with AI-powered optimization. Bu
 
 ---
 
+## 💡 Why This Exists
+
+Every professional maintains the same information scattered across dozens of places: a Word document, a Google Doc "updated" version, a PDF you emailed last year, a LinkedIn profile that's slightly different, a version tailored for that one job you applied to in 2023. Every time you need a CV, you open whichever file you find first, realize it's outdated, copy-paste from another version, reformat, adjust, and inevitably lose track of what's current.
+
+**The problem isn't writing a CV. It's that you don't have a single source of truth.**
+
+Think about it: your professional history — your experience, skills, education, projects — is *one* dataset. It doesn't change depending on where you apply. What changes is *which parts you highlight* and *how you present them*. But instead of maintaining one canonical record and generating tailored views from it, we've been maintaining dozens of divergent copies. It's the same mistake as copying a database instead of querying it.
+
+### The obvious solution (once you see it)
+
+1. **One knowledge base.** You maintain a single, complete, structured record of everything: every role, every skill, every project, every certification. This is your source of truth. You update it once, and it's always current.
+
+2. **Generate, don't duplicate.** When you need a CV for a specific job, you don't copy and edit — you *generate* an optimized version from your complete data. The AI reads the job description, selects the most relevant experience, emphasizes the right skills, and adjusts the tone. The output is a tailored CV. Your source data stays untouched.
+
+3. **Templates and formatting are separate concerns.** Your content shouldn't be locked into a format. Want a minimal single-column layout today and a sidebar layout tomorrow? Switch. Want a different color palette for a creative role vs. a corporate one? Switch. The data doesn't care about the presentation.
+
+4. **AI assists, you decide.** The AI can draft, suggest, and optimize — but you always have the final word. Review every change, edit any detail, tweak the wording until it feels right. Run multiple iterations until you're satisfied. Or skip AI entirely and write everything yourself — the editor, templates, and export work perfectly without it. The tool adapts to your workflow, not the other way around.
+
+5. **Your data stays yours.** Everything lives in your browser. No accounts, no cloud sync, no vendor lock-in. Export your data as JSON anytime. If you use AI, you can run it locally with Ollama — your professional history never leaves your machine.
+
+This is what CV Generator does. It's not a "prettier resume template" — it's the workflow that makes maintaining and tailoring your CV a solved problem instead of a recurring chore.
+
+---
+
 ## ✨ Features
 
 ### 📝 Full CV Editor
