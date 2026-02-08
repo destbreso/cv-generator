@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { Terminal, Moon, Sun, Laptop, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,11 @@ const THEMES = [
 
 export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const current = THEMES.find((t) => t.id === theme) ?? THEMES[1];
   const CurrentIcon = current.icon;
@@ -63,7 +69,11 @@ export function ThemeSwitcher() {
           size="icon"
           className="h-9 w-9 hover:bg-secondary"
         >
-          <CurrentIcon className="h-4 w-4" />
+          {mounted ? (
+            <CurrentIcon className="h-4 w-4" />
+          ) : (
+            <Sun className="h-4 w-4" />
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
