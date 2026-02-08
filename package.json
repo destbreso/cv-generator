@@ -1,7 +1,23 @@
 {
   "name": "cv-generator",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "description": "AI-powered CV/resume builder with 18 templates, custom palettes, and local/cloud LLM support",
+  "license": "MIT",
+  "author": "David Estevez",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/cv-generator"
+  },
+  "keywords": [
+    "cv",
+    "resume",
+    "generator",
+    "ai",
+    "ollama",
+    "nextjs",
+    "react",
+    "tailwindcss"
+  ],
   "scripts": {
     "build": "next build",
     "dev": "next dev",

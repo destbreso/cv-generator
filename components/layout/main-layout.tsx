@@ -28,9 +28,8 @@ import {
   Sparkles,
   History,
   Settings2,
-  PanelLeftClose,
-  PanelLeft,
   Eye,
+  Database,
   EyeOff,
   Download,
   Save,
@@ -38,6 +37,7 @@ import {
   Bot,
   Zap,
   ChevronRight,
+  HelpCircle,
 } from "lucide-react";
 import { useCVStore } from "@/lib/cv-store";
 import { CVEditorPanel } from "@/components/panels/cv-editor-panel";
@@ -48,6 +48,8 @@ import { PreviewPanel } from "@/components/panels/preview-panel";
 import { AIConfigSheet } from "@/components/sheets/ai-config-sheet";
 import { ExportSheet } from "@/components/sheets/export-sheet";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { FAQPanel } from "@/components/panels/faq-panel";
+import { StorageManagerPanel } from "@/components/panels/storage-manager-panel";
 import { cn } from "@/lib/utils";
 
 interface MainLayoutProps {
@@ -95,6 +97,14 @@ export function MainLayout({ className }: MainLayoutProps) {
                 </Badge>
               )}
             </div>
+            <a
+              href="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-muted-foreground hover:text-primary transition-colors"
+            >
+              Privacy
+            </a>
           </div>
 
           <div className="flex items-center gap-2">
@@ -208,12 +218,7 @@ export function MainLayout({ className }: MainLayoutProps) {
         {/* Main Content */}
         <div className="flex-1 flex overflow-hidden">
           {/* Sidebar */}
-          <aside
-            className={cn(
-              "border-r border-border bg-card/30 transition-all duration-300 flex flex-col",
-              panels.showSidebar ? "w-14" : "w-0",
-            )}
-          >
+          <aside className="w-14 border-r border-border bg-card/30 flex flex-col">
             <nav className="flex-1 py-4 flex flex-col items-center gap-1">
               <SidebarButton
                 icon={FileText}
@@ -250,26 +255,23 @@ export function MainLayout({ className }: MainLayoutProps) {
               />
             </nav>
 
-            <div className="p-2 border-t border-border">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="w-10 h-10"
-                    onClick={() => dispatch({ type: "TOGGLE_SIDEBAR" })}
-                  >
-                    {panels.showSidebar ? (
-                      <PanelLeftClose className="h-4 w-4" />
-                    ) : (
-                      <PanelLeft className="h-4 w-4" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {panels.showSidebar ? "Collapse sidebar" : "Expand sidebar"}
-                </TooltipContent>
-              </Tooltip>
+            <div className="p-2 border-t border-border flex flex-col items-center gap-1">
+              <SidebarButton
+                icon={Database}
+                label="Storage"
+                active={panels.activePanel === "storage"}
+                onClick={() =>
+                  dispatch({ type: "SET_ACTIVE_PANEL", payload: "storage" })
+                }
+              />
+              <SidebarButton
+                icon={HelpCircle}
+                label="FAQ"
+                active={panels.activePanel === "faq"}
+                onClick={() =>
+                  dispatch({ type: "SET_ACTIVE_PANEL", payload: "faq" })
+                }
+              />
             </div>
           </aside>
 
@@ -314,6 +316,16 @@ export function MainLayout({ className }: MainLayoutProps) {
                         icon: History,
                         label: "History",
                       },
+                      {
+                        value: "storage" as const,
+                        icon: Database,
+                        label: "Storage",
+                      },
+                      {
+                        value: "faq" as const,
+                        icon: HelpCircle,
+                        label: "FAQ",
+                      },
                     ].map((tab) => (
                       <TabsTrigger
                         key={tab.value}
@@ -345,6 +357,12 @@ export function MainLayout({ className }: MainLayoutProps) {
                   </TabsContent>
                   <TabsContent value="export" className="m-0 p-4">
                     <HistoryPanel />
+                  </TabsContent>
+                  <TabsContent value="storage" className="m-0 p-4">
+                    <StorageManagerPanel />
+                  </TabsContent>
+                  <TabsContent value="faq" className="m-0 p-4">
+                    <FAQPanel />
                   </TabsContent>
                 </div>
               </Tabs>

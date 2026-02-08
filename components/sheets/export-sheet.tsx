@@ -120,8 +120,8 @@ export function ExportSheet() {
   };
 
   return (
-    <ScrollArea className="h-[calc(100vh-120px)] pr-4">
-      <div className="space-y-6 py-4">
+    <ScrollArea className="h-[calc(100vh-120px)] pr-4 pl-1">
+      <div className="space-y-6 py-4 pl-5">
         {/* Data Source */}
         {generatedCVData && (
           <>

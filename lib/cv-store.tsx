@@ -353,10 +353,9 @@ export const DEFAULT_AI_CONFIGS: Record<
 
 // Panel visibility state
 export interface PanelState {
-  showSidebar: boolean;
   showPreview: boolean;
   showAIConfig: boolean;
-  activePanel: "editor" | "templates" | "history" | "export";
+  activePanel: "editor" | "templates" | "history" | "export" | "faq" | "storage";
 }
 
 // Template selection types (co-located with store)
@@ -653,7 +652,6 @@ type CVAction =
   | { type: "SET_JOB_CONTEXT"; payload: string }
   | { type: "ADD_ITERATION"; payload: CVIteration }
   | { type: "LOAD_ITERATION"; payload: CVIteration }
-  | { type: "TOGGLE_SIDEBAR" }
   | { type: "TOGGLE_PREVIEW" }
   | { type: "TOGGLE_AI_CONFIG" }
   | { type: "SET_ACTIVE_PANEL"; payload: PanelState["activePanel"] }
@@ -690,7 +688,6 @@ const initialState: CVAppState = {
   linkedInImportStatus: "",
   iterations: [],
   panels: {
-    showSidebar: true,
     showPreview: true,
     showAIConfig: false,
     activePanel: "editor",
@@ -816,12 +813,6 @@ function cvReducer(state: CVAppState, action: CVAction): CVAppState {
         generatedCVData: action.payload.generatedCVData || null,
         jobContext: action.payload.context,
         isDirty: false,
-      };
-
-    case "TOGGLE_SIDEBAR":
-      return {
-        ...state,
-        panels: { ...state.panels, showSidebar: !state.panels.showSidebar },
       };
 
     case "TOGGLE_PREVIEW":
