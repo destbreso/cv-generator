@@ -103,6 +103,126 @@ function getTemplateStyles(templateId: string) {
       headerLayout: "left",
       accentBar: true,
     },
+    compact: {
+      headerStyle: "text-left",
+      sectionTitleStyle: "text-xs font-bold uppercase tracking-widest",
+      bodyFont: "font-sans",
+      headerFont: "font-sans",
+      borderStyle: "border-b",
+      chipStyle: "text-[10px] px-1 py-0.5 rounded",
+      headerLayout: "left",
+      accentBar: true,
+    },
+    academic: {
+      headerStyle: "text-center",
+      sectionTitleStyle: "text-sm font-semibold italic",
+      bodyFont: "font-serif",
+      headerFont: "font-serif",
+      borderStyle: "border-b",
+      chipStyle: "text-xs italic",
+      headerLayout: "center",
+      accentBar: false,
+    },
+    elegant: {
+      headerStyle: "text-center",
+      sectionTitleStyle: "text-base font-medium tracking-wide",
+      bodyFont: "font-serif",
+      headerFont: "font-serif",
+      borderStyle: "border-b",
+      chipStyle: "text-xs px-2 py-0.5 rounded-full",
+      headerLayout: "center",
+      accentBar: false,
+    },
+    swiss: {
+      headerStyle: "text-left",
+      sectionTitleStyle: "text-lg font-black uppercase",
+      bodyFont: "font-sans",
+      headerFont: "font-sans",
+      borderStyle: "border-b-4",
+      chipStyle: "text-xs font-semibold px-2 py-0.5 rounded",
+      headerLayout: "left",
+      accentBar: true,
+    },
+    editorial: {
+      headerStyle: "text-left",
+      sectionTitleStyle: "text-sm font-semibold uppercase tracking-[0.2em]",
+      bodyFont: "font-serif",
+      headerFont: "font-sans",
+      borderStyle: "border-b-2",
+      chipStyle: "text-xs px-2 py-0.5 rounded-lg",
+      headerLayout: "left",
+      accentBar: true,
+    },
+    startup: {
+      headerStyle: "text-center",
+      sectionTitleStyle: "text-base font-bold",
+      bodyFont: "font-sans",
+      headerFont: "font-sans",
+      borderStyle: "border-b-2",
+      chipStyle: "text-xs font-medium px-2.5 py-1 rounded-full",
+      headerLayout: "center",
+      accentBar: true,
+    },
+    harvard: {
+      headerStyle: "text-center",
+      sectionTitleStyle: "text-sm font-bold uppercase tracking-widest",
+      bodyFont: "font-serif",
+      headerFont: "font-serif",
+      borderStyle: "border-b",
+      chipStyle: "text-xs",
+      headerLayout: "center",
+      accentBar: false,
+    },
+    oxford: {
+      headerStyle: "text-center",
+      sectionTitleStyle: "text-sm font-semibold uppercase tracking-[0.2em]",
+      bodyFont: "font-serif",
+      headerFont: "font-serif",
+      borderStyle: "border-b",
+      chipStyle: "text-xs italic",
+      headerLayout: "center",
+      accentBar: false,
+    },
+    cambridge: {
+      headerStyle: "text-left",
+      sectionTitleStyle: "text-sm font-bold uppercase tracking-wide",
+      bodyFont: "font-sans",
+      headerFont: "font-sans",
+      borderStyle: "border-b",
+      chipStyle: "text-xs",
+      headerLayout: "left",
+      accentBar: false,
+    },
+    princeton: {
+      headerStyle: "text-center",
+      sectionTitleStyle: "text-base font-black uppercase",
+      bodyFont: "font-serif",
+      headerFont: "font-sans",
+      borderStyle: "border-b-2",
+      chipStyle: "text-xs font-semibold",
+      headerLayout: "center",
+      accentBar: true,
+    },
+    yale: {
+      headerStyle: "text-center",
+      sectionTitleStyle: "text-sm font-semibold uppercase tracking-widest",
+      bodyFont: "font-serif",
+      headerFont: "font-serif",
+      borderStyle: "border-b",
+      chipStyle: "text-xs",
+      headerLayout: "center",
+      accentBar: false,
+    },
+    mit: {
+      headerStyle: "text-left",
+      sectionTitleStyle: "text-sm font-bold uppercase tracking-wide",
+      bodyFont: "font-sans",
+      headerFont: "font-sans",
+      borderStyle: "border-b-2",
+      chipStyle: "text-xs font-mono px-1.5 py-0.5 rounded border",
+      headerLayout: "left",
+      accentBar: true,
+    },
   };
   return styles[templateId] || styles.minimal;
 }
@@ -147,6 +267,7 @@ export function PreviewPanel() {
     generatedContent,
     selectedTemplateId,
     selectedPaletteId,
+    customPalette,
     selectedLayoutId,
     isGenerating,
     isImportingLinkedIn,
@@ -170,9 +291,11 @@ export function PreviewPanel() {
   const displayData = generatedCVData || cvData;
   const palette = useMemo(
     () =>
-      COLOR_PALETTES.find((p) => p.id === selectedPaletteId)?.colors ??
-      COLOR_PALETTES[0].colors,
-    [selectedPaletteId],
+      selectedPaletteId === "custom" && customPalette
+        ? customPalette
+        : (COLOR_PALETTES.find((p) => p.id === selectedPaletteId)?.colors ??
+          COLOR_PALETTES[0].colors),
+    [selectedPaletteId, customPalette],
   );
   const templateStyles = useMemo(
     () => getTemplateStyles(selectedTemplateId),
@@ -394,6 +517,7 @@ export function PreviewPanel() {
       .px-1 { padding-left: 0.25rem; padding-right: 0.25rem; }
       .px-1\\.5 { padding-left: 0.375rem; padding-right: 0.375rem; }
       .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+      .px-2\\.5 { padding-left: 0.625rem; padding-right: 0.625rem; }
       .py-0\\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
       .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
       .mt-1 { margin-top: 0.25rem; }

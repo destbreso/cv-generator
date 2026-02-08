@@ -384,6 +384,90 @@ export const TEMPLATES: TemplateOption[] = [
     preview:
       "bg-gradient-to-br from-green-100 to-emerald-200 dark:from-green-900 dark:to-emerald-900",
   },
+  {
+    id: "compact",
+    name: "Compact",
+    description: "Dense, space-efficient layout",
+    preview:
+      "bg-gradient-to-br from-gray-100 to-stone-200 dark:from-gray-800 dark:to-stone-900",
+  },
+  {
+    id: "academic",
+    name: "Academic",
+    description: "Research & academic style",
+    preview:
+      "bg-gradient-to-br from-sky-100 to-cyan-200 dark:from-sky-900 dark:to-cyan-900",
+  },
+  {
+    id: "elegant",
+    name: "Elegant",
+    description: "Refined serif typography",
+    preview:
+      "bg-gradient-to-br from-rose-100 to-pink-200 dark:from-rose-900 dark:to-pink-900",
+  },
+  {
+    id: "swiss",
+    name: "Swiss",
+    description: "International typographic style",
+    preview:
+      "bg-gradient-to-br from-red-100 to-orange-200 dark:from-red-900 dark:to-orange-900",
+  },
+  {
+    id: "editorial",
+    name: "Editorial",
+    description: "Magazine-inspired design",
+    preview:
+      "bg-gradient-to-br from-teal-100 to-emerald-200 dark:from-teal-900 dark:to-emerald-900",
+  },
+  {
+    id: "startup",
+    name: "Startup",
+    description: "Fresh, modern & friendly",
+    preview:
+      "bg-gradient-to-br from-violet-100 to-fuchsia-200 dark:from-violet-900 dark:to-fuchsia-900",
+  },
+  {
+    id: "harvard",
+    name: "Harvard",
+    description: "Classic Harvard OCS style",
+    preview:
+      "bg-gradient-to-br from-red-50 to-stone-200 dark:from-red-950 dark:to-stone-900",
+  },
+  {
+    id: "oxford",
+    name: "Oxford",
+    description: "Traditional Oxford CV format",
+    preview:
+      "bg-gradient-to-br from-blue-50 to-stone-200 dark:from-blue-950 dark:to-stone-900",
+  },
+  {
+    id: "cambridge",
+    name: "Cambridge",
+    description: "Clean Cambridge academic style",
+    preview:
+      "bg-gradient-to-br from-sky-50 to-gray-200 dark:from-sky-950 dark:to-gray-900",
+  },
+  {
+    id: "princeton",
+    name: "Princeton",
+    description: "Bold Princeton career format",
+    preview:
+      "bg-gradient-to-br from-orange-50 to-stone-200 dark:from-orange-950 dark:to-stone-900",
+  },
+  {
+    id: "yale",
+    name: "Yale",
+    description: "Refined Yale resume style",
+    preview:
+      "bg-gradient-to-br from-blue-100 to-zinc-200 dark:from-blue-950 dark:to-zinc-900",
+  },
+  {
+    id: "mit",
+    name: "MIT",
+    description: "Structured MIT engineering CV",
+    preview:
+      "bg-gradient-to-br from-gray-50 to-red-100 dark:from-gray-950 dark:to-red-950",
+  },
 ];
 
 export const COLOR_PALETTES: PaletteOption[] = [
@@ -417,6 +501,46 @@ export const COLOR_PALETTES: PaletteOption[] = [
     name: "Monochrome",
     colors: { primary: "#000000", secondary: "#525252", accent: "#a3a3a3" },
   },
+  {
+    id: "slate",
+    name: "Slate",
+    colors: { primary: "#334155", secondary: "#64748b", accent: "#0ea5e9" },
+  },
+  {
+    id: "rose",
+    name: "Rose",
+    colors: { primary: "#9f1239", secondary: "#e11d48", accent: "#fb7185" },
+  },
+  {
+    id: "teal",
+    name: "Teal",
+    colors: { primary: "#115e59", secondary: "#0d9488", accent: "#2dd4bf" },
+  },
+  {
+    id: "amber",
+    name: "Amber",
+    colors: { primary: "#92400e", secondary: "#d97706", accent: "#fbbf24" },
+  },
+  {
+    id: "navy",
+    name: "Navy",
+    colors: { primary: "#1e3a5f", secondary: "#2563eb", accent: "#60a5fa" },
+  },
+  {
+    id: "coral",
+    name: "Coral",
+    colors: { primary: "#9a3412", secondary: "#f43f5e", accent: "#fb923c" },
+  },
+  {
+    id: "lavender",
+    name: "Lavender",
+    colors: { primary: "#4c1d95", secondary: "#7c3aed", accent: "#c4b5fd" },
+  },
+  {
+    id: "charcoal",
+    name: "Charcoal",
+    colors: { primary: "#1c1917", secondary: "#44403c", accent: "#78716c" },
+  },
 ];
 
 export const LAYOUTS: LayoutOption[] = [
@@ -437,6 +561,7 @@ export interface CVAppState {
   customization: TemplateCustomization | null;
   selectedTemplateId: string;
   selectedPaletteId: string;
+  customPalette: TemplatePaletteColors | null;
   selectedLayoutId: string;
 
   // AI Configuration
@@ -470,6 +595,7 @@ type CVAction =
   | { type: "SET_CUSTOMIZATION"; payload: TemplateCustomization }
   | { type: "SET_TEMPLATE_ID"; payload: string }
   | { type: "SET_PALETTE_ID"; payload: string }
+  | { type: "SET_CUSTOM_PALETTE"; payload: TemplatePaletteColors }
   | { type: "SET_LAYOUT_ID"; payload: string }
   | { type: "SET_AI_CONFIG"; payload: Partial<AIProviderConfig> }
   | { type: "SET_AI_PROVIDER"; payload: AIProvider }
@@ -502,6 +628,7 @@ const initialState: CVAppState = {
   customization: null,
   selectedTemplateId: "minimal",
   selectedPaletteId: "default",
+  customPalette: null,
   selectedLayoutId: "single",
   aiConfig: {
     provider: "ollama",
@@ -576,7 +703,18 @@ function cvReducer(state: CVAppState, action: CVAction): CVAppState {
       return { ...state, selectedTemplateId: action.payload };
 
     case "SET_PALETTE_ID":
-      return { ...state, selectedPaletteId: action.payload };
+      return {
+        ...state,
+        selectedPaletteId: action.payload,
+        customPalette: null,
+      };
+
+    case "SET_CUSTOM_PALETTE":
+      return {
+        ...state,
+        selectedPaletteId: "custom",
+        customPalette: action.payload,
+      };
 
     case "SET_LAYOUT_ID":
       return { ...state, selectedLayoutId: action.payload };
