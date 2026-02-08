@@ -413,7 +413,8 @@ export function PreviewPanel() {
 
       body {
         font-family: ${bodyFont};
-        line-height: 1.5;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
         color: ${p.primary};
         background: #ffffff;
         width: ${pageW};
@@ -460,8 +461,8 @@ export function PreviewPanel() {
         margin-bottom: 0.75rem;
       }
 
-      h3 { font-weight: 500; color: ${p.primary}; }
-      p, li, span { font-size: 0.875rem; }
+      h3 { font-weight: 500; font-size: inherit; color: ${p.primary}; }
+      p, li, span { font-size: 0.875rem; line-height: 1.25rem; }
       a { color: ${p.accent}; text-decoration: none; }
       a:hover { text-decoration: underline; }
       ul { padding-left: 1.25rem; }
@@ -577,6 +578,31 @@ export function PreviewPanel() {
       .rounded-lg { border-radius: 0.5rem; }
 
       .cv-root > div { min-height: 100%; }
+
+      /* Sidebar compact styles — match Tailwind preview density */
+      [data-sidebar] {
+        line-height: 1.35;
+      }
+      [data-sidebar] p,
+      [data-sidebar] a,
+      [data-sidebar] span,
+      [data-sidebar] div {
+        font-size: 0.75rem;
+        line-height: 1rem;
+      }
+      [data-sidebar] .text-\\[10px\\],
+      [data-sidebar] .text-\\[10px\\] span {
+        font-size: 10px;
+        line-height: 0.875rem;
+      }
+      [data-sidebar] h3.text-xs {
+        margin-bottom: 0.375rem;
+      }
+      [data-sidebar] .space-y-1\\.5 > * + * { margin-top: 0.375rem; }
+      [data-sidebar] .space-y-1 > * + * { margin-top: 0.25rem; }
+      [data-sidebar] .space-y-2 > * + * { margin-top: 0.5rem; }
+      [data-sidebar] .mb-1 { margin-bottom: 0.25rem; }
+      [data-sidebar] .mb-2 { margin-bottom: 0.5rem; }
 
       h3.text-xs {
         font-size: 0.75rem;
@@ -2032,6 +2058,7 @@ function CVPreviewContent({
     const sidebar = (
       <div
         className="p-5 space-y-4"
+        data-sidebar="true"
         style={{
           backgroundColor: sidebarBg,
           borderRight:
