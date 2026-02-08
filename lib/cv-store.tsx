@@ -617,6 +617,7 @@ export interface CVAppState {
   generatedContent: string;
   generatedCVData: CVData | null;
   jobContext: string;
+  outputLanguage: string;
 
   // LinkedIn Import
   isImportingLinkedIn: boolean;
@@ -650,6 +651,7 @@ type CVAction =
       payload: { content: string; cvData?: CVData };
     }
   | { type: "SET_JOB_CONTEXT"; payload: string }
+  | { type: "SET_OUTPUT_LANGUAGE"; payload: string }
   | { type: "ADD_ITERATION"; payload: CVIteration }
   | { type: "LOAD_ITERATION"; payload: CVIteration }
   | { type: "TOGGLE_PREVIEW" }
@@ -684,6 +686,7 @@ const initialState: CVAppState = {
   generatedContent: "",
   generatedCVData: null,
   jobContext: "",
+  outputLanguage: "auto",
   isImportingLinkedIn: false,
   linkedInImportStatus: "",
   iterations: [],
@@ -798,6 +801,9 @@ function cvReducer(state: CVAppState, action: CVAction): CVAppState {
 
     case "SET_JOB_CONTEXT":
       return { ...state, jobContext: action.payload };
+
+    case "SET_OUTPUT_LANGUAGE":
+      return { ...state, outputLanguage: action.payload };
 
     case "ADD_ITERATION":
       return {
@@ -1032,6 +1038,7 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({
           cvData: state.cvData,
           context: state.jobContext,
+          outputLanguage: state.outputLanguage,
           llmConfig: {
             baseUrl: state.aiConfig.baseUrl,
             model: state.aiConfig.model,
@@ -1179,7 +1186,7 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
     } finally {
       dispatch({ type: "SET_GENERATING", payload: false });
     }
-  }, [state.cvData, state.jobContext, state.aiConfig, state.selectedTemplate]);
+  }, [state.cvData, state.jobContext, state.outputLanguage, state.aiConfig, state.selectedTemplate]);
 
   const applyGeneratedData = useCallback(() => {
     dispatch({ type: "APPLY_GENERATED" });

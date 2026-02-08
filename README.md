@@ -45,6 +45,7 @@ This is what CV Generator does. It's not a "prettier resume template" — it's t
 
 ### 🤖 AI-Powered Generation
 - Tailor your CV for specific job descriptions with AI
+- **Output language selector** — generate your CV in any of 13 languages (English, Spanish, French, German, Portuguese, Italian, Dutch, Chinese, Japanese, Korean, Arabic, Russian, Hindi) or auto-detect from your input
 - Streaming generation with real-time preview
 - Support for multiple AI providers:
   - **Ollama** — Run locally, completely free and private
@@ -238,6 +239,12 @@ No. All CV data stays in your browser (localStorage). If you use Ollama, AI proc
 <summary><strong>How do I export to PDF?</strong></summary>
 
 Use the print button in the preview panel → your browser's print dialog opens → select "Save as PDF". The output faithfully reproduces the preview with all colors and formatting.
+</details>
+
+<details>
+<summary><strong>Can I generate my CV in a different language?</strong></summary>
+
+Yes! In the Generate panel, select an output language before generating. The AI will translate all content (summary, descriptions, achievements, skill categories) to your chosen language while preserving proper nouns like company names, institutions, and technologies. You can also set it to "Auto" to keep the same language as your input data.
 </details>
 
 <details>

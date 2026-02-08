@@ -22,8 +22,33 @@ import {
   Bot,
   Target,
   Lightbulb,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const OUTPUT_LANGUAGES = [
+  { value: "auto", label: "Auto (same as input)" },
+  { value: "English", label: "English" },
+  { value: "Spanish", label: "Español" },
+  { value: "French", label: "Français" },
+  { value: "German", label: "Deutsch" },
+  { value: "Portuguese", label: "Português" },
+  { value: "Italian", label: "Italiano" },
+  { value: "Dutch", label: "Nederlands" },
+  { value: "Chinese", label: "中文" },
+  { value: "Japanese", label: "日本語" },
+  { value: "Korean", label: "한국어" },
+  { value: "Arabic", label: "العربية" },
+  { value: "Russian", label: "Русский" },
+  { value: "Hindi", label: "हिन्दी" },
+] as const;
 
 export function GeneratePanel() {
   const {
@@ -37,6 +62,7 @@ export function GeneratePanel() {
   const {
     cvData,
     jobContext,
+    outputLanguage,
     isGenerating,
     isConnected,
     generatedContent,
@@ -220,6 +246,43 @@ Example:
               }
             />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Output Language */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Globe className="h-4 w-4" />
+            Output Language
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Language for the generated CV content
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Select
+            value={outputLanguage}
+            onValueChange={(value) =>
+              dispatch({ type: "SET_OUTPUT_LANGUAGE", payload: value })
+            }
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select language" />
+            </SelectTrigger>
+            <SelectContent>
+              {OUTPUT_LANGUAGES.map((lang) => (
+                <SelectItem key={lang.value} value={lang.value}>
+                  {lang.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground mt-2">
+            {outputLanguage === "auto"
+              ? "The AI will keep the same language as your input data"
+              : `All content will be translated to ${outputLanguage}`}
+          </p>
         </CardContent>
       </Card>
 

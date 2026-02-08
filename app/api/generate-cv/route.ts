@@ -6,7 +6,7 @@ export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
   try {
-    const { cvData, context, llmConfig } = await request.json();
+    const { cvData, context, outputLanguage, llmConfig } = await request.json();
 
     if (!llmConfig || !llmConfig.baseUrl || !llmConfig.model) {
       return Response.json(
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       model: llmConfig.model,
     });
 
-    const prompt = buildPrompt(cvData, context, llmConfig.systemPrompt);
+    const prompt = buildPrompt(cvData, context, llmConfig.systemPrompt, outputLanguage);
     const generateEndpoint = `${llmConfig.baseUrl}/api/generate`;
 
     const headers: Record<string, string> = {
@@ -158,7 +158,12 @@ function buildPrompt(
   cvData: CVData,
   context: string,
   systemPrompt?: string,
+  outputLanguage?: string,
 ): string {
+  const languageInstruction = outputLanguage && outputLanguage !== "auto"
+    ? `\nIMPORTANT: Write ALL text content (summary, descriptions, achievements, skill categories, etc.) in ${outputLanguage}. Translate everything except proper nouns (company names, institution names, technologies, certifications). Field keys must remain in English.`
+    : "";
+
   const defaultPrompt = `You are a professional CV/resume optimization assistant.
 Your task is to optimize the given CV data for the specified job context.
 You MUST return ONLY a single valid JSON object — no markdown, no explanation, no code fences.
@@ -166,7 +171,7 @@ The JSON must match the exact structure of the input CV data.
 Keep all existing array fields (experience, education, skills, languages, projects, certifications, publications, volunteerWork, awards, interests).
 Preserve all "id" fields exactly as they are.
 Optimize descriptions, achievements, and summaries to better match the job context.
-Do NOT remove sections — if a section has data, keep it. You may reword content to be more relevant.`;
+Do NOT remove sections — if a section has data, keep it. You may reword content to be more relevant.${languageInstruction}`;
 
   return `${systemPrompt || defaultPrompt}
 
