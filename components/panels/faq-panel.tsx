@@ -18,7 +18,7 @@ const FAQ_SECTIONS = [
     items: [
       {
         q: "What is CV Generator?",
-        a: "CV Generator is an open-source, privacy-first resume builder. You can create, edit, and customize your CV with 18 templates, 14+ color palettes, and 4 layout modes — all from your browser. Optionally, use AI to tailor your resume for specific job applications.",
+        a: "CV Generator is an open-source, privacy-first resume builder. You can create, edit, and customize your CV with 18 templates, 14+ color palettes, and 4 layout modes, all from your browser. Optionally, use AI to tailor your resume for specific job applications.",
       },
       {
         q: "Is it free to use?",

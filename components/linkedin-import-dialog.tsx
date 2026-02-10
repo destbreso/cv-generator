@@ -177,7 +177,7 @@ export function LinkedInImportDialog() {
                         Drop your LinkedIn PDF here
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        or click to browse — PDF files only
+                        or click to browse, PDF files only
                       </p>
                     </div>
                   </>
