@@ -1,12 +1,5 @@
-"use client";
-
-import { CVStoreProvider } from "@/lib/cv-store";
-import { MainLayout } from "@/components/layout/main-layout";
+import { LandingPage } from "@/components/landing/landing-page";
 
 export default function Home() {
-  return (
-    <CVStoreProvider>
-      <MainLayout />
-    </CVStoreProvider>
-  );
+  return <LandingPage />;
 }
