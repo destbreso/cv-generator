@@ -467,6 +467,920 @@ function AIProviderCard({
   );
 }
 
+function EditorPreviewWithThemes() {
+  const [selectedTheme, setSelectedTheme] = useState("modern");
+
+  // Real theme definitions based on actual editor oklch colors
+  const themeStyles = {
+    light: {
+      name: "Console Light",
+      bg: "bg-[#f8f6f1]", // oklch(0.96 0.01 85) - warm light
+      sidebar: "bg-[#efeae3]", // slightly darker
+      accent: "#2d5a49", // oklch(0.35 0.12 142) - emerald
+      accentLight: "#e8f5f1",
+      text: "#1a1a1a",
+      grid: "border-[#e0d9d0]",
+      preview: "#e8f5f1",
+    },
+    dark: {
+      name: "Console Dark",
+      bg: "#0a0e14", // ultra-dark terminal black
+      sidebar: "#0d1117", // slightly lighter for depth
+      accent: "#00ff41", // neon green (classic terminal)
+      accentLight: "#00ff41", // same bright neon for consistency
+      text: "#e8e8e8", // light gray for readability
+      grid: "#1a1f2b", // subtle grid lines
+      preview: "linear-gradient(135deg, #0a0e14 0%, #0d1117 100%)",
+    },
+    modern: {
+      name: "Modern",
+      bg: "#ffffff", // oklch(0.985 0.002 265) - pure white
+      sidebar: "#f5f5f5",
+      accent: "#4a7adb", // oklch(0.55 0.18 260) - blue
+      accentLight: "#f0f4fc",
+      text: "#1a1a1a",
+      grid: "#e8e8e8",
+      preview: "#f5f7fc",
+    },
+  };
+
+  return (
+    <>
+      <InteractiveEditorPreview selectedTheme={selectedTheme} />
+      <ScrollReveal delay={400}>
+        <div className="flex justify-center gap-3 mt-6 flex-wrap">
+          {Object.entries(themeStyles).map(([key, t]) => (
+            <button
+              key={key}
+              onClick={() => setSelectedTheme(key)}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 transition-all duration-300",
+                "hover:scale-105 cursor-pointer",
+                selectedTheme === key
+                  ? "border-primary bg-primary/10 text-primary font-semibold shadow-lg"
+                  : "border-border/40 bg-card/60 text-muted-foreground hover:border-primary/30",
+              )}
+            >
+              {/* Theme preview swatch */}
+              <div className="flex items-center gap-1.5">
+                <div
+                  className="h-3 w-3 rounded-sm border border-border/50"
+                  style={{
+                    backgroundColor: t.bg.startsWith("linear")
+                      ? "#1a1a1a"
+                      : t.bg,
+                  }}
+                />
+                <div
+                  className="h-3 w-3 rounded-sm border border-border/50"
+                  style={{ backgroundColor: t.accent }}
+                />
+                <div
+                  className="h-3 w-3 rounded-sm border border-border/50"
+                  style={{ backgroundColor: t.accentLight }}
+                />
+              </div>
+              <span className="text-sm font-medium">{t.name}</span>
+            </button>
+          ))}
+        </div>
+        <p className="text-center text-xs text-muted-foreground mt-3">
+          Three distinct editor environments. Same powerful tool.
+        </p>
+      </ScrollReveal>
+    </>
+  );
+}
+
+function InteractiveEditorPreview({
+  selectedTheme = "modern",
+}: {
+  selectedTheme?: string;
+}) {
+  const [expandedSection, setExpandedSection] = useState<string | null>(
+    "personal",
+  );
+  const [activeTab, setActiveTab] = useState(0);
+  const [highlightSection, setHighlightSection] = useState<string | null>(null);
+  const [showHint, setShowHint] = useState(true);
+
+  // Real theme definitions based on oklch colors from globals.css
+  const themeEnvironments = {
+    light: {
+      container: "bg-[#f8f6f1]", // Light warm background
+      border: "border-[#e0d9d0]",
+      sidebar: "bg-[#efeae3]",
+      sidebarText: "text-[#2d5a49]",
+      accentBg: "bg-[#e8f5f1]",
+      accentText: "text-[#2d5a49]",
+      accentBorder: "border-[#a8d5c4]",
+      previewBg: "bg-white",
+    },
+    dark: {
+      container: "bg-[#1a1a1a]", // Deep black
+      border: "border-[#2a2a2a]",
+      sidebar: "bg-[#0f0f0f]",
+      sidebarText: "text-[#76dd9e]",
+      accentBg: "bg-[#1a3d2e]",
+      accentText: "text-[#76dd9e]",
+      accentBorder: "border-[#2d7a63]",
+      previewBg: "bg-[#1a1a1a]",
+    },
+    modern: {
+      container: "bg-white", // Clean white
+      border: "border-[#e8e8e8]",
+      sidebar: "bg-[#f5f5f5]",
+      sidebarText: "text-[#4a7adb]",
+      accentBg: "bg-[#f0f4fc]",
+      accentText: "text-[#4a7adb]",
+      accentBorder: "border-[#a8c5f0]",
+      previewBg: "bg-white",
+    },
+  };
+
+  const env =
+    themeEnvironments[selectedTheme as keyof typeof themeEnvironments] ||
+    themeEnvironments.modern;
+
+  useEffect(() => {
+    // Animación inicial de pulso para indicar interactividad
+    const timer = setTimeout(() => {
+      setHighlightSection("personal");
+      setTimeout(() => setHighlightSection(null), 2000);
+    }, 500);
+
+    // Ocultar hint después de 4 segundos
+    const hintTimer = setTimeout(() => setShowHint(false), 4000);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(hintTimer);
+    };
+  }, []);
+
+  // Mostrar hint cuando cambia de tab
+  useEffect(() => {
+    setShowHint(true);
+    const timer = setTimeout(() => setShowHint(false), 3000);
+    return () => clearTimeout(timer);
+  }, [activeTab]);
+
+  const sections = [
+    {
+      id: "personal",
+      icon: FileText,
+      title: "Personal Information",
+      fields: [
+        { label: "Full Name", value: "Sarah Johnson" },
+        { label: "Email", value: "sarah@example.com" },
+        { label: "Phone", value: "+1 (555) 123-4567" },
+        { label: "Location", value: "San Francisco, CA" },
+      ],
+    },
+    {
+      id: "summary",
+      icon: Sparkles,
+      title: "Professional Summary",
+      badge: "AI",
+    },
+    {
+      id: "experience",
+      icon: Layers,
+      title: "Work Experience",
+    },
+  ];
+
+  const tabs = [
+    { icon: FileText, active: true, label: "Content" },
+    { icon: Palette, active: false, label: "Design" },
+    { icon: Sparkles, active: false, label: "AI" },
+    { icon: History, active: false, label: "History" },
+    { icon: Database, active: false, label: "Storage" },
+    { icon: Eye, active: false, label: "Preview" },
+  ];
+
+  return (
+    <div
+      className={cn(
+        "relative rounded-2xl border overflow-hidden transition-all duration-500",
+        "shadow-[0_20px_60px_-12px_rgba(0,0,0,0.15)]",
+        "ring-1 ring-border/20",
+        env.container,
+        env.border,
+      )}
+    >
+      {/* Browser chrome */}
+      <div
+        className={cn(
+          "flex items-center gap-2 px-4 h-10 border-b transition-all duration-500",
+          env.border,
+        )}
+        style={{
+          backgroundColor:
+            Object.values(themeEnvironments)[
+              Object.keys(themeEnvironments).indexOf(
+                selectedTheme || "modern",
+              ) || (0 as any)
+            ]?.sidebar,
+        }}
+      >
+        <div className="flex gap-1.5">
+          <div className="w-3 h-3 rounded-full bg-red-400/70" />
+          <div className="w-3 h-3 rounded-full bg-yellow-400/70" />
+          <div className="w-3 h-3 rounded-full bg-green-400/70" />
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="px-6 py-1 rounded-full bg-muted/60 text-xs text-muted-foreground flex items-center gap-2">
+            <Lock className="h-2.5 w-2.5" />
+            cvgenerator.app/editor
+          </div>
+        </div>
+      </div>
+
+      {/* Interactive hint */}
+      {showHint && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+          <div
+            className={cn(
+              "px-4 py-2 rounded-full bg-primary/95 text-primary-foreground text-xs font-medium shadow-lg",
+              "flex items-center gap-2",
+              "animate-bounce",
+            )}
+          >
+            <div className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-foreground opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-foreground"></span>
+            </div>
+            {activeTab === 0 && "Click sections to expand/collapse"}
+            {activeTab === 1 && "Select a template or color palette"}
+            {activeTab === 2 && "Configure your AI provider"}
+            {activeTab === 3 && "View version history"}
+            {activeTab === 4 && "Manage your browser storage"}
+            {activeTab === 5 && "Full preview mode"}
+            <ChevronDown className="h-3 w-3 animate-pulse" />
+          </div>
+        </div>
+      )}
+
+      <div className="flex h-[420px] sm:h-[500px]">
+        {/* Sidebar */}
+        <div
+          className={cn(
+            "w-12 border-r flex flex-col items-center py-3 gap-1.5 transition-all duration-500",
+            env.border,
+          )}
+          style={{
+            backgroundColor: env.sidebar.startsWith("#")
+              ? env.sidebar
+              : undefined,
+          }}
+        >
+          {tabs.map(({ icon: Icon, active }, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                setActiveTab(i);
+                setShowHint(false);
+              }}
+              className={cn(
+                "w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300",
+                "hover:scale-110 cursor-pointer",
+                activeTab === i
+                  ? cn(env.accentBg, env.accentText, "shadow-sm")
+                  : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/20",
+              )}
+            >
+              <Icon className="h-3.5 w-3.5" />
+            </button>
+          ))}
+        </div>
+
+        {/* Editor panel */}
+        <div className="flex-1 p-5 overflow-hidden">
+          {/* TAB 0: Content */}
+          {activeTab === 0 && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-left-2 duration-300">
+              {sections.map((section) => {
+                const isExpanded = expandedSection === section.id;
+                const isHighlighted = highlightSection === section.id;
+                const Icon = section.icon;
+
+                return (
+                  <div key={section.id} className="relative">
+                    {isHighlighted && (
+                      <div className="absolute -inset-2 bg-primary/5 rounded-xl animate-pulse pointer-events-none" />
+                    )}
+                    <div className="relative">
+                      <button
+                        onClick={() => {
+                          setExpandedSection(isExpanded ? null : section.id);
+                          setShowHint(false);
+                        }}
+                        onMouseEnter={() => setHighlightSection(section.id)}
+                        onMouseLeave={() => setHighlightSection(null)}
+                        className={cn(
+                          "w-full flex items-center gap-2 mb-3 group cursor-pointer",
+                          "transition-all duration-300 rounded-lg p-2 -mx-2",
+                          "hover:bg-primary/5",
+                          isExpanded && "bg-primary/5",
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "h-6 w-6 rounded-md flex items-center justify-center transition-all duration-300",
+                            "bg-primary/10 group-hover:bg-primary/15 group-hover:scale-110",
+                            isExpanded && "bg-primary/15 scale-110",
+                          )}
+                        >
+                          <Icon className="h-3 w-3 text-primary" />
+                        </div>
+                        <span
+                          className={cn(
+                            "text-sm font-semibold transition-colors",
+                            "group-hover:text-primary",
+                            isExpanded && "text-primary",
+                          )}
+                        >
+                          {section.title}
+                        </span>
+                        {section.badge && (
+                          <Badge
+                            variant="secondary"
+                            className="text-[9px] px-1 py-0 h-3.5 ml-1"
+                          >
+                            {section.badge}
+                          </Badge>
+                        )}
+                        <ChevronDown
+                          className={cn(
+                            "h-3.5 w-3.5 text-muted-foreground ml-auto transition-transform duration-300",
+                            isExpanded && "rotate-180",
+                          )}
+                        />
+                      </button>
+
+                      <div
+                        className={cn(
+                          "overflow-hidden transition-all duration-500 ease-in-out",
+                          isExpanded
+                            ? "max-h-96 opacity-100"
+                            : "max-h-0 opacity-0",
+                        )}
+                      >
+                        {section.id === "personal" && (
+                          <div className="grid grid-cols-2 gap-2 pb-2">
+                            {section.fields?.map((field, i) => (
+                              <div
+                                key={field.label}
+                                className={cn(
+                                  "rounded-lg border border-border/40 bg-muted/20 px-3 py-2",
+                                  "hover:border-primary/30 hover:bg-primary/5 transition-all duration-300 cursor-pointer",
+                                  "transform hover:scale-[1.02]",
+                                )}
+                                style={{
+                                  animation: isExpanded
+                                    ? `slideIn 0.3s ease-out ${i * 0.05}s backwards`
+                                    : undefined,
+                                }}
+                              >
+                                <div className="text-[10px] text-muted-foreground mb-0.5 font-medium">
+                                  {field.label}
+                                </div>
+                                <div className="text-xs text-foreground/70">
+                                  {field.value}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {section.id === "summary" && (
+                          <div className="pb-2 space-y-2">
+                            <div
+                              className={cn(
+                                "rounded-lg border border-border/40 bg-muted/20 px-3 py-2 space-y-1",
+                                "hover:border-primary/30 hover:bg-primary/5 transition-all duration-300 cursor-pointer",
+                              )}
+                            >
+                              <div className="h-2 rounded bg-muted-foreground/8 w-full animate-pulse" />
+                              <div
+                                className="h-2 rounded bg-muted-foreground/8 w-[92%] animate-pulse"
+                                style={{ animationDelay: "0.1s" }}
+                              />
+                              <div
+                                className="h-2 rounded bg-muted-foreground/8 w-[78%] animate-pulse"
+                                style={{ animationDelay: "0.2s" }}
+                              />
+                            </div>
+                            <button
+                              className={cn(
+                                "w-full px-3 py-2 rounded-lg border border-primary/30 bg-primary/5",
+                                "text-xs font-medium text-primary",
+                                "hover:bg-primary/10 transition-colors duration-200",
+                                "flex items-center justify-center gap-2",
+                              )}
+                            >
+                              <Sparkles className="h-3 w-3" />
+                              Regenerate with AI
+                            </button>
+                          </div>
+                        )}
+
+                        {section.id === "experience" && (
+                          <div
+                            className={cn(
+                              "rounded-lg border border-border/40 bg-muted/20 p-3 space-y-2 mb-2",
+                              "hover:border-primary/30 hover:bg-primary/5 transition-all duration-300 cursor-pointer",
+                            )}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="h-2.5 rounded bg-foreground/12 w-1/3" />
+                              <div className="text-[9px] text-muted-foreground">
+                                2020 — Present
+                              </div>
+                            </div>
+                            <div className="h-2 rounded bg-primary/10 w-2/5" />
+                            <div className="space-y-0.5">
+                              <div className="h-1.5 rounded bg-muted-foreground/6 w-full" />
+                              <div className="h-1.5 rounded bg-muted-foreground/6 w-[88%]" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* TAB 1: Design */}
+          {activeTab === 1 && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-left-2 duration-300">
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Palette className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-semibold">Template</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {["Classic", "Modern", "Minimal"].map((name, i) => (
+                    <div
+                      key={name}
+                      className={cn(
+                        "aspect-[8.5/11] rounded-lg border-2 transition-all duration-300 cursor-pointer",
+                        i === 1
+                          ? "border-primary bg-primary/5"
+                          : "border-border/40 hover:border-primary/30",
+                      )}
+                    >
+                      <div className="p-2 space-y-1">
+                        <div className="h-1 rounded bg-muted-foreground/20 w-2/3" />
+                        <div className="h-0.5 rounded bg-muted-foreground/10 w-1/2" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Palette className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-semibold">Color Palette</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    "bg-blue-500",
+                    "bg-emerald-500",
+                    "bg-purple-500",
+                    "bg-amber-500",
+                  ].map((color, i) => (
+                    <button
+                      key={i}
+                      className={cn(
+                        "aspect-square rounded-lg border-2 transition-all duration-300",
+                        color,
+                        i === 0
+                          ? "border-foreground scale-110"
+                          : "border-transparent hover:scale-105",
+                      )}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-semibold">Typography</span>
+                </div>
+                <div className="space-y-2">
+                  {["Inter", "Geist", "Roboto"].map((font, i) => (
+                    <div
+                      key={font}
+                      className={cn(
+                        "px-3 py-2 rounded-lg border transition-all duration-300 cursor-pointer",
+                        i === 0
+                          ? "border-primary bg-primary/5"
+                          : "border-border/40 hover:border-primary/30",
+                      )}
+                    >
+                      <span className="text-xs font-medium">{font}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: AI Config */}
+          {activeTab === 2 && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-left-2 duration-300">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Bot className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-semibold">AI Provider</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[10px] text-emerald-600 font-medium">
+                    Connected
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {[
+                  { name: "Ollama", badge: "LOCAL", icon: Cpu },
+                  { name: "OpenAI", badge: "CLOUD", icon: Zap },
+                  { name: "Anthropic", badge: "CLOUD", icon: Bot },
+                ].map((provider, i) => {
+                  const Icon = provider.icon;
+                  return (
+                    <button
+                      key={provider.name}
+                      className={cn(
+                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all duration-300",
+                        i === 0
+                          ? "border-primary bg-primary/5"
+                          : "border-border/40 hover:border-primary/30",
+                      )}
+                    >
+                      <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Icon className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <div className="text-xs font-semibold">
+                          {provider.name}
+                        </div>
+                        <Badge
+                          variant="secondary"
+                          className="text-[8px] px-1 py-0 h-3 mt-0.5"
+                        >
+                          {provider.badge}
+                        </Badge>
+                      </div>
+                      {i === 0 && (
+                        <Check className="h-3.5 w-3.5 text-primary" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="pt-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <Terminal className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Model
+                  </span>
+                </div>
+                <div className="px-3 py-2 rounded-lg border border-border/40 bg-muted/20">
+                  <span className="text-xs font-mono">llama3.2:3b</span>
+                </div>
+              </div>
+
+              <button
+                className={cn(
+                  "w-full px-3 py-2 rounded-lg border border-primary/30 bg-primary/5",
+                  "text-xs font-medium text-primary",
+                  "hover:bg-primary/10 transition-colors duration-200",
+                  "flex items-center justify-center gap-2",
+                )}
+              >
+                <RefreshCw className="h-3 w-3" />
+                Test Connection
+              </button>
+            </div>
+          )}
+
+          {/* TAB 3: History */}
+          {activeTab === 3 && (
+            <div className="space-y-3 animate-in fade-in slide-in-from-left-2 duration-300">
+              <div className="flex items-center gap-2 mb-3">
+                <History className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold">Version History</span>
+              </div>
+              {[
+                { time: "2 min ago", action: "AI: Updated summary" },
+                { time: "15 min ago", action: "Added experience" },
+                { time: "1 hour ago", action: "Changed template" },
+              ].map((entry, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "flex items-start gap-2 px-3 py-2 rounded-lg transition-all duration-300",
+                    "border border-border/40 hover:border-primary/30 hover:bg-primary/5 cursor-pointer",
+                  )}
+                >
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5" />
+                  <div className="flex-1">
+                    <div className="text-xs font-medium">{entry.action}</div>
+                    <div className="text-[10px] text-muted-foreground">
+                      {entry.time}
+                    </div>
+                  </div>
+                  {i === 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="text-[8px] px-1 py-0 h-3"
+                    >
+                      CURRENT
+                    </Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* TAB 4: Storage */}
+          {activeTab === 4 && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-left-2 duration-300">
+              <div className="flex items-center gap-2 mb-3">
+                <Database className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold">Storage Manager</span>
+              </div>
+
+              <div className="rounded-lg border border-border/40 bg-muted/20 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium">Usage</span>
+                  <span className="text-[10px] text-muted-foreground font-mono">
+                    47.2 KB / 5 MB
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-primary/70 to-primary"
+                    style={{ width: "12%" }}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { label: "CV Data", size: "12.8 KB", icon: FileText },
+                  { label: "AI Config", size: "1.2 KB", icon: Bot },
+                  { label: "Templates", size: "28.1 KB", icon: Palette },
+                  { label: "History", size: "5.1 KB", icon: History },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div
+                      key={item.label}
+                      className="flex items-center gap-2 px-2.5 py-2 rounded-lg border border-border/30 bg-background/50"
+                    >
+                      <Icon className="h-3.5 w-3.5 text-primary" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[10px] font-medium truncate">
+                          {item.label}
+                        </div>
+                        <div className="text-[9px] text-muted-foreground">
+                          {item.size}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex gap-2">
+                <button className="flex-1 px-2 py-1.5 rounded-md border border-border/40 text-[10px] font-medium hover:bg-muted/20">
+                  Export
+                </button>
+                <button className="flex-1 px-2 py-1.5 rounded-md border border-border/40 text-[10px] font-medium hover:bg-muted/20">
+                  Import
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: Preview Only */}
+          {activeTab === 5 && (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center space-y-2">
+                <Eye className="h-8 w-8 text-muted-foreground mx-auto" />
+                <p className="text-xs text-muted-foreground">
+                  Full preview mode
+                </p>
+                <p className="text-[10px] text-muted-foreground/70">
+                  See complete CV on the right →
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Preview panel */}
+        <div
+          className={cn(
+            "hidden sm:block w-[42%] border-l p-6 transition-all duration-500",
+            env.border,
+          )}
+          style={{
+            backgroundColor: env.sidebar.startsWith("#")
+              ? env.sidebar
+              : undefined,
+          }}
+        >
+          <div
+            className={cn(
+              "w-full h-full rounded-lg border shadow-md p-5 space-y-3 overflow-y-auto transition-all duration-500",
+              env.border,
+            )}
+            style={{ backgroundColor: env.previewBg }}
+          >
+            <div
+              className={cn(
+                "text-center pb-2 transition-all duration-500",
+                expandedSection === "personal" && "scale-105",
+                env.border,
+              )}
+              style={{
+                borderBottomColor:
+                  expandedSection === "personal"
+                    ? env.accentText.replace("text-", "#")
+                    : env.border.replace("border-[", "#").replace("]", ""),
+              }}
+            >
+              <div
+                className="h-2.5 rounded w-2/3 mx-auto mb-1"
+                style={{
+                  backgroundColor:
+                    selectedTheme === "dark"
+                      ? "#e8e8e8"
+                      : selectedTheme === "light"
+                        ? "#1a1a1a"
+                        : "#1a1a1a",
+                }}
+              />
+              <div
+                className="h-1.5 rounded w-1/2 mx-auto"
+                style={{
+                  backgroundColor:
+                    selectedTheme === "dark" ? "#888888" : "#a0a0a0",
+                }}
+              />
+            </div>
+            <div
+              className={cn(
+                "space-y-2 transition-all duration-500",
+                expandedSection === "summary" &&
+                  "ring-2 ring-offset-2 rounded-lg p-2 -m-2",
+              )}
+              style={{
+                boxShadow:
+                  expandedSection === "summary"
+                    ? `0 0 0 2px ${env.accentBorder.replace("border-[", "#").replace("]", "")}, 0 0 0 4px ${env.container}`
+                    : undefined,
+              }}
+            >
+              <div
+                className="h-1.5 rounded w-1/3 font-bold"
+                style={{
+                  backgroundColor: env.accentBg.includes("#")
+                    ? env.accentBg
+                    : selectedTheme === "light"
+                      ? "#d5ead5"
+                      : selectedTheme === "dark"
+                        ? "#1a3d2e"
+                        : "#f0f4fc",
+                }}
+              />
+              <div
+                className="h-1 rounded w-full"
+                style={{
+                  backgroundColor:
+                    selectedTheme === "dark" ? "#3a3a3a" : "#d0d0d0",
+                }}
+              />
+              <div
+                className="h-1 rounded w-[90%]"
+                style={{
+                  backgroundColor:
+                    selectedTheme === "dark" ? "#3a3a3a" : "#d0d0d0",
+                }}
+              />
+              <div
+                className="h-1 rounded w-[75%]"
+                style={{
+                  backgroundColor:
+                    selectedTheme === "dark" ? "#3a3a3a" : "#d0d0d0",
+                }}
+              />
+            </div>
+            <div
+              className={cn(
+                "space-y-2 pt-1 transition-all duration-500",
+                expandedSection === "experience" &&
+                  "ring-2 ring-offset-2 rounded-lg p-2 -m-2",
+              )}
+              style={{
+                boxShadow:
+                  expandedSection === "experience"
+                    ? `0 0 0 2px ${env.accentBorder.replace("border-[", "#").replace("]", "")}, 0 0 0 4px ${env.container}`
+                    : undefined,
+              }}
+            >
+              <div
+                className="h-1.5 rounded w-2/5"
+                style={{
+                  backgroundColor: env.accentBg.includes("#")
+                    ? env.accentBg
+                    : selectedTheme === "light"
+                      ? "#d5ead5"
+                      : selectedTheme === "dark"
+                        ? "#1a3d2e"
+                        : "#f0f4fc",
+                }}
+              />
+              <div className="flex gap-3">
+                <div className="flex-1 space-y-1">
+                  <div
+                    className="h-1 rounded w-3/4"
+                    style={{
+                      backgroundColor:
+                        selectedTheme === "dark" ? "#555555" : "#c0c0c0",
+                    }}
+                  />
+                  <div
+                    className="h-0.5 rounded w-full"
+                    style={{
+                      backgroundColor:
+                        selectedTheme === "dark" ? "#3a3a3a" : "#d0d0d0",
+                    }}
+                  />
+                  <div
+                    className="h-0.5 rounded w-[85%]"
+                    style={{
+                      backgroundColor:
+                        selectedTheme === "dark" ? "#3a3a3a" : "#d0d0d0",
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2 pt-1">
+              <div
+                className="h-1.5 rounded w-1/4"
+                style={{
+                  backgroundColor: env.accentBg.includes("#")
+                    ? env.accentBg
+                    : selectedTheme === "light"
+                      ? "#d5ead5"
+                      : selectedTheme === "dark"
+                        ? "#1a3d2e"
+                        : "#f0f4fc",
+                }}
+              />
+              <div className="flex gap-1.5 flex-wrap">
+                {["w-12", "w-14", "w-10", "w-16", "w-11"].map((w, i) => (
+                  <div
+                    key={i}
+                    className={cn("h-3 rounded-full border", w)}
+                    style={{
+                      backgroundColor:
+                        selectedTheme === "light"
+                          ? "#d5ead5"
+                          : selectedTheme === "dark"
+                            ? "#1a3d2e"
+                            : "#f0f4fc",
+                      borderColor:
+                        selectedTheme === "light"
+                          ? "#a8d5c4"
+                          : selectedTheme === "dark"
+                            ? "#2d7a63"
+                            : "#a8c5f0",
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function LandingPage() {
   const [mounted, setMounted] = useState(false);
 
@@ -486,6 +1400,72 @@ export function LandingPage() {
           }
           50% {
             transform: translateY(-20px) scale(1.1);
+          }
+        }
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes clickPulse {
+          0%,
+          100% {
+            box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0.4);
+          }
+          50% {
+            box-shadow: 0 0 0 8px rgba(var(--primary-rgb), 0);
+          }
+        }
+        @keyframes parallax {
+          0% {
+            transform: translateY(0);
+          }
+          100% {
+            transform: translateY(20px);
+          }
+        }
+        @keyframes glow {
+          0%,
+          100% {
+            opacity: 0.5;
+            filter: blur(8px);
+          }
+          50% {
+            opacity: 0.8;
+            filter: blur(12px);
+          }
+        }
+        @keyframes shimmer {
+          0% {
+            background-position: -1000px 0;
+          }
+          100% {
+            background-position: 1000px 0;
+          }
+        }
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes fadeInDown {
+          from {
+            opacity: 0;
+            transform: translateY(-30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
           }
         }
       `}</style>
@@ -670,6 +1650,187 @@ export function LandingPage() {
         <WaveDivider className="-mb-px" />
       </section>
 
+      {/* THE PROBLEM */}
+      <section className="relative py-24 sm:py-32 overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/5 to-background" />
+        <div
+          className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-amber-500/8 rounded-full blur-[140px] pointer-events-none"
+          style={{ animation: "glow 8s ease-in-out infinite" }}
+        />
+        <div
+          className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none"
+          style={{ animation: "glow 10s ease-in-out infinite 2s" }}
+        />
+
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <ScrollReveal>
+            <div className="text-center mb-16">
+              <Badge
+                variant="outline"
+                className="mb-4 border-amber-500/30 text-amber-700 dark:text-amber-400 bg-amber-500/5"
+              >
+                The Problem
+              </Badge>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6">
+                We've been thinking about CVs{" "}
+                <span className="text-amber-600 dark:text-amber-500">
+                  all wrong
+                </span>
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+                Your career is one dataset. A CV is just a generated view of
+                that data — tailored for context, formatted for presentation.
+                But the tools we use treat CVs as documents. Edit, duplicate,
+                tweak for a role, save a new version, repeat.
+                <br />
+                <span className="font-medium text-foreground">
+                  And that's not the only problem.
+                </span>
+              </p>
+            </div>
+          </ScrollReveal>
+
+          {/* Two-column layout: Concept + Practical Issues */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
+            {/* Left: The Conceptual Problem */}
+            <ScrollReveal delay={100}>
+              <div
+                className={cn(
+                  "rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 p-8",
+                  "backdrop-blur-sm shadow-xl shadow-primary/5",
+                )}
+              >
+                <div className="flex items-start gap-3 mb-4">
+                  <Database className="h-6 w-6 text-primary shrink-0 mt-1" />
+                  <div>
+                    <h3 className="font-bold text-xl mb-2">
+                      Your career is one dataset
+                    </h3>
+                    <p className="text-muted-foreground leading-relaxed">
+                      Stop editing the same information over and over. Maintain
+                      one structured record, generate tailored CVs.
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 pl-9 space-y-2 text-sm">
+                  <div className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                    <span className="text-muted-foreground">
+                      Source data stays intact
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                    <span className="text-muted-foreground">
+                      Only the generated output changes
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                    <span className="text-muted-foreground">
+                      Tailored for each opportunity from one source of truth
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            {/* Right: The Commercial Problem */}
+            <ScrollReveal delay={200}>
+              <div className="space-y-4">
+                {[
+                  {
+                    icon: Lock,
+                    title: "No Paywalls",
+                    description:
+                      "Download your own CV without a subscription. No premium features, no upsells.",
+                  },
+                  {
+                    icon: Shield,
+                    title: "100% Private",
+                    description:
+                      "Your data never leaves your device. Zero server tracking, zero data selling.",
+                  },
+                  {
+                    icon: Palette,
+                    title: "Full Creative Control",
+                    description:
+                      "13 languages, 3 themes, unlimited templates. Customize everything.",
+                  },
+                  {
+                    icon: Globe,
+                    title: "Open Source & Free Forever",
+                    description:
+                      "MIT licensed. Built for the community, not a VC-funded business model.",
+                  },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <ScrollReveal delay={250} key={item.title}>
+                      <div
+                        className={cn(
+                          "flex items-start gap-3 p-4 rounded-xl border border-border/50 bg-card/30",
+                          "transition-all duration-300 hover:border-primary/30 hover:bg-primary/5",
+                        )}
+                      >
+                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                          <Icon className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-sm mb-1">
+                            {item.title}
+                          </h4>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {item.description}
+                          </p>
+                        </div>
+                      </div>
+                    </ScrollReveal>
+                  );
+                })}
+              </div>
+            </ScrollReveal>
+          </div>
+
+          {/* How it works */}
+          <ScrollReveal delay={400}>
+            <div className="bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-2xl border border-primary/10 p-6 sm:p-8">
+              <h3 className="font-bold text-lg mb-4 text-center">
+                Instead of endless editing
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[
+                  {
+                    num: "1",
+                    title: "Maintain",
+                    desc: "One structured record of your experience",
+                  },
+                  {
+                    num: "2",
+                    title: "Paste",
+                    desc: "A job description when applying",
+                  },
+                  {
+                    num: "3",
+                    title: "Generate",
+                    desc: "A tailored CV in seconds",
+                  },
+                ].map((step) => (
+                  <div key={step.num} className="text-center">
+                    <div className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold mx-auto mb-3">
+                      {step.num}
+                    </div>
+                    <h4 className="font-semibold text-sm mb-1">{step.title}</h4>
+                    <p className="text-xs text-muted-foreground">{step.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
       {/* HOW IT WORKS */}
       <section
         id="how-it-works"
@@ -736,8 +1897,16 @@ export function LandingPage() {
       </section>
 
       {/* EDITOR PREVIEW */}
-      <section className="py-24 sm:py-28 relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-primary/3 rounded-full blur-[120px] pointer-events-none" />
+      <section className="py-24 sm:py-28 relative overflow-hidden bg-gradient-to-b from-background via-muted/5 to-background">
+        {/* Animated accent elements */}
+        <div
+          className="absolute top-0 right-1/3 w-[700px] h-[700px] bg-primary/5 rounded-full blur-[150px] pointer-events-none"
+          style={{ animation: "glow 12s ease-in-out infinite" }}
+        />
+        <div
+          className="absolute -bottom-1/4 left-1/4 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[140px] pointer-events-none"
+          style={{ animation: "glow 14s ease-in-out infinite 3s" }}
+        />
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <ScrollReveal>
@@ -759,192 +1928,8 @@ export function LandingPage() {
           </ScrollReveal>
 
           <ScrollReveal delay={200}>
-            <div
-              className={cn(
-                "relative rounded-2xl border border-border/50 bg-card overflow-hidden",
-                "shadow-[0_20px_60px_-12px_rgba(0,0,0,0.15)]",
-                "ring-1 ring-border/20",
-              )}
-            >
-              <div className="flex items-center gap-2 px-4 h-10 border-b border-border/50 bg-gradient-to-r from-card to-muted/20">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-400/70" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-400/70" />
-                  <div className="w-3 h-3 rounded-full bg-green-400/70" />
-                </div>
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="px-6 py-1 rounded-full bg-muted/60 text-xs text-muted-foreground flex items-center gap-2">
-                    <Lock className="h-2.5 w-2.5" />
-                    cvgenerator.app/editor
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex h-[420px] sm:h-[500px]">
-                <div className="w-12 border-r border-border/40 bg-card/80 flex flex-col items-center py-3 gap-1.5">
-                  {[
-                    { icon: FileText, active: true },
-                    { icon: Palette, active: false },
-                    { icon: Sparkles, active: false },
-                    { icon: History, active: false },
-                    { icon: Database, active: false },
-                    { icon: Eye, active: false },
-                  ].map(({ icon: Icon, active }, i) => (
-                    <div
-                      key={i}
-                      className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
-                        active
-                          ? "bg-primary/15 text-primary shadow-sm"
-                          : "text-muted-foreground/50 hover:text-muted-foreground",
-                      )}
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex-1 p-5 overflow-hidden">
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center">
-                          <FileText className="h-3 w-3 text-primary" />
-                        </div>
-                        <span className="text-sm font-semibold">
-                          Personal Information
-                        </span>
-                        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground ml-auto" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {[
-                          { label: "Full Name", value: "Sarah Johnson" },
-                          { label: "Email", value: "sarah@example.com" },
-                          { label: "Phone", value: "+1 (555) 123-4567" },
-                          { label: "Location", value: "San Francisco, CA" },
-                        ].map((field) => (
-                          <div
-                            key={field.label}
-                            className="rounded-lg border border-border/40 bg-muted/20 px-3 py-2"
-                          >
-                            <div className="text-[10px] text-muted-foreground mb-0.5 font-medium">
-                              {field.label}
-                            </div>
-                            <div className="text-xs text-foreground/70">
-                              {field.value}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center">
-                          <Sparkles className="h-3 w-3 text-primary" />
-                        </div>
-                        <span className="text-sm font-semibold">
-                          Professional Summary
-                        </span>
-                        <Badge
-                          variant="secondary"
-                          className="text-[9px] px-1 py-0 h-3.5 ml-1"
-                        >
-                          AI
-                        </Badge>
-                      </div>
-                      <div className="rounded-lg border border-border/40 bg-muted/20 px-3 py-2 space-y-1">
-                        <div className="h-2 rounded bg-muted-foreground/8 w-full" />
-                        <div className="h-2 rounded bg-muted-foreground/8 w-[92%]" />
-                        <div className="h-2 rounded bg-muted-foreground/8 w-[78%]" />
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center">
-                          <Layers className="h-3 w-3 text-primary" />
-                        </div>
-                        <span className="text-sm font-semibold">
-                          Work Experience
-                        </span>
-                      </div>
-                      <div className="rounded-lg border border-border/40 bg-muted/20 p-3 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="h-2.5 rounded bg-foreground/12 w-1/3" />
-                          <div className="text-[9px] text-muted-foreground">
-                            2020 — Present
-                          </div>
-                        </div>
-                        <div className="h-2 rounded bg-primary/10 w-2/5" />
-                        <div className="space-y-0.5">
-                          <div className="h-1.5 rounded bg-muted-foreground/6 w-full" />
-                          <div className="h-1.5 rounded bg-muted-foreground/6 w-[88%]" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="hidden sm:block w-[42%] border-l border-border/40 bg-gradient-to-br from-muted/10 to-muted/30 p-6">
-                  <div className="w-full h-full rounded-lg border border-border/50 bg-white shadow-md p-5 space-y-3">
-                    <div className="text-center pb-2 border-b border-slate-100">
-                      <div className="h-2.5 rounded bg-slate-800 w-2/3 mx-auto mb-1" />
-                      <div className="h-1.5 rounded bg-slate-400 w-1/2 mx-auto" />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="h-1.5 rounded bg-blue-500/25 w-1/3 font-bold" />
-                      <div className="h-1 rounded bg-slate-200 w-full" />
-                      <div className="h-1 rounded bg-slate-200 w-[90%]" />
-                      <div className="h-1 rounded bg-slate-200 w-[75%]" />
-                    </div>
-                    <div className="space-y-2 pt-1">
-                      <div className="h-1.5 rounded bg-blue-500/25 w-2/5" />
-                      <div className="flex gap-3">
-                        <div className="flex-1 space-y-1">
-                          <div className="h-1 rounded bg-slate-300 w-3/4" />
-                          <div className="h-0.5 rounded bg-slate-200 w-full" />
-                          <div className="h-0.5 rounded bg-slate-200 w-[85%]" />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-2 pt-1">
-                      <div className="h-1.5 rounded bg-blue-500/25 w-1/4" />
-                      <div className="flex gap-1.5 flex-wrap">
-                        {["w-12", "w-14", "w-10", "w-16", "w-11"].map(
-                          (w, i) => (
-                            <div
-                              key={i}
-                              className={cn(
-                                "h-3 rounded-full bg-blue-50 border border-blue-100",
-                                w,
-                              )}
-                            />
-                          ),
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </ScrollReveal>
-
-          <ScrollReveal delay={400}>
-            <div className="flex justify-center gap-3 mt-6">
-              {[
-                { name: "Console Light", color: "bg-emerald-500" },
-                { name: "Console Dark", color: "bg-emerald-700" },
-                { name: "Modern", color: "bg-blue-500" },
-              ].map((theme) => (
-                <div
-                  key={theme.name}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/40 bg-card/60 text-[11px] text-muted-foreground"
-                >
-                  <div className={cn("h-2 w-2 rounded-full", theme.color)} />
-                  {theme.name}
-                </div>
-              ))}
+            <div style={{ animation: "fadeInUp 0.8s ease-out" }}>
+              <EditorPreviewWithThemes />
             </div>
           </ScrollReveal>
         </div>
@@ -1087,9 +2072,14 @@ export function LandingPage() {
       {/* FEATURES */}
       <section
         id="features"
-        className="relative py-24 sm:py-28 overflow-hidden scroll-mt-14"
+        className="relative py-24 sm:py-32 overflow-hidden scroll-mt-14 bg-gradient-to-b from-background via-muted/5 to-muted/10"
       >
-        <div className="absolute inset-0 bg-muted/20" />
+        {/* Animated background */}
+        <div
+          className="absolute top-1/3 right-1/3 w-[900px] h-[900px] bg-primary/5 rounded-full blur-[180px] pointer-events-none"
+          style={{ animation: "glow 16s ease-in-out infinite" }}
+        />
+
         <WaveDivider flip className="absolute top-0 left-0 right-0" />
 
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
@@ -1417,6 +2407,151 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* WHY FREE? */}
+      <section className="relative py-24 sm:py-32 overflow-hidden bg-gradient-to-b from-muted/10 via-background to-background">
+        {/* Animated background elements */}
+        <div
+          className="absolute top-0 right-1/4 w-[700px] h-[700px] bg-primary/8 rounded-full blur-[150px] pointer-events-none"
+          style={{ animation: "glow 14s ease-in-out infinite" }}
+        />
+        <div
+          className="absolute bottom-1/4 left-1/3 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[120px] pointer-events-none"
+          style={{ animation: "glow 12s ease-in-out infinite 2s" }}
+        />
+
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <ScrollReveal>
+            <div className="text-center mb-14">
+              <Badge
+                variant="outline"
+                className="mb-4 border-primary/20 text-primary"
+              >
+                Why Free?
+              </Badge>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+                Because this is how{" "}
+                <GradientText>I think software should work</GradientText>
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                This started as a personal project while exploring practical
+                applications of LLMs — tools that support our work without
+                making decisions for us.
+                <br />
+                <span className="font-medium text-foreground">
+                  Built for the community, open source, free forever.
+                </span>
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            {[
+              {
+                icon: Globe,
+                title: "Open Source",
+                description:
+                  "MIT licensed. Fork it, study it, improve it. Full transparency.",
+                delay: 0,
+              },
+              {
+                icon: Shield,
+                title: "Privacy First",
+                description:
+                  "No data collection means zero server costs to pass on to you.",
+                delay: 100,
+              },
+              {
+                icon: Star,
+                title: "Community Driven",
+                description:
+                  "Built by developers, for developers. Your feedback shapes the roadmap.",
+                delay: 200,
+              },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <ScrollReveal key={item.title} delay={item.delay}>
+                  <div
+                    className={cn(
+                      "group text-center rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6",
+                      "transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5",
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "h-14 w-14 rounded-xl mx-auto mb-4 flex items-center justify-center",
+                        "bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/10",
+                        "transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/10",
+                      )}
+                    >
+                      <Icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <h3 className="font-bold text-base mb-2">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {item.description}
+                    </p>
+                  </div>
+                </ScrollReveal>
+              );
+            })}
+          </div>
+
+          <ScrollReveal delay={300}>
+            <div
+              className={cn(
+                "rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 p-8",
+                "backdrop-blur-sm",
+              )}
+            >
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                <div className="flex-shrink-0">
+                  <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Sparkles className="h-8 w-8 text-primary" />
+                  </div>
+                </div>
+                <div className="flex-1 text-center sm:text-left">
+                  <h3 className="font-bold text-lg mb-2">Stay Connected</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Follow my journey exploring LLMs, building open-source
+                    tools, and sharing what I learn. Articles, projects, and
+                    experiments — all in public.
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
+                    <a
+                      href="https://www.linkedin.com/in/destbreso/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        "inline-flex items-center gap-2 px-4 py-2 rounded-lg",
+                        "bg-primary text-primary-foreground font-medium text-sm",
+                        "hover:bg-primary/90 transition-all duration-300 hover:scale-105",
+                        "shadow-md shadow-primary/20",
+                      )}
+                    >
+                      <Linkedin className="h-4 w-4" />
+                      Follow on LinkedIn
+                    </a>
+                    <a
+                      href="https://destbreso.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        "inline-flex items-center gap-2 px-4 py-2 rounded-lg",
+                        "border border-primary/30 bg-background/50 font-medium text-sm",
+                        "hover:bg-primary/5 hover:border-primary transition-all duration-300",
+                      )}
+                    >
+                      <Globe className="h-4 w-4" />
+                      Visit destbreso.com
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
       {/* FINAL CTA */}
       <section className="relative py-28 sm:py-36 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/[0.03] to-background" />
@@ -1462,32 +2597,167 @@ export function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-border/30 py-8 bg-card/30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
-            <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center">
-              <FileText className="h-3 w-3 text-primary" />
+      <footer className="border-t border-border/30 bg-card/30">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            {/* Brand */}
+            <div className="md:col-span-2">
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/15 flex items-center justify-center">
+                  <FileText className="h-4 w-4 text-primary" />
+                </div>
+                <span className="font-bold text-foreground tracking-tight">
+                  CV Generator
+                </span>
+                <Badge
+                  variant="secondary"
+                  className="text-[10px] px-1.5 py-0 h-4 bg-primary/10 text-primary border-0"
+                >
+                  FREE
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-4 max-w-sm">
+                Build professional resumes with AI-powered tools, beautiful
+                templates, and complete privacy. Open source, forever free.
+              </p>
+              <div className="flex items-center gap-3">
+                <a
+                  href="https://github.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="GitHub"
+                >
+                  <Github className="h-5 w-5" />
+                </a>
+                <a
+                  href="https://www.linkedin.com/in/destbreso/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="LinkedIn"
+                >
+                  <Linkedin className="h-5 w-5" />
+                </a>
+              </div>
             </div>
-            <span className="font-medium">CV Generator</span>
-            <span className="text-muted-foreground/30">·</span>
-            <span>© {new Date().getFullYear()}</span>
+
+            {/* Quick Links */}
+            <div>
+              <h3 className="font-semibold text-sm mb-3">Product</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link
+                    href="/editor"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Editor
+                  </Link>
+                </li>
+                <li>
+                  <a
+                    href="#templates"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Templates
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#features"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Features
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Resources */}
+            <div>
+              <h3 className="font-semibold text-sm mb-3">Resources</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link
+                    href="/faq"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    FAQ
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/privacy"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <a
+                    href="https://destbreso.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
+                  >
+                    Blog & Articles
+                    <ArrowRight className="h-3 w-3" />
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
-          <div className="flex items-center gap-5 text-sm text-muted-foreground">
-            <Link
-              href="/privacy"
-              className="hover:text-foreground transition-colors"
-            >
-              Privacy
-            </Link>
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-foreground transition-colors flex items-center gap-1.5"
-            >
-              <Github className="h-3.5 w-3.5" />
-              GitHub
-            </a>
+
+          {/* Bottom bar */}
+          <div className="pt-8 border-t border-border/30">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="text-sm text-muted-foreground text-center md:text-left">
+                <p>
+                  © {new Date().getFullYear()} CV Generator. Created by{" "}
+                  <a
+                    href="https://destbreso.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline font-medium"
+                  >
+                    David Estévez Bresó
+                  </a>
+                  .
+                </p>
+                <p className="text-xs mt-1">
+                  Open source under MIT License. Free forever, built for the
+                  community.
+                </p>
+              </div>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <a
+                  href="https://destbreso.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground transition-colors"
+                >
+                  destbreso.com
+                </a>
+                <span className="text-muted-foreground/30">·</span>
+                <a
+                  href="https://www.linkedin.com/in/destbreso/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground transition-colors"
+                >
+                  LinkedIn
+                </a>
+                <span className="text-muted-foreground/30">·</span>
+                <a
+                  href="https://github.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground transition-colors"
+                >
+                  GitHub
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
@@ -1634,9 +2904,15 @@ const FEATURES = [
   },
   {
     icon: Linkedin,
-    title: "LinkedIn Import",
+    title: "PDF Import & LinkedIn",
     description:
-      "Upload your LinkedIn PDF and let AI extract and structure your data automatically — instant CV from your profile.",
+      "Import any existing PDF CV (including LinkedIn's generated PDF) and let AI extract and structure your data automatically.",
+  },
+  {
+    icon: Globe,
+    title: "13 Languages Supported",
+    description:
+      "Generate your CV in English, Spanish, French, German, Portuguese, Italian, Dutch, Chinese, Japanese, Korean, Arabic, Russian, or Hindi.",
   },
   {
     icon: Terminal,
