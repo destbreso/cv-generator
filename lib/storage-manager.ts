@@ -12,8 +12,15 @@ export interface StorageKeyInfo {
   key: string;
   label: string;
   description: string;
-  category: "cv-data" | "ai-config" | "templates" | "preferences" | "history";
+  category:
+    | "cv-data"
+    | "ai-config"
+    | "templates"
+    | "preferences"
+    | "history"
+    | "secrets";
   critical: boolean; // If true, deleting may break the app flow
+  storage?: "local" | "session" | "memory"; // Where the key is stored (default: local). Memory = not persisted anywhere
 }
 
 export const STORAGE_REGISTRY: StorageKeyInfo[] = [
@@ -147,6 +154,17 @@ export const STORAGE_REGISTRY: StorageKeyInfo[] = [
     category: "preferences",
     critical: false,
   },
+
+  // Secrets (Memory Only - NEVER Persisted)
+  {
+    key: "ai-api-key",
+    label: "AI Provider API Key",
+    description:
+      "API keys are stored ONLY in memory during the current session. They are NOT saved to localStorage, sessionStorage, or cookies. User must re-enter the key each time they open the editor. This is the most secure approach for browser-based applications.",
+    category: "secrets",
+    critical: false,
+    storage: "memory",
+  },
 ];
 
 // ─── Storage Item ────────────────────────────────────────────────────────────
@@ -199,13 +217,14 @@ function generatePreview(value: string | null, maxLen: number = 120): string {
 }
 
 /**
- * Scan localStorage for all known CV Generator keys and return their status
+ * Scan localStorage and sessionStorage for all known CV Generator keys and return their status
  */
 export function scanStorage(): StorageItem[] {
   if (typeof window === "undefined") return [];
 
   return STORAGE_REGISTRY.map((info) => {
-    const rawValue = localStorage.getItem(info.key);
+    const storage = info.storage === "session" ? sessionStorage : localStorage;
+    const rawValue = storage.getItem(info.key);
     const exists = rawValue !== null;
     const sizeBytes = exists ? getStringByteSize(rawValue!) : 0;
 
@@ -221,36 +240,54 @@ export function scanStorage(): StorageItem[] {
 }
 
 /**
- * Scan for any unknown localStorage keys not in the registry
- * (from other apps or leftover data)
+ * Scan for dynamic app keys not hardcoded in the registry
+ * (e.g. template_customization_* per-template overrides).
+ * Only returns keys with recognized CV Generator prefixes.
  */
-export function scanUnknownKeys(): StorageItem[] {
+export function scanDynamicAppKeys(): StorageItem[] {
   if (typeof window === "undefined") return [];
 
   const knownKeys = new Set(STORAGE_REGISTRY.map((k) => k.key));
-  const unknownItems: StorageItem[] = [];
+  const dynamicItems: StorageItem[] = [];
 
-  // Also detect dynamic keys like template_customization_*
-  const dynamicPrefixes = ["template_customization_"];
+  // Only recognized dynamic prefixes that belong to this app
+  const APP_DYNAMIC_PREFIXES: {
+    prefix: string;
+    category: StorageKeyInfo["category"];
+    labelFn: (key: string, prefix: string) => string;
+    description: string;
+  }[] = [
+    {
+      prefix: "template_customization_",
+      category: "templates",
+      labelFn: (key, prefix) =>
+        `Template Customization (${key.replace(prefix, "")})`,
+      description: "Per-template customization overrides.",
+    },
+    {
+      prefix: "cv-",
+      category: "preferences",
+      labelFn: (key) => key,
+      description: "CV Generator application data.",
+    },
+  ];
 
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (!key) continue;
     if (knownKeys.has(key)) continue;
 
-    const isDynamic = dynamicPrefixes.some((prefix) => key.startsWith(prefix));
+    const match = APP_DYNAMIC_PREFIXES.find((p) => key.startsWith(p.prefix));
+    if (!match) continue;
+
     const rawValue = localStorage.getItem(key);
     const sizeBytes = rawValue ? getStringByteSize(rawValue) : 0;
 
-    unknownItems.push({
+    dynamicItems.push({
       key,
-      label: isDynamic
-        ? `Template Customization (${key.replace("template_customization_", "")})`
-        : key,
-      description: isDynamic
-        ? "Per-template customization overrides."
-        : "Key not recognized by CV Generator. May belong to another app or be leftover data.",
-      category: isDynamic ? "templates" : "preferences",
+      label: match.labelFn(key, match.prefix),
+      description: match.description,
+      category: match.category,
       critical: false,
       exists: true,
       sizeBytes,
@@ -260,7 +297,7 @@ export function scanUnknownKeys(): StorageItem[] {
     });
   }
 
-  return unknownItems;
+  return dynamicItems;
 }
 
 /**
@@ -289,8 +326,8 @@ export function getStorageSummary(): StorageSummary {
   }
 
   const knownItems = scanStorage().filter((item) => item.exists);
-  const unknownItems = scanUnknownKeys();
-  const allItems = [...knownItems, ...unknownItems];
+  const dynamicItems = scanDynamicAppKeys();
+  const allItems = [...knownItems, ...dynamicItems];
 
   const totalSize = allItems.reduce((acc, item) => acc + item.sizeBytes, 0);
 
@@ -323,22 +360,31 @@ export function getStorageSummary(): StorageSummary {
 }
 
 /**
- * Delete a specific storage key
+ * Delete a specific storage key (from localStorage or sessionStorage)
  */
 export function deleteStorageKey(key: string): boolean {
   if (typeof window === "undefined") return false;
-  localStorage.removeItem(key);
+
+  // Check which storage contains the key
+  const registryItem = STORAGE_REGISTRY.find((item) => item.key === key);
+  const storage =
+    registryItem?.storage === "session" ? sessionStorage : localStorage;
+
+  storage.removeItem(key);
   return true;
 }
 
 /**
- * Delete multiple storage keys
+ * Delete multiple storage keys (from localStorage or sessionStorage)
  */
 export function deleteStorageKeys(keys: string[]): number {
   if (typeof window === "undefined") return 0;
   let count = 0;
   for (const key of keys) {
-    localStorage.removeItem(key);
+    const registryItem = STORAGE_REGISTRY.find((item) => item.key === key);
+    const storage =
+      registryItem?.storage === "session" ? sessionStorage : localStorage;
+    storage.removeItem(key);
     count++;
   }
   return count;
@@ -371,8 +417,8 @@ export function exportAllData(): string {
   if (typeof window === "undefined") return "{}";
 
   const knownItems = scanStorage().filter((item) => item.exists);
-  const unknownItems = scanUnknownKeys();
-  const allItems = [...knownItems, ...unknownItems];
+  const dynamicItems = scanDynamicAppKeys();
+  const allItems = [...knownItems, ...dynamicItems];
 
   const exportData: Record<string, unknown> = {};
   for (const item of allItems) {
@@ -464,5 +510,10 @@ export const CATEGORY_META: Record<
     label: "Generation History",
     icon: "History",
     color: "text-green-500",
+  },
+  secrets: {
+    label: "API Keys (Memory Only)",
+    icon: "AlertTriangle",
+    color: "text-amber-500",
   },
 };

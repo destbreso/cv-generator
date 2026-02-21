@@ -6,7 +6,12 @@ import type { TemplatePaletteColors } from "@/lib/cv-store";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Check, Palette, Layout, Eye, Pipette } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Check, Palette, Layout, Pipette } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function TemplatePanel() {
@@ -37,7 +42,7 @@ export function TemplatePanel() {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="templates" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-4">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
           <TabsTrigger value="templates" className="gap-2 text-xs">
             <Layout className="h-3.5 w-3.5" />
             Templates
@@ -46,48 +51,103 @@ export function TemplatePanel() {
             <Palette className="h-3.5 w-3.5" />
             Colors
           </TabsTrigger>
-          <TabsTrigger value="layout" className="gap-2 text-xs">
-            <Eye className="h-3.5 w-3.5" />
-            Layout
-          </TabsTrigger>
         </TabsList>
 
+        {/* ── Templates + Layout ── */}
         <TabsContent value="templates" className="mt-0">
-          <div className="grid grid-cols-3 gap-2 max-h-[60vh] overflow-y-auto pr-1">
-            {TEMPLATES.map((template) => (
-              <button
-                key={template.id}
-                className={cn(
-                  "group relative rounded-lg border text-left transition-all hover:shadow-md overflow-hidden",
-                  selectedTemplate === template.id
-                    ? "ring-2 ring-primary border-primary"
-                    : "border-border hover:border-muted-foreground/30",
-                )}
-                onClick={() =>
-                  dispatch({ type: "SET_TEMPLATE_ID", payload: template.id })
-                }
-              >
-                <div className={cn("h-14", template.preview)} />
-                <div className="px-2 py-1.5">
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="font-medium text-xs truncate">
-                      {template.name}
-                    </span>
-                    {selectedTemplate === template.id && (
-                      <div className="h-4 w-4 shrink-0 rounded-full bg-primary flex items-center justify-center">
-                        <Check className="h-2.5 w-2.5 text-primary-foreground" />
+          <div className="grid grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+            {TEMPLATES.map((template) => {
+              const isSelected = selectedTemplate === template.id;
+
+              return (
+                <div
+                  key={template.id}
+                  className={cn(
+                    "group relative rounded-lg border text-left transition-all hover:shadow-md overflow-hidden",
+                    isSelected
+                      ? "ring-2 ring-primary border-primary"
+                      : "border-border hover:border-muted-foreground/30",
+                  )}
+                >
+                  {/* Template preview + name */}
+                  <button
+                    className="w-full text-left"
+                    onClick={() =>
+                      dispatch({
+                        type: "SET_TEMPLATE_ID",
+                        payload: template.id,
+                      })
+                    }
+                  >
+                    <div className={cn("h-12", template.preview)} />
+                    <div className="px-2.5 pt-1.5 pb-1">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-medium text-xs truncate">
+                          {template.name}
+                        </span>
+                        {isSelected && (
+                          <div className="h-4 w-4 shrink-0 rounded-full bg-primary flex items-center justify-center">
+                            <Check className="h-2.5 w-2.5 text-primary-foreground" />
+                          </div>
+                        )}
                       </div>
-                    )}
+                      <p className="text-[10px] text-muted-foreground truncate leading-tight">
+                        {template.description}
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Layout picker row */}
+                  <div className="flex items-center gap-0.5 px-2.5 pb-2 pt-0.5">
+                    {LAYOUTS.map((layout) => {
+                      const isLayoutActive =
+                        isSelected && selectedLayout === layout.id;
+                      return (
+                        <Tooltip key={layout.id}>
+                          <TooltipTrigger asChild>
+                            <button
+                              className={cn(
+                                "flex-1 h-6 rounded text-sm flex items-center justify-center transition-all",
+                                isLayoutActive
+                                  ? "bg-primary text-primary-foreground shadow-sm"
+                                  : isSelected
+                                    ? "bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground"
+                                    : "bg-muted/50 text-muted-foreground/50",
+                              )}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Select both template and layout
+                                if (!isSelected) {
+                                  dispatch({
+                                    type: "SET_TEMPLATE_ID",
+                                    payload: template.id,
+                                  });
+                                }
+                                dispatch({
+                                  type: "SET_LAYOUT_ID",
+                                  payload: layout.id,
+                                });
+                              }}
+                            >
+                              <span className="text-[13px] leading-none">
+                                {layout.icon}
+                              </span>
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="text-xs">
+                            {layout.name}
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })}
                   </div>
-                  <p className="text-[10px] text-muted-foreground truncate leading-tight">
-                    {template.description}
-                  </p>
                 </div>
-              </button>
-            ))}
+              );
+            })}
           </div>
         </TabsContent>
 
+        {/* ── Colors ── */}
         <TabsContent value="colors" className="mt-0">
           <div className="max-h-[60vh] overflow-y-auto pr-1 space-y-3">
             {/* Preset palettes – compact 3-col grid */}
@@ -196,35 +256,6 @@ export function TemplatePanel() {
             </div>
           </div>
         </TabsContent>
-
-        <TabsContent value="layout" className="mt-0">
-          <div className="grid grid-cols-2 gap-3">
-            {LAYOUTS.map((layout) => (
-              <Card
-                key={layout.id}
-                className={cn(
-                  "cursor-pointer transition-all hover:shadow-md",
-                  selectedLayout === layout.id && "ring-2 ring-primary",
-                )}
-                onClick={() =>
-                  dispatch({ type: "SET_LAYOUT_ID", payload: layout.id })
-                }
-              >
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="h-12 w-12 rounded bg-muted flex items-center justify-center text-2xl">
-                    {layout.icon}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-sm">{layout.name}</h3>
-                  </div>
-                  {selectedLayout === layout.id && (
-                    <Check className="h-4 w-4 text-primary" />
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
       </Tabs>
 
       {/* Summary */}
@@ -233,16 +264,14 @@ export function TemplatePanel() {
           <h4 className="font-medium text-sm mb-3">Current Configuration</h4>
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline">
-              Template: {TEMPLATES.find((t) => t.id === selectedTemplate)?.name}
+              {TEMPLATES.find((t) => t.id === selectedTemplate)?.name} ·{" "}
+              {LAYOUTS.find((l) => l.id === selectedLayout)?.name}
             </Badge>
             <Badge variant="outline">
               Colors:{" "}
               {selectedPalette === "custom"
                 ? "Custom"
                 : COLOR_PALETTES.find((p) => p.id === selectedPalette)?.name}
-            </Badge>
-            <Badge variant="outline">
-              Layout: {LAYOUTS.find((l) => l.id === selectedLayout)?.name}
             </Badge>
           </div>
         </CardContent>

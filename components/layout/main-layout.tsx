@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -27,17 +28,12 @@ import {
   Palette,
   Sparkles,
   History,
-  Settings2,
   Eye,
   Database,
   EyeOff,
-  Download,
-  Save,
-  Upload,
   Bot,
-  Zap,
-  ChevronRight,
   HelpCircle,
+  Home,
 } from "lucide-react";
 import { useCVStore } from "@/lib/cv-store";
 import { CVEditorPanel } from "@/components/panels/cv-editor-panel";
@@ -46,7 +42,6 @@ import { GeneratePanel } from "@/components/panels/generate-panel";
 import { HistoryPanel } from "@/components/panels/history-panel";
 import { PreviewPanel } from "@/components/panels/preview-panel";
 import { AIConfigSheet } from "@/components/sheets/ai-config-sheet";
-import { ExportSheet } from "@/components/sheets/export-sheet";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { FAQPanel } from "@/components/panels/faq-panel";
 import { StorageManagerPanel } from "@/components/panels/storage-manager-panel";
@@ -57,7 +52,7 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ className }: MainLayoutProps) {
-  const { state, dispatch, saveToStorage, loadFromStorage } = useCVStore();
+  const { state, dispatch, loadFromStorage } = useCVStore();
   const { panels, isDirty, isConnected, aiConfig, isGenerating } = state;
 
   const [mounted, setMounted] = useState(false);
@@ -108,46 +103,52 @@ export function MainLayout({ className }: MainLayoutProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* AI Status */}
-            <Tooltip>
-              <TooltipTrigger asChild>
+            {/* Home Button */}
+            <Link href="/">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9"
+                title="Back to Home"
+              >
+                <Home className="h-4 w-4" />
+              </Button>
+            </Link>
+
+            {/* AI Status + Config Sheet Trigger */}
+            <Sheet
+              open={panels.showAIConfig}
+              onOpenChange={(open) =>
+                dispatch({ type: "SET_AI_CONFIG_OPEN", payload: open })
+              }
+            >
+              <button
+                type="button"
+                onClick={() => dispatch({ type: "TOGGLE_AI_CONFIG" })}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs transition-colors",
+                  "hover:bg-muted/80",
+                  isConnected
+                    ? "bg-green-500/10 text-green-600"
+                    : "bg-muted text-muted-foreground",
+                )}
+                title={
+                  isConnected
+                    ? `Connected to ${aiConfig.provider}`
+                    : "AI not connected"
+                }
+              >
+                <Bot className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">
+                  {aiConfig.model || "No model"}
+                </span>
                 <div
                   className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs transition-colors",
-                    isConnected
-                      ? "bg-green-500/10 text-green-500"
-                      : "bg-muted text-muted-foreground",
+                    "h-2 w-2 rounded-full",
+                    isConnected ? "bg-green-500" : "bg-muted-foreground",
                   )}
-                >
-                  <Bot className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">
-                    {aiConfig.model || "No model"}
-                  </span>
-                  <div
-                    className={cn(
-                      "h-2 w-2 rounded-full",
-                      isConnected ? "bg-green-500" : "bg-muted-foreground",
-                    )}
-                  />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                {isConnected
-                  ? `Connected to ${aiConfig.provider}`
-                  : "AI not connected"}
-              </TooltipContent>
-            </Tooltip>
-
-            {/* Theme Switcher */}
-            <ThemeSwitcher />
-
-            {/* AI Config Sheet */}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <Settings2 className="h-4 w-4" />
-                </Button>
-              </SheetTrigger>
+                />
+              </button>
               <SheetContent className="w-[400px] sm:w-[540px]">
                 <SheetHeader>
                   <SheetTitle className="flex items-center gap-2">
@@ -159,38 +160,8 @@ export function MainLayout({ className }: MainLayoutProps) {
               </SheetContent>
             </Sheet>
 
-            {/* Export Sheet */}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <Download className="h-4 w-4" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent className="w-[400px] sm:w-[540px]">
-                <SheetHeader>
-                  <SheetTitle className="flex items-center gap-2">
-                    <Download className="h-5 w-5" />
-                    Export CV
-                  </SheetTitle>
-                </SheetHeader>
-                <ExportSheet />
-              </SheetContent>
-            </Sheet>
-
-            {/* Save Button */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={isDirty ? "default" : "ghost"}
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={saveToStorage}
-                >
-                  <Save className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Save changes</TooltipContent>
-            </Tooltip>
+            {/* Theme Switcher */}
+            <ThemeSwitcher />
 
             {/* Toggle Preview */}
             <Tooltip>
@@ -219,32 +190,40 @@ export function MainLayout({ className }: MainLayoutProps) {
         <div className="flex-1 flex overflow-hidden">
           {/* Sidebar */}
           <aside className="w-14 border-r border-border bg-card/30 flex flex-col">
+            {/* Workflow steps */}
             <nav className="flex-1 py-4 flex flex-col items-center gap-1">
               <SidebarButton
                 icon={FileText}
-                label="Editor"
+                label="Your Data"
+                step={1}
                 active={panels.activePanel === "editor"}
                 onClick={() =>
                   dispatch({ type: "SET_ACTIVE_PANEL", payload: "editor" })
                 }
               />
               <SidebarButton
-                icon={Palette}
-                label="Templates"
-                active={panels.activePanel === "templates"}
-                onClick={() =>
-                  dispatch({ type: "SET_ACTIVE_PANEL", payload: "templates" })
-                }
-              />
-              <SidebarButton
                 icon={Sparkles}
-                label="Generate"
+                label="AI Enhance"
+                step={2}
                 active={panels.activePanel === "history"}
                 badge={isGenerating ? "..." : undefined}
                 onClick={() =>
                   dispatch({ type: "SET_ACTIVE_PANEL", payload: "history" })
                 }
               />
+              <SidebarButton
+                icon={Palette}
+                label="Design & Export"
+                step={3}
+                active={panels.activePanel === "templates"}
+                onClick={() =>
+                  dispatch({ type: "SET_ACTIVE_PANEL", payload: "templates" })
+                }
+              />
+            </nav>
+
+            {/* Secondary tools */}
+            <div className="p-2 border-t border-border flex flex-col items-center gap-1">
               <SidebarButton
                 icon={History}
                 label="History"
@@ -253,9 +232,6 @@ export function MainLayout({ className }: MainLayoutProps) {
                   dispatch({ type: "SET_ACTIVE_PANEL", payload: "export" })
                 }
               />
-            </nav>
-
-            <div className="p-2 border-t border-border flex flex-col items-center gap-1">
               <SidebarButton
                 icon={Database}
                 label="Storage"
@@ -293,55 +269,81 @@ export function MainLayout({ className }: MainLayoutProps) {
                 }
                 className="flex-1 flex flex-col min-h-0"
               >
-                <div className="border-b border-border px-2">
-                  <TabsList className="h-11 bg-transparent p-0 gap-1">
-                    {[
-                      {
-                        value: "editor" as const,
-                        icon: FileText,
-                        label: "Editor",
-                      },
-                      {
-                        value: "templates" as const,
-                        icon: Palette,
-                        label: "Templates",
-                      },
-                      {
-                        value: "history" as const,
-                        icon: Sparkles,
-                        label: "Generate",
-                      },
-                      {
-                        value: "export" as const,
-                        icon: History,
-                        label: "History",
-                      },
-                      {
-                        value: "storage" as const,
-                        icon: Database,
-                        label: "Storage",
-                      },
-                      {
-                        value: "faq" as const,
-                        icon: HelpCircle,
-                        label: "FAQ",
-                      },
-                    ].map((tab) => (
-                      <TabsTrigger
-                        key={tab.value}
-                        value={tab.value}
-                        className={cn(
-                          "relative h-11 px-3 rounded-none bg-transparent shadow-none transition-colors duration-200",
-                          "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-                          "data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none",
-                          "after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:h-[2px] after:rounded-full after:transition-all after:duration-300",
-                          "after:bg-primary data-[state=active]:after:w-[calc(100%-12px)] after:w-0",
-                        )}
-                      >
-                        <tab.icon className="h-3.5 w-3.5 mr-1.5" />
-                        <span className="text-xs font-medium">{tab.label}</span>
-                      </TabsTrigger>
-                    ))}
+                {/* Workflow step tabs */}
+                <div className="border-b border-border">
+                  <TabsList className="flex items-center px-4 h-11 bg-transparent rounded-none w-full justify-start gap-0">
+                    {(
+                      [
+                        {
+                          value: "editor" as const,
+                          icon: FileText,
+                          label: "Your Data",
+                          step: 1,
+                        },
+                        {
+                          value: "history" as const,
+                          icon: Sparkles,
+                          label: "AI Enhance",
+                          step: 2,
+                        },
+                        {
+                          value: "templates" as const,
+                          icon: Palette,
+                          label: "Design & Export",
+                          step: 3,
+                        },
+                      ] as const
+                    ).map((tab, i) => {
+                      const isActive = panels.activePanel === tab.value;
+                      const workflowSteps = [
+                        "editor",
+                        "history",
+                        "templates",
+                      ] as const;
+                      const activeStepIdx = workflowSteps.indexOf(
+                        panels.activePanel as (typeof workflowSteps)[number],
+                      );
+                      const isPast = activeStepIdx > i;
+
+                      return (
+                        <div key={tab.value} className="flex items-center">
+                          {i > 0 && (
+                            <div
+                              className={cn(
+                                "w-8 h-px mx-1 transition-colors",
+                                isPast ? "bg-primary/40" : "bg-border",
+                              )}
+                            />
+                          )}
+                          <TabsTrigger
+                            value={tab.value}
+                            className={cn(
+                              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200",
+                              "bg-transparent shadow-none border-0 outline-none",
+                              "hover:bg-muted/60",
+                              "data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none",
+                              !isActive && "text-muted-foreground",
+                            )}
+                          >
+                            <div
+                              className={cn(
+                                "h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold border transition-colors",
+                                isActive
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : isPast
+                                    ? "bg-primary/20 text-primary border-primary/30"
+                                    : "border-muted-foreground/30 text-muted-foreground",
+                              )}
+                            >
+                              {tab.step}
+                            </div>
+                            <span className="hidden sm:inline">
+                              {tab.label}
+                            </span>
+                          </TabsTrigger>
+                        </div>
+                      );
+                    })}
                   </TabsList>
                 </div>
 
@@ -390,6 +392,7 @@ export function MainLayout({ className }: MainLayoutProps) {
 interface SidebarButtonProps {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
+  step?: number;
   active?: boolean;
   badge?: string;
   onClick?: () => void;
@@ -398,6 +401,7 @@ interface SidebarButtonProps {
 function SidebarButton({
   icon: Icon,
   label,
+  step,
   active,
   badge,
   onClick,
@@ -420,12 +424,25 @@ function SidebarButton({
           {active && (
             <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-primary" />
           )}
-          <Icon
-            className={cn(
-              "h-4 w-4 transition-transform duration-200",
-              active && "scale-110",
-            )}
-          />
+          {step ? (
+            <div
+              className={cn(
+                "h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold border transition-colors",
+                active
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "border-muted-foreground/30",
+              )}
+            >
+              {step}
+            </div>
+          ) : (
+            <Icon
+              className={cn(
+                "h-4 w-4 transition-transform duration-200",
+                active && "scale-110",
+              )}
+            />
+          )}
           {badge && (
             <span className="absolute -top-1 -right-1 h-4 min-w-4 px-0.5 rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center animate-pulse">
               {badge}
@@ -433,7 +450,12 @@ function SidebarButton({
           )}
         </button>
       </TooltipTrigger>
-      <TooltipContent side="right">{label}</TooltipContent>
+      <TooltipContent side="right">
+        {step && (
+          <span className="text-muted-foreground mr-1">Step {step}:</span>
+        )}
+        {label}
+      </TooltipContent>{" "}
     </Tooltip>
   );
 }

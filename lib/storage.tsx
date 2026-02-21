@@ -1,7 +1,7 @@
 export const DEFAULT_CV_DATA = {
   personalInfo: {
     name: "David Estevez",
-    email: "destbreso@gmail.com",
+    email: "dev.destbreso@gmail.com",
     phone: "+1 (305) 555-0123",
     location: "Miami, Florida",
     website: "https://davidestevez.dev",

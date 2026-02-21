@@ -41,13 +41,31 @@ import {
   Trophy,
   Beaker,
   Eraser,
+  Linkedin,
+  FileText,
+  Sparkles,
+  MoreHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LinkedInImportDialog } from "@/components/linkedin-import-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function CVEditorPanel() {
   const { state, dispatch, updateField, setCVData } = useCVStore();
   const { cvData } = state;
+
+  const [pdfImportOpen, setPdfImportOpen] = useState(false);
 
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     personal: true,
@@ -104,37 +122,97 @@ export function CVEditorPanel() {
 
   return (
     <div className="space-y-4">
-      {/* Action buttons */}
+      {/* Compact action toolbar */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">CV Data</h2>
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => dispatch({ type: "LOAD_SAMPLE_DATA" })}
-          >
-            <Beaker className="h-4 w-4 mr-2" />
-            Load Sample
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => dispatch({ type: "CLEAR_DATA" })}
-          >
-            <Eraser className="h-4 w-4 mr-2" />
-            Clear
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleImport}>
-            <Upload className="h-4 w-4 mr-2" />
-            Import
-          </Button>
-          <LinkedInImportDialog />
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
+        <h2 className="text-lg font-semibold">Your Profile</h2>
+        <div className="flex items-center gap-1">
+          {/* Import dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <Upload className="h-3.5 w-3.5" />
+                Import
+                <ChevronDown className="h-3 w-3 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem
+                onClick={() => setPdfImportOpen(true)}
+                className="gap-2"
+              >
+                <Linkedin className="h-4 w-4 text-[#0A66C2]" />
+                <div className="flex flex-col">
+                  <span className="flex items-center gap-1.5">
+                    LinkedIn PDF
+                    <Sparkles className="h-3 w-3 text-amber-500" />
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">
+                    AI extracts your profile data
+                  </span>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setPdfImportOpen(true)}
+                className="gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                <div className="flex flex-col">
+                  <span>Any Resume PDF</span>
+                  <span className="text-[11px] text-muted-foreground">
+                    AI extracts from any PDF
+                  </span>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleImport} className="gap-2">
+                <Upload className="h-4 w-4" />
+                <div className="flex flex-col">
+                  <span>JSON File</span>
+                  <span className="text-[11px] text-muted-foreground">
+                    Import a CV data backup
+                  </span>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Secondary actions */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => dispatch({ type: "LOAD_SAMPLE_DATA" })}
+                className="gap-2"
+              >
+                <Beaker className="h-4 w-4" />
+                Load Sample Data
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExport} className="gap-2">
+                <Download className="h-4 w-4" />
+                Export as JSON
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => dispatch({ type: "CLEAR_DATA" })}
+                className="gap-2 text-destructive focus:text-destructive"
+              >
+                <Eraser className="h-4 w-4" />
+                Clear All Data
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
+
+      {/* PDF Import dialog (controlled externally) */}
+      <LinkedInImportDialog
+        externalOpen={pdfImportOpen}
+        onExternalOpenChange={setPdfImportOpen}
+      />
 
       {/* ── Personal Info ── */}
       <CollapsibleSection

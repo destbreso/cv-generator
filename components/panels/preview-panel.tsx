@@ -10,6 +10,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
   Eye,
   Code,
   FileText,
@@ -23,9 +30,16 @@ import {
   Sparkles,
   LayoutGrid,
   Rows3,
+  Save,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { CVData } from "@/lib/types";
+import { ExportSheet } from "@/components/sheets/export-sheet";
 
 /* ─── Template style helpers ─── */
 
@@ -260,7 +274,7 @@ const PAGE_MARGIN_BOTTOM = 14;
 const PAGE_MARGIN_SIDE = 0; // side margins handled by CVPreviewContent padding
 
 export function PreviewPanel() {
-  const { state } = useCVStore();
+  const { state, saveToStorage } = useCVStore();
   const {
     cvData,
     generatedCVData,
@@ -282,7 +296,7 @@ export function PreviewPanel() {
   const [previewLayout, setPreviewLayout] = useState<"scroll" | "grid">(
     "scroll",
   );
-  const [pageCount, setPageCount] = useState(1);
+  const [pageBreaks, setPageBreaks] = useState<number[]>([0]);
 
   // Hidden off-screen container to measure total content height
   const measureRef = useRef<HTMLDivElement>(null);
@@ -310,13 +324,110 @@ export function PreviewPanel() {
     [pageHeightPx],
   );
 
-  // Measure content and compute page count
+  /* ── Footer height reservation (px) ── */
+  const FOOTER_HEIGHT_PX = 10;
+  /** Height of the visible content viewport on each page */
+  const viewportPx = contentHeightPx - FOOTER_HEIGHT_PX;
+  /** Safe height for the break calculator — leaves a small buffer so
+   *  the last line of text never gets clipped at the viewport edge */
+  const CONTENT_BUFFER_PX = 10;
+  const usableContentPx = viewportPx - CONTENT_BUFFER_PX;
+
+  /**
+   * Smart page-break calculator (entry-level granularity).
+   *
+   * Instead of treating whole <section> blocks as atomic we decompose
+   * them into their individual entries (job items, education rows …).
+   * This prevents pushing an entire long section to the next page and
+   * leaving the current page nearly empty.
+   *
+   * We also consider sidebar blocks ([data-sidebar]) so that breaks
+   * respect both columns in sidebar layouts.
+   */
   const calculatePages = useCallback(() => {
     if (!measureRef.current) return;
-    const totalH = measureRef.current.scrollHeight;
-    const pages = Math.max(1, Math.ceil(totalH / contentHeightPx));
-    setPageCount(pages);
-  }, [contentHeightPx]);
+    const container = measureRef.current;
+    const totalH = container.scrollHeight;
+
+    if (totalH <= usableContentPx) {
+      setPageBreaks([0]);
+      return;
+    }
+
+    const containerTop = container.getBoundingClientRect().top;
+    const rect = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      return { top: r.top - containerTop, bottom: r.bottom - containerTop };
+    };
+
+    const candidates: { top: number; bottom: number }[] = [];
+
+    // Header – atomic
+    container
+      .querySelectorAll("header")
+      .forEach((el) => candidates.push(rect(el)));
+
+    // Sections – decompose into h2 + individual entries when possible
+    container.querySelectorAll("section").forEach((section) => {
+      const entryContainer = section.querySelector(":scope > div");
+      const entries = entryContainer
+        ? entryContainer.querySelectorAll(":scope > div")
+        : null;
+
+      if (entries && entries.length > 1) {
+        // Section title (h2) is a separate candidate so it won't be orphaned
+        section
+          .querySelectorAll(":scope > h2")
+          .forEach((el) => candidates.push(rect(el)));
+        entries.forEach((el) => candidates.push(rect(el)));
+      } else {
+        // Small / single-entry section – keep atomic
+        candidates.push(rect(section));
+      }
+    });
+
+    // Sidebar blocks (sidebar layouts)
+    container
+      .querySelectorAll("[data-sidebar] > div > div")
+      .forEach((el) => candidates.push(rect(el)));
+
+    if (candidates.length === 0) {
+      const count = Math.max(1, Math.ceil(totalH / usableContentPx));
+      setPageBreaks(
+        Array.from({ length: count }, (_, i) => i * usableContentPx),
+      );
+      return;
+    }
+
+    candidates.sort((a, b) => a.top - b.top);
+
+    const breaks: number[] = [0];
+    let cursor = usableContentPx;
+    const MIN_ADVANCE = 60; // px – prevent degenerate micro-pages
+
+    while (cursor < totalH) {
+      const straddling = candidates.filter(
+        (r) => r.top < cursor && r.bottom > cursor,
+      );
+
+      if (straddling.length > 0) {
+        const safeY = Math.min(...straddling.map((r) => r.top)) - 8;
+        if (safeY > breaks[breaks.length - 1] + MIN_ADVANCE) {
+          breaks.push(safeY);
+          cursor = safeY + usableContentPx;
+          continue;
+        }
+      }
+
+      // Clean boundary or element too tall — accept the cut
+      breaks.push(cursor);
+      cursor += usableContentPx;
+    }
+
+    setPageBreaks(breaks);
+  }, [usableContentPx]);
+
+  const pageCount = pageBreaks.length;
 
   useEffect(() => {
     const node = measureRef.current;
@@ -619,30 +730,102 @@ export function PreviewPanel() {
           color-adjust: exact !important;
         }
         body { background: white; margin: 0; padding: 0; }
-        @page { margin: 8mm 0 8mm 0; size: ${pageSizeCss}; }
+        @page { margin: 0; size: ${pageSizeCss}; }
         .cv-root { max-width: 100%; box-shadow: none; }
       }
     `;
   };
 
+  /**
+   * Build standalone HTML that replicates the preview's virtual pagination
+   * exactly — one fixed-size page per break, with the same offsets,
+   * viewport clipping, background fill, and footer.
+   */
   const buildFullHTML = useCallback(
     (innerHtml: string) => {
       const name = displayData.personalInfo.name || "Untitled";
+      const p = palette;
+      const pageW = `${fmt.widthMm}mm`;
+      const pageH = `${fmt.heightMm}mm`;
+      const marginTopMm = PAGE_MARGIN_TOP;
+      const marginBottomMm = PAGE_MARGIN_BOTTOM;
+
+      // Build one page div per break
+      const pagesHtml = pageBreaks
+        .map((breakOffset, idx) => {
+          const footerHtml = `<div class="page-footer"><span>Built with <a href="https://cv.destevez.dev">CV Generator</a></span></div>`;
+
+          return `
+      <div class="page" style="page-break-after: always; width: ${pageW}; height: ${pageH}; box-sizing: border-box; padding-top: ${marginTopMm}mm; padding-bottom: ${marginBottomMm}mm; overflow: hidden; display: flex; flex-direction: column; position: relative;">
+        <div style="height: ${viewportPx}px; overflow: hidden; flex: none;">
+          <div style="margin-top: -${breakOffset}px;">
+            <div class="cv-root" style="height: ${breakOffset + viewportPx}px;">
+              ${innerHtml}
+            </div>
+          </div>
+        </div>
+        ${footerHtml}
+      </div>`;
+        })
+        .join("\n");
+
+      // Remove the last page-break-after
+      const css = buildExportStyles();
+
       return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CV - ${name}</title>
-  <style>${buildExportStyles()}</style>
+  <style>
+    ${css}
+
+    /* Override @page — pages are self-contained so no extra margins */
+    @page { margin: 0; size: ${fmt.css}; }
+
+    @media print {
+      body { margin: 0; padding: 0; }
+      .page { page-break-after: always !important; }
+      .page:last-child { page-break-after: avoid !important; }
+    }
+
+    .page { background: #ffffff; }
+    .page .cv-root { width: 100%; max-width: 100%; }
+
+    .page-footer {
+      height: ${FOOTER_HEIGHT_PX}px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+      position: relative;
+      z-index: 2;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 6px;
+      color: ${p.secondary}40;
+    }
+    .page-footer a {
+      color: ${p.secondary}60;
+      text-decoration: none;
+    }
+  </style>
 </head>
 <body>
-  <div class="cv-root">${innerHtml}</div>
+${pagesHtml}
 </body>
 </html>`;
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    [displayData.personalInfo.name, palette, templateStyles, fmt],
+    [
+      displayData.personalInfo.name,
+      palette,
+      templateStyles,
+      fmt,
+      pageBreaks,
+      viewportPx,
+    ],
   );
 
   const handleExportPDF = useCallback(() => {
@@ -807,18 +990,49 @@ export function PreviewPanel() {
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={() => handleExportHTML()}
-          >
-            <Download className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
             onClick={() => handleExportPDF()}
+            title="Print / PDF"
           >
             <Printer className="h-4 w-4" />
           </Button>
+
+          {/* Export Sheet */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                title="Export CV"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="w-[400px] sm:w-[540px]">
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  <Download className="h-5 w-5" />
+                  Export CV
+                </SheetTitle>
+              </SheetHeader>
+              <ExportSheet />
+            </SheetContent>
+          </Sheet>
+          {/* Save */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={state.isDirty ? "default" : "ghost"}
+                size="icon"
+                className="h-8 w-8"
+                onClick={saveToStorage}
+                title="Save changes"
+              >
+                <Save className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Save changes</TooltipContent>
+          </Tooltip>
         </div>
       </div>
 
@@ -897,6 +1111,7 @@ export function PreviewPanel() {
                 const scale = gridScale;
                 const marginTopPx = mmToPx(PAGE_MARGIN_TOP);
                 const marginBottomPx = mmToPx(PAGE_MARGIN_BOTTOM);
+                const breakOffset = pageBreaks[pageIdx] ?? 0;
 
                 return (
                   <div
@@ -918,41 +1133,77 @@ export function PreviewPanel() {
                         paddingTop: `${marginTopPx}px`,
                         paddingBottom: `${marginBottomPx}px`,
                         boxSizing: "border-box",
+                        display: "flex",
+                        flexDirection: "column",
                       }}
                     >
                       {/* Content area – clips to safe zone between margins */}
                       <div
                         style={{
-                          height: `${contentHeightPx}px`,
+                          height: `${viewportPx}px`,
                           overflow: "hidden",
+                          flex: "none",
                         }}
                       >
                         <div
                           style={{
-                            marginTop: `-${pageIdx * contentHeightPx}px`,
+                            marginTop: `-${breakOffset}px`,
                           }}
                         >
-                          <CVPreviewContent
-                            data={displayData}
-                            palette={palette}
-                            templateId={selectedTemplateId}
-                            layoutId={selectedLayoutId}
-                            templateStyles={templateStyles}
-                          />
+                          {/* Explicit height forces sidebar/bg to fill
+                              the entire visible page region on every page */}
+                          <div
+                            style={{
+                              height: `${breakOffset + viewportPx}px`,
+                            }}
+                          >
+                            <CVPreviewContent
+                              data={displayData}
+                              palette={palette}
+                              templateId={selectedTemplateId}
+                              layoutId={selectedLayoutId}
+                              templateStyles={templateStyles}
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Page number label */}
-                    <span
-                      className="absolute bottom-1 right-2 text-[10px] text-muted-foreground/60 select-none"
-                      style={{
-                        transform: `scale(${1 / scale})`,
-                        transformOrigin: "bottom right",
-                      }}
-                    >
-                      {pageIdx + 1} / {pageCount}
-                    </span>
+                      {/* Page footer — discreet attribution, identical to print */}
+                      <div
+                        style={{
+                          height: `${FOOTER_HEIGHT_PX}px`,
+                          flexShrink: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: "#ffffff",
+                          position: "relative",
+                          zIndex: 2,
+                          fontFamily:
+                            "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: "6px",
+                            color: `${palette.secondary}40`,
+                          }}
+                        >
+                          Built with{" "}
+                          <a
+                            href="https://cv.destevez.dev"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              color: `${palette.secondary}60`,
+                              textDecoration: "none",
+                            }}
+                          >
+                            CV Generator
+                          </a>
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 );
               })}

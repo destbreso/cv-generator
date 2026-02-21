@@ -5,8 +5,10 @@ import {
   useContext,
   useReducer,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react";
+import { toast } from "sonner";
 import type {
   CVData,
   CVTemplate,
@@ -310,7 +312,15 @@ export const SAMPLE_CV_DATA: CVData = {
 };
 
 // AI Provider types
-export type AIProvider = "ollama" | "openai" | "anthropic" | "groq" | "custom";
+export type AIProvider =
+  | "ollama"
+  | "openai"
+  | "anthropic"
+  | "groq"
+  | "gemini"
+  | "mistral"
+  | "deepseek"
+  | "custom";
 
 export interface AIProviderConfig {
   provider: AIProvider;
@@ -344,6 +354,21 @@ export const DEFAULT_AI_CONFIGS: Record<
     baseUrl: "https://api.groq.com/openai/v1",
     model: "llama-3.3-70b-versatile",
   },
+  gemini: {
+    provider: "gemini",
+    baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
+    model: "gemini-2.0-flash",
+  },
+  mistral: {
+    provider: "mistral",
+    baseUrl: "https://api.mistral.ai/v1",
+    model: "mistral-small-latest",
+  },
+  deepseek: {
+    provider: "deepseek",
+    baseUrl: "https://api.deepseek.com/v1",
+    model: "deepseek-chat",
+  },
   custom: {
     provider: "custom",
     baseUrl: "",
@@ -355,7 +380,13 @@ export const DEFAULT_AI_CONFIGS: Record<
 export interface PanelState {
   showPreview: boolean;
   showAIConfig: boolean;
-  activePanel: "editor" | "templates" | "history" | "export" | "faq" | "storage";
+  activePanel:
+    | "editor"
+    | "templates"
+    | "history"
+    | "export"
+    | "faq"
+    | "storage";
 }
 
 // Template selection types (co-located with store)
@@ -609,6 +640,7 @@ export interface CVAppState {
 
   // AI Configuration
   aiConfig: AIProviderConfig;
+  apiKeys: Partial<Record<AIProvider, string>>; // Per-provider API keys (memory only)
   isConnected: boolean;
   availableModels: string[];
 
@@ -616,6 +648,8 @@ export interface CVAppState {
   isGenerating: boolean;
   generatedContent: string;
   generatedCVData: CVData | null;
+  generationStatus: string;
+  generationChunks: number;
   jobContext: string;
   outputLanguage: string;
 
@@ -646,6 +680,8 @@ type CVAction =
   | { type: "SET_CONNECTION_STATUS"; payload: boolean }
   | { type: "SET_AVAILABLE_MODELS"; payload: string[] }
   | { type: "SET_GENERATING"; payload: boolean }
+  | { type: "SET_GENERATION_STATUS"; payload: string }
+  | { type: "SET_GENERATION_CHUNKS"; payload: number }
   | {
       type: "SET_GENERATED_CONTENT";
       payload: { content: string; cvData?: CVData };
@@ -656,6 +692,7 @@ type CVAction =
   | { type: "LOAD_ITERATION"; payload: CVIteration }
   | { type: "TOGGLE_PREVIEW" }
   | { type: "TOGGLE_AI_CONFIG" }
+  | { type: "SET_AI_CONFIG_OPEN"; payload: boolean }
   | { type: "SET_ACTIVE_PANEL"; payload: PanelState["activePanel"] }
   | { type: "LOAD_STATE"; payload: Partial<CVAppState> }
   | { type: "LOAD_SAMPLE_DATA" }
@@ -680,11 +717,14 @@ const initialState: CVAppState = {
     model: "llama3",
     systemPrompt: "",
   },
+  apiKeys: {},
   isConnected: false,
   availableModels: [],
   isGenerating: false,
   generatedContent: "",
   generatedCVData: null,
+  generationStatus: "",
+  generationChunks: 0,
   jobContext: "",
   outputLanguage: "auto",
   isImportingLinkedIn: false,
@@ -763,25 +803,42 @@ function cvReducer(state: CVAppState, action: CVAction): CVAppState {
     case "SET_LAYOUT_ID":
       return { ...state, selectedLayoutId: action.payload };
 
-    case "SET_AI_CONFIG":
+    case "SET_AI_CONFIG": {
+      const updatedAiConfig = { ...state.aiConfig, ...action.payload };
+      // Sync apiKeys map when apiKey changes
+      const updatedApiKeys =
+        action.payload.apiKey !== undefined
+          ? {
+              ...state.apiKeys,
+              [updatedAiConfig.provider]: action.payload.apiKey || undefined,
+            }
+          : state.apiKeys;
       return {
         ...state,
-        aiConfig: { ...state.aiConfig, ...action.payload },
+        aiConfig: updatedAiConfig,
+        apiKeys: updatedApiKeys,
       };
+    }
 
-    case "SET_AI_PROVIDER":
+    case "SET_AI_PROVIDER": {
       const defaultConfig = DEFAULT_AI_CONFIGS[action.payload];
+      // Save current provider's key, load new provider's key
+      const savedKeys = state.aiConfig.apiKey
+        ? { ...state.apiKeys, [state.aiConfig.provider]: state.aiConfig.apiKey }
+        : { ...state.apiKeys };
       return {
         ...state,
         aiConfig: {
           ...state.aiConfig,
           ...defaultConfig,
-          apiKey: state.aiConfig.apiKey, // Keep existing API key
+          apiKey: savedKeys[action.payload] || "",
           systemPrompt: state.aiConfig.systemPrompt, // Keep existing prompt
         },
+        apiKeys: savedKeys,
         isConnected: false,
         availableModels: [],
       };
+    }
 
     case "SET_CONNECTION_STATUS":
       return { ...state, isConnected: action.payload };
@@ -791,6 +848,12 @@ function cvReducer(state: CVAppState, action: CVAction): CVAppState {
 
     case "SET_GENERATING":
       return { ...state, isGenerating: action.payload };
+
+    case "SET_GENERATION_STATUS":
+      return { ...state, generationStatus: action.payload };
+
+    case "SET_GENERATION_CHUNKS":
+      return { ...state, generationChunks: action.payload };
 
     case "SET_GENERATED_CONTENT":
       return {
@@ -831,6 +894,12 @@ function cvReducer(state: CVAppState, action: CVAction): CVAppState {
       return {
         ...state,
         panels: { ...state.panels, showAIConfig: !state.panels.showAIConfig },
+      };
+
+    case "SET_AI_CONFIG_OPEN":
+      return {
+        ...state,
+        panels: { ...state.panels, showAIConfig: action.payload },
       };
 
     case "SET_ACTIVE_PANEL":
@@ -893,8 +962,10 @@ interface CVContextType {
   testConnection: () => Promise<boolean>;
   loadModels: () => Promise<void>;
   generateCV: () => Promise<void>;
+  cancelGeneration: () => void;
   applyGeneratedData: () => void;
   importFromLinkedIn: (file: File) => Promise<void>;
+  cancelLinkedInImport: () => void;
 }
 
 const CVContext = createContext<CVContextType | null>(null);
@@ -911,9 +982,18 @@ const STORAGE_KEYS = {
   layoutId: "cv-layout-id",
 };
 
+// API keys are ONLY stored in memory (React state), NEVER persisted to localStorage/sessionStorage
+// This is the most secure approach for client-side only apps.
+// User must re-enter API key each session - no persistence.
+const SENSITIVE_KEYS = {
+  aiApiKey: true, // Never persist to any storage
+};
+
 // Provider
 export function CVStoreProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cvReducer, initialState);
+  const generationAbortRef = useRef<AbortController | null>(null);
+  const linkedInAbortRef = useRef<AbortController | null>(null);
 
   const setCVData = useCallback((data: CVData) => {
     dispatch({ type: "SET_CV_DATA", payload: data });
@@ -926,8 +1006,20 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
   const saveToStorage = useCallback(() => {
     if (typeof window === "undefined") return;
 
+    // Save CV data
     localStorage.setItem(STORAGE_KEYS.cvData, JSON.stringify(state.cvData));
-    localStorage.setItem(STORAGE_KEYS.aiConfig, JSON.stringify(state.aiConfig));
+
+    // Save AI config WITHOUT API key (separate for security)
+    const aiConfigWithoutKey = { ...state.aiConfig };
+    delete (aiConfigWithoutKey as { apiKey?: string }).apiKey; // Remove sensitive key
+    localStorage.setItem(
+      STORAGE_KEYS.aiConfig,
+      JSON.stringify(aiConfigWithoutKey),
+    );
+
+    // API key is NOT stored anywhere - kept only in memory for this session
+
+    // Save other data
     localStorage.setItem(
       STORAGE_KEYS.iterations,
       JSON.stringify(state.iterations),
@@ -958,8 +1050,13 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
     const cvData = localStorage.getItem(STORAGE_KEYS.cvData);
     if (cvData) stored.cvData = JSON.parse(cvData);
 
+    // Load AI config from localStorage (but NOT the API key - intentional)
     const aiConfig = localStorage.getItem(STORAGE_KEYS.aiConfig);
-    if (aiConfig) stored.aiConfig = JSON.parse(aiConfig);
+    if (aiConfig) {
+      stored.aiConfig = JSON.parse(aiConfig);
+      // API key is intentionally NOT restored from storage
+      // For security: user must re-enter API key each session
+    }
 
     const iterations = localStorage.getItem(STORAGE_KEYS.iterations);
     if (iterations) stored.iterations = JSON.parse(iterations);
@@ -996,9 +1093,15 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json();
       dispatch({ type: "SET_CONNECTION_STATUS", payload: data.success });
+      if (data.success) {
+        toast.success("Connected to AI provider");
+      } else {
+        toast.error(data.error || "Connection failed");
+      }
       return data.success;
     } catch {
       dispatch({ type: "SET_CONNECTION_STATUS", payload: false });
+      toast.error("Connection failed");
       return false;
     }
   }, [state.aiConfig]);
@@ -1011,18 +1114,40 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({
           baseUrl: state.aiConfig.baseUrl,
           provider: state.aiConfig.provider,
+          apiKey: state.aiConfig.apiKey,
         }),
       });
 
+      if (!response.ok) {
+        const errorBody = await response.text();
+        let message = "Failed to load models";
+        try {
+          const parsed = JSON.parse(errorBody);
+          message = parsed?.error?.message || parsed?.error || message;
+        } catch {
+          if (errorBody) message = errorBody;
+        }
+        toast.error(message);
+        return;
+      }
+
       const data = await response.json();
       if (data.success && data.models) {
+        const models = data.models.map((m: { name: string }) => m.name || m);
         dispatch({
           type: "SET_AVAILABLE_MODELS",
-          payload: data.models.map((m: { name: string }) => m.name || m),
+          payload: models,
         });
+        if (models.length > 0) {
+          toast.success(`Models loaded (${models.length})`);
+        } else {
+          toast.message("No models returned");
+        }
+      } else {
+        toast.error(data.error || "Failed to load models");
       }
     } catch {
-      // Silent fail
+      toast.error("Failed to load models");
     }
   }, [state.aiConfig]);
 
@@ -1030,11 +1155,20 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
     if (!state.jobContext.trim()) return;
 
     dispatch({ type: "SET_GENERATING", payload: true });
+    dispatch({
+      type: "SET_GENERATION_STATUS",
+      payload: "Starting generation...",
+    });
+    dispatch({ type: "SET_GENERATION_CHUNKS", payload: 0 });
+
+    const controller = new AbortController();
+    generationAbortRef.current = controller;
 
     try {
       const response = await fetch("/api/generate-cv", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           cvData: state.cvData,
           context: state.jobContext,
@@ -1052,7 +1186,14 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
       if (!response.ok) {
         const errorBody = await response.text();
         console.error("Generation failed:", response.status, errorBody);
-        throw new Error("Generation failed");
+        let message = "Generation failed";
+        try {
+          const parsed = JSON.parse(errorBody);
+          message = parsed?.error || message;
+        } catch {
+          if (errorBody) message = errorBody;
+        }
+        throw new Error(message);
       }
 
       // Read SSE stream — server sends progress pings and a final "done" message with content
@@ -1079,7 +1220,19 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
           const jsonStr = line.slice(6);
           try {
             const data = JSON.parse(jsonStr);
-            if (data.status === "done" && data.content) {
+            if (data.status === "generating") {
+              dispatch({
+                type: "SET_GENERATION_STATUS",
+                payload: "Generating optimized CV...",
+              });
+            } else if (data.status === "progress") {
+              const chunks = Number(data.chunks || 0);
+              dispatch({ type: "SET_GENERATION_CHUNKS", payload: chunks });
+              dispatch({
+                type: "SET_GENERATION_STATUS",
+                payload: `Processing... (${chunks} chunks)`,
+              });
+            } else if (data.status === "done" && data.content) {
               generatedContent = data.content;
             } else if (data.status === "error") {
               throw new Error(data.error || "Generation failed");
@@ -1169,6 +1322,10 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
         type: "SET_GENERATED_CONTENT",
         payload: { content: generatedContent, cvData: generatedCVData },
       });
+      dispatch({
+        type: "SET_GENERATION_STATUS",
+        payload: "Generation complete.",
+      });
 
       // Save iteration
       const iteration: CVIteration = {
@@ -1183,13 +1340,58 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "ADD_ITERATION", payload: iteration });
     } catch (error) {
       console.error("Generation error:", error);
+      if (error instanceof Error) {
+        if (error.name === "AbortError") {
+          dispatch({
+            type: "SET_GENERATION_STATUS",
+            payload: "Generation cancelled.",
+          });
+          toast.message("Generation cancelled");
+        } else {
+          dispatch({
+            type: "SET_GENERATION_STATUS",
+            payload: error.message || "Generation failed",
+          });
+          toast.error(error.message || "Generation failed");
+        }
+      } else {
+        dispatch({
+          type: "SET_GENERATION_STATUS",
+          payload: "Generation failed",
+        });
+        toast.error("Generation failed");
+      }
     } finally {
       dispatch({ type: "SET_GENERATING", payload: false });
+      generationAbortRef.current = null;
     }
-  }, [state.cvData, state.jobContext, state.outputLanguage, state.aiConfig, state.selectedTemplate]);
+  }, [
+    state.cvData,
+    state.jobContext,
+    state.outputLanguage,
+    state.aiConfig,
+    state.selectedTemplate,
+  ]);
 
   const applyGeneratedData = useCallback(() => {
     dispatch({ type: "APPLY_GENERATED" });
+  }, []);
+
+  const cancelGeneration = useCallback(() => {
+    const controller = generationAbortRef.current;
+    if (!controller) return;
+    if (controller.signal.aborted) {
+      generationAbortRef.current = null;
+      return;
+    }
+    dispatch({ type: "SET_GENERATION_STATUS", payload: "Cancelling..." });
+    try {
+      controller.abort();
+    } catch {
+      // Ignore abort errors
+    } finally {
+      generationAbortRef.current = null;
+    }
   }, []);
 
   const importFromLinkedIn = useCallback(
@@ -1200,11 +1402,15 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
         payload: "Extracting text from PDF\u2026",
       });
 
+      const controller = new AbortController();
+      linkedInAbortRef.current = controller;
+
       try {
         const formData = new FormData();
         formData.append("pdf", file);
         formData.append("baseUrl", state.aiConfig.baseUrl);
         formData.append("model", state.aiConfig.model);
+        formData.append("provider", state.aiConfig.provider);
         if (state.aiConfig.apiKey) {
           formData.append("apiKey", state.aiConfig.apiKey);
         }
@@ -1212,12 +1418,20 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
         const response = await fetch("/api/parse-linkedin-pdf", {
           method: "POST",
           body: formData,
+          signal: controller.signal,
         });
 
         if (!response.ok) {
           const errorBody = await response.text();
           console.error("LinkedIn import failed:", response.status, errorBody);
-          throw new Error("Import failed");
+          let message = "Import failed";
+          try {
+            const parsed = JSON.parse(errorBody);
+            message = parsed?.error || message;
+          } catch {
+            if (errorBody && errorBody.length < 200) message = errorBody;
+          }
+          throw new Error(message);
         }
 
         // Read SSE stream
@@ -1292,17 +1506,29 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
             type: "SET_LINKEDIN_IMPORT_STATUS",
             payload: "Import complete!",
           });
+          toast.success("LinkedIn profile imported successfully");
           console.log("[cv-store] LinkedIn import successful");
         } else {
           throw new Error("No structured data received from parser");
         }
       } catch (error) {
         console.error("LinkedIn import error:", error);
-        dispatch({
-          type: "SET_LINKEDIN_IMPORT_STATUS",
-          payload: `Error: ${error instanceof Error ? error.message : "Import failed"}`,
-        });
+        if (error instanceof Error && error.name === "AbortError") {
+          dispatch({
+            type: "SET_LINKEDIN_IMPORT_STATUS",
+            payload: "Import cancelled.",
+          });
+          toast.message("LinkedIn import cancelled");
+        } else {
+          const msg = error instanceof Error ? error.message : "Import failed";
+          dispatch({
+            type: "SET_LINKEDIN_IMPORT_STATUS",
+            payload: `Error: ${msg}`,
+          });
+          toast.error(msg);
+        }
       } finally {
+        linkedInAbortRef.current = null;
         // Keep status visible briefly, then clear
         setTimeout(() => {
           dispatch({ type: "SET_IMPORTING_LINKEDIN", payload: false });
@@ -1311,6 +1537,26 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
     },
     [state.aiConfig],
   );
+
+  const cancelLinkedInImport = useCallback(() => {
+    const controller = linkedInAbortRef.current;
+    if (!controller) return;
+    if (controller.signal.aborted) {
+      linkedInAbortRef.current = null;
+      return;
+    }
+    dispatch({
+      type: "SET_LINKEDIN_IMPORT_STATUS",
+      payload: "Cancelling...",
+    });
+    try {
+      controller.abort();
+    } catch {
+      // Ignore abort errors
+    } finally {
+      linkedInAbortRef.current = null;
+    }
+  }, []);
 
   return (
     <CVContext.Provider
@@ -1325,8 +1571,10 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
         testConnection,
         loadModels,
         generateCV,
+        cancelGeneration,
         applyGeneratedData,
         importFromLinkedIn,
+        cancelLinkedInImport,
       }}
     >
       {children}

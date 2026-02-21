@@ -19,12 +19,12 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
-  Bot,
   Target,
   Lightbulb,
   Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { InlineAIConfig } from "@/components/inline-ai-config";
 import {
   Select,
   SelectContent,
@@ -55,9 +55,8 @@ export function GeneratePanel() {
     state,
     dispatch,
     generateCV,
+    cancelGeneration,
     applyGeneratedData,
-    testConnection,
-    loadModels,
   } = useCVStore();
   const {
     cvData,
@@ -68,6 +67,8 @@ export function GeneratePanel() {
     generatedContent,
     generatedCVData,
     aiConfig,
+    generationStatus,
+    generationChunks,
   } = state;
 
   const hasRequiredData =
@@ -76,72 +77,36 @@ export function GeneratePanel() {
     (cvData.experience.length > 0 || cvData.education.length > 0);
 
   const handleGenerate = async () => {
-    if (!isConnected) {
-      const connected = await testConnection();
-      if (!connected) return;
-      await loadModels();
-    }
     await generateCV();
   };
 
+  const genStages = [
+    { key: "Starting", label: "Connecting" },
+    { key: "Generating", label: "Generating" },
+    { key: "Processing", label: "Processing" },
+  ];
+
+  const isGenDone = generationStatus === "Generation complete.";
+  const isGenCancelled = generationStatus === "Generation cancelled.";
+  const isGenError =
+    !isGenDone &&
+    !isGenCancelled &&
+    !isGenerating &&
+    generationStatus &&
+    generationStatus !== "";
+
+  const genActiveIndex = genStages.findIndex((s) =>
+    generationStatus.includes(s.key),
+  );
+
+  const progressValue = isGenDone
+    ? 100
+    : Math.min(95, generationChunks > 0 ? 10 + generationChunks * 2 : 15);
+
   return (
     <div className="space-y-6">
-      {/* AI Status Card */}
-      <Card
-        className={cn(
-          "border-2 transition-colors",
-          isConnected ? "border-green-500/20 bg-green-500/5" : "border-muted",
-        )}
-      >
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div
-                className={cn(
-                  "h-10 w-10 rounded-full flex items-center justify-center",
-                  isConnected ? "bg-green-500/10" : "bg-muted",
-                )}
-              >
-                <Bot
-                  className={cn(
-                    "h-5 w-5",
-                    isConnected ? "text-green-500" : "text-muted-foreground",
-                  )}
-                />
-              </div>
-              <div>
-                <CardTitle className="text-base">
-                  {aiConfig.provider.charAt(0).toUpperCase() +
-                    aiConfig.provider.slice(1)}
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  {isConnected
-                    ? `Connected • ${aiConfig.model}`
-                    : "Not connected"}
-                </CardDescription>
-              </div>
-            </div>
-            <Badge variant={isConnected ? "default" : "secondary"}>
-              {isConnected ? "Ready" : "Offline"}
-            </Badge>
-          </div>
-        </CardHeader>
-        {!isConnected && (
-          <CardContent className="pt-0">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={async () => {
-                await testConnection();
-                await loadModels();
-              }}
-            >
-              Test Connection
-            </Button>
-          </CardContent>
-        )}
-      </Card>
+      {/* AI Provider — inline quick config */}
+      <InlineAIConfig variant="compact" />
 
       {/* CV Data Status */}
       <Card>
@@ -290,7 +255,7 @@ Example:
       <Button
         className="w-full h-12 text-base gap-2"
         onClick={handleGenerate}
-        disabled={isGenerating || !hasRequiredData || !jobContext.trim()}
+        disabled={isGenerating || !hasRequiredData || !jobContext.trim() || !isConnected || !aiConfig.model}
       >
         {isGenerating ? (
           <>
@@ -304,6 +269,62 @@ Example:
           </>
         )}
       </Button>
+
+      {isGenerating && (
+        <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 space-y-3">
+          <div className="flex items-center gap-3">
+            <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+            <div className="flex-1 space-y-2 min-w-0">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-medium truncate">
+                  {generationStatus || "Working on your CV..."}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-xs shrink-0"
+                  onClick={cancelGeneration}
+                >
+                  Stop
+                </Button>
+              </div>
+              <Progress value={progressValue} className="h-2" />
+            </div>
+          </div>
+          <div className="grid gap-1.5 text-xs">
+            {genStages.map((stage, index) => {
+              const isComplete = isGenDone || index < genActiveIndex;
+              const isActive = index === genActiveIndex && !isGenDone;
+              return (
+                <div
+                  key={stage.key}
+                  className={cn(
+                    "flex items-center gap-2 rounded-md border px-2 py-1",
+                    isComplete && "border-green-500/30 bg-green-500/5",
+                    isActive && "border-primary/30 bg-primary/5",
+                  )}
+                >
+                  {isComplete ? (
+                    <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                  ) : isActive ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                  ) : (
+                    <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
+                  )}
+                  <span
+                    className={cn(
+                      isComplete && "text-green-600",
+                      isActive && "text-primary",
+                    )}
+                  >
+                    {stage.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {!hasRequiredData && (
         <p className="text-xs text-muted-foreground text-center">

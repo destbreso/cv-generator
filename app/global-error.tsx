@@ -1,0 +1,57 @@
+"use client";
+
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle, Home } from "lucide-react";
+
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  return (
+    <html lang="en">
+      <body className="min-h-screen bg-background text-foreground">
+        <div className="relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,theme(colors.destructive/0.2),transparent_60%)]" />
+          <div className="pointer-events-none absolute -top-24 left-1/2 h-64 w-[600px] -translate-x-1/2 rounded-full bg-destructive/10 blur-3xl" />
+
+          <div className="relative mx-auto flex min-h-screen w-full max-w-3xl flex-col items-center justify-center px-6 py-16 text-center">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-destructive/30 bg-destructive/10 px-4 py-1 text-xs uppercase tracking-widest text-destructive">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Core Failure
+            </div>
+
+            <h1 className="text-3xl font-semibold sm:text-4xl">
+              We lost the reactor. Let us reboot.
+            </h1>
+            <p className="mt-4 text-sm text-muted-foreground sm:text-base">
+              A global error stopped the app. Reset the system or return home.
+            </p>
+
+            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
+              <Button onClick={reset} className="gap-2">
+                Reset Application
+              </Button>
+              <Button variant="outline" asChild className="gap-2">
+                <Link href="/">
+                  <Home className="h-4 w-4" />
+                  Go Home
+                </Link>
+              </Button>
+            </div>
+
+            <div className="mt-10 w-full rounded-xl border border-border bg-card/50 p-4 text-left text-xs text-muted-foreground">
+              <div className="font-mono">Fault: {error.name}</div>
+              <div className="font-mono">
+                Digest: {error.digest || "unknown"}
+              </div>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  );
+}

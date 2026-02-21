@@ -33,6 +33,7 @@ import {
   RefreshCw,
   Linkedin,
   WifiOff,
+  AlertTriangle,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -66,6 +67,9 @@ function RotatingWords({
   const [index, setIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
+  // Find the longest word to reserve fixed width
+  const longestWord = words.reduce((a, b) => (a.length > b.length ? a : b), "");
+
   useEffect(() => {
     const interval = setInterval(() => {
       setIsAnimating(true);
@@ -78,13 +82,20 @@ function RotatingWords({
   }, [words.length]);
 
   return (
-    <span className={cn("inline-block relative overflow-hidden", className)}>
+    <span
+      className={cn("inline-flex justify-center relative", className)}
+      style={{ minWidth: "fit-content" }}
+    >
+      {/* Invisible spacer for stable width */}
+      <span className="invisible whitespace-nowrap" aria-hidden="true">
+        {longestWord}
+      </span>
       <span
         className={cn(
-          "inline-block transition-all duration-500 ease-out",
+          "absolute inset-0 flex items-center justify-center whitespace-nowrap transition-all duration-500 ease-out",
           isAnimating
-            ? "opacity-0 -translate-y-full"
-            : "opacity-100 translate-y-0",
+            ? "opacity-0 -translate-y-[30%] scale-95"
+            : "opacity-100 translate-y-0 scale-100",
         )}
       >
         {words[index]}
@@ -1490,7 +1501,7 @@ export function LandingPage() {
             </div>
             <div className="flex items-center gap-3">
               <a
-                href="https://github.com"
+                href="https://github.com/destbreso/cv-generator"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-colors"
@@ -1532,7 +1543,7 @@ export function LandingPage() {
         </div>
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-32 text-center">
-          <ScrollReveal delay={100}>
+          {/* <ScrollReveal delay={100}>
             <div
               className={cn(
                 "inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-8",
@@ -1550,7 +1561,7 @@ export function LandingPage() {
                 v1.0
               </Badge>
             </div>
-          </ScrollReveal>
+          </ScrollReveal> */}
 
           <ScrollReveal delay={200}>
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6">
@@ -1568,19 +1579,13 @@ export function LandingPage() {
           </ScrollReveal>
 
           <ScrollReveal delay={300}>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed">
-              <span className="text-foreground font-medium">18 templates</span>,{" "}
-              <span className="text-foreground font-medium">
-                4 layout structures
-              </span>
-              ,{" "}
-              <span className="text-foreground font-medium">
-                5 AI providers
-              </span>{" "}
-              — all running locally in your browser. No sign-up. No data
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-4 leading-relaxed">
+              Maintain one complete record of your career. Generate tailored CVs
+              for every opportunity. All in your browser. No sign-up, no data
               collection.
-              <br />
-              <span className="text-primary font-medium">Just results.</span>
+            </p>
+            <p className="text-base text-primary font-medium mb-12">
+              Stop duplicating. Start generating.
             </p>
           </ScrollReveal>
 
@@ -1617,7 +1622,7 @@ export function LandingPage() {
             <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 mt-14">
               {[
                 { value: 18, suffix: "+", label: "Templates", icon: Palette },
-                { value: 5, suffix: "", label: "AI Providers", icon: Bot },
+                { value: 8, suffix: "", label: "AI Providers", icon: Bot },
                 { value: 4, suffix: "", label: "Layout Modes", icon: Layers },
                 { value: 0, suffix: "$", label: "Forever", icon: Sparkles },
               ].map((stat) => (
@@ -1679,13 +1684,14 @@ export function LandingPage() {
                 </span>
               </h2>
               <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                Your career is one dataset. A CV is just a generated view of
-                that data — tailored for context, formatted for presentation.
-                But the tools we use treat CVs as documents. Edit, duplicate,
-                tweak for a role, save a new version, repeat.
+                A Word doc here, a Google Doc there, a LinkedIn profile that’s
+                slightly different, a PDF you emailed last year. Every time you
+                need a CV, you copy-paste, reformat, and lose track of what’s
+                current.
                 <br />
                 <span className="font-medium text-foreground">
-                  And that's not the only problem.
+                  The problem isn’t writing a CV. It’s that you don’t have a
+                  single source of truth.
                 </span>
               </p>
             </div>
@@ -1708,8 +1714,10 @@ export function LandingPage() {
                       Your career is one dataset
                     </h3>
                     <p className="text-muted-foreground leading-relaxed">
-                      Stop editing the same information over and over. Maintain
-                      one structured record, generate tailored CVs.
+                      Your experience, skills, education — it doesn’t change
+                      depending on where you apply. What changes is which parts
+                      you highlight. Maintain one record, generate tailored
+                      views.
                     </p>
                   </div>
                 </div>
@@ -1935,6 +1943,198 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* POWERFUL EDITOR + OPTIONAL AI */}
+      <section className="relative py-24 sm:py-28 overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute left-1/2 -translate-x-1/2 top-16 w-[600px] h-[400px] bg-gradient-to-b from-accent/15 to-transparent rounded-full blur-[100px] pointer-events-none" />
+        </div>
+
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <ScrollReveal>
+            <div className="text-center mb-16">
+              <Badge
+                variant="outline"
+                className="mb-4 border-primary/20 text-primary inline-flex items-center gap-2"
+              >
+                <Zap className="h-3.5 w-3.5" />
+                Complete Control
+              </Badge>
+              <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+                Powerful Editor. <GradientText>Optional AI</GradientText>.
+              </h2>
+              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
+                AI can draft, suggest, and optimize — but you always have the
+                final word. Or skip it entirely. The editor stands on its own.
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            {/* Left: Editor Power */}
+            <div className="space-y-6">
+              <ScrollReveal delay={100}>
+                <div className="rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6 hover:border-primary/30 transition-colors">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <FileText className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-2">
+                        Full Manual Control
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Manually edit, refine, and polish your resume with
+                        intuitive controls. Every section editable, every word
+                        yours.
+                      </p>
+                      <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                        <li className="flex items-center gap-2">
+                          <Check className="h-3.5 w-3.5 text-primary" />
+                          Real-time preview
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="h-3.5 w-3.5 text-primary" />
+                          18 templates × 4 layouts × ∞ palettes
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="h-3.5 w-3.5 text-primary" />
+                          Multiple layout options
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </ScrollReveal>
+
+              <ScrollReveal delay={200}>
+                <div className="rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6 hover:border-accent/30 transition-colors">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Cpu className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-2">
+                        Import & Structure
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Import your LinkedIn PDF or any existing resume. Our
+                        parser automatically extracts and organizes your
+                        information.
+                      </p>
+                      <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                        <li className="flex items-center gap-2">
+                          <Check className="h-3.5 w-3.5 text-blue-600" />
+                          PDF auto-parsing
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="h-3.5 w-3.5 text-blue-600" />
+                          Smart data extraction
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="h-3.5 w-3.5 text-blue-600" />
+                          Ready to customize
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </ScrollReveal>
+            </div>
+
+            {/* Right: Optional AI */}
+            <div className="space-y-6">
+              <ScrollReveal delay={150}>
+                <div className="rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6 hover:border-purple-500/30 transition-colors">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="h-10 w-10 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Sparkles className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-2">
+                        Optional AI Refinement
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        If you want AI help, connect any of 8 providers (Ollama,
+                        OpenAI, Anthropic, Gemini, Mistral, DeepSeek, Groq, or
+                        custom). Completely optional.
+                      </p>
+                      <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                        <li className="flex items-center gap-2">
+                          <Check className="h-3.5 w-3.5 text-purple-600" />8
+                          provider choices
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="h-3.5 w-3.5 text-purple-600" />
+                          No account needed
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="h-3.5 w-3.5 text-purple-600" />
+                          You stay in control
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </ScrollReveal>
+
+              <ScrollReveal delay={250}>
+                <div className="rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6 hover:border-green-500/30 transition-colors">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <History className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-2">
+                        Version History & Diff
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Every AI generation is saved. Compare versions
+                        side-by-side with our diff viewer. Pick exactly what you
+                        want to keep.
+                      </p>
+                      <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                        <li className="flex items-center gap-2">
+                          <Check className="h-3.5 w-3.5 text-green-600" />
+                          Full change history
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="h-3.5 w-3.5 text-green-600" />
+                          Side-by-side comparison
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="h-3.5 w-3.5 text-green-600" />
+                          Selective merging
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </ScrollReveal>
+            </div>
+          </div>
+
+          <ScrollReveal delay={300}>
+            <div className="rounded-lg border border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5 p-8 text-center">
+              <h3 className="text-xl font-semibold text-foreground mb-3">
+                Your Data, Your Way
+              </h3>
+              <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
+                Edit manually, use AI to refine, or combine both. The tool
+                adapts to your workflow, not the other way around. Skip AI
+                entirely if you want — the editor, templates, and export work
+                perfectly without it.
+              </p>
+              <Link href="/editor">
+                <Button size="lg" className="gap-2">
+                  <Terminal className="h-4 w-4" />
+                  Try Editor Now
+                </Button>
+              </Link>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
       {/* AI PROVIDERS */}
       <section className="relative py-24 sm:py-28 overflow-hidden">
         <div className="absolute inset-0 bg-muted/30" />
@@ -2016,16 +2216,33 @@ export function LandingPage() {
                 className="mb-4 border-primary/20 text-primary"
               >
                 <Palette className="h-3 w-3 mr-1" />
-                Templates & Layouts
+                Design System
               </Badge>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-                <AnimatedCounter end={18} /> professional templates,{" "}
-                <GradientText>4 layout structures</GradientText>
+                <AnimatedCounter end={18} /> templates ×{" "}
+                <AnimatedCounter end={4} /> layouts ×{" "}
+                <GradientText>∞ color palettes</GradientText>
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                From classic corporate to creative portfolios — each template is
-                fully customizable with color palettes, fonts, and spacing. Then
-                choose a layout structure that best presents your story.
+                Pick a template, choose a layout structure, tweak the color
+                palette — and everything combines.{" "}
+                <span className="text-foreground font-medium">
+                  Thousands of unique combinations
+                </span>{" "}
+                from one simple system.
+              </p>
+            </div>
+          </ScrollReveal>
+
+          {/* Templates grid */}
+          <ScrollReveal delay={100}>
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-bold tracking-tight mb-2">
+                Templates
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-lg mx-auto">
+                From classic corporate to Ivy League — each one defines
+                typography, spacing, and visual personality.
               </p>
             </div>
           </ScrollReveal>
@@ -2042,29 +2259,87 @@ export function LandingPage() {
             ))}
           </div>
 
+          {/* Layouts */}
           <ScrollReveal>
             <div className="text-center mb-10">
               <h3 className="text-xl font-bold tracking-tight mb-2">
                 Layout Structures
               </h3>
               <p className="text-sm text-muted-foreground max-w-lg mx-auto">
-                Control how your CV is structured. Each layout works with every
-                template and customization.
+                Control how your CV is structured. Every layout works with every
+                template — mix and match freely.
               </p>
             </div>
           </ScrollReveal>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-2xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-2xl mx-auto mb-16">
             {LAYOUTS.map((l, i) => (
               <LayoutPreview key={l.name} {...l} delay={i * 100} />
             ))}
           </div>
 
+          {/* Color Palettes */}
+          <ScrollReveal delay={200}>
+            <div className="text-center mb-8">
+              <h3 className="text-xl font-bold tracking-tight mb-2">
+                Infinite Color Palettes
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-lg mx-auto">
+                14 curated palettes included, plus a full color picker to create
+                your own. Each palette defines primary, secondary, and accent
+                colors.
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal delay={250}>
+            <div className="flex justify-center gap-2.5 sm:gap-3.5 mb-8 flex-wrap max-w-3xl mx-auto">
+              {LANDING_PALETTES.map((p, i) => (
+                <div key={p.name} className="group relative" title={p.name}>
+                  <div
+                    className={cn(
+                      "h-9 w-9 sm:h-11 sm:w-11 rounded-full border-2 border-background shadow-md",
+                      "overflow-hidden transition-all duration-300 group-hover:scale-125 group-hover:shadow-lg",
+                    )}
+                    style={{ animationDelay: `${i * 60}ms` }}
+                  >
+                    {/* Three stripes: primary | secondary | accent */}
+                    <div className="flex h-full w-full">
+                      <div
+                        className="flex-1"
+                        style={{ backgroundColor: p.primary }}
+                      />
+                      <div
+                        className="flex-1"
+                        style={{ backgroundColor: p.secondary }}
+                      />
+                      <div
+                        className="flex-1"
+                        style={{ backgroundColor: p.accent }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {/* Custom palette indicator */}
+              <div className="group relative" title="Custom — pick any color">
+                <div className="h-9 w-9 sm:h-11 sm:w-11 rounded-full border-2 border-dashed border-primary/40 flex items-center justify-center text-primary/60 text-base font-bold transition-all duration-300 group-hover:scale-125 group-hover:border-primary">
+                  +
+                </div>
+              </div>
+            </div>
+          </ScrollReveal>
+
+          {/* Combination callout */}
           <ScrollReveal delay={300}>
-            <p className="text-center text-xs text-muted-foreground mt-8">
-              + upload custom templates · customize color palettes · adjust
-              fonts & spacing
-            </p>
+            <div className="rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 p-6 sm:p-8 text-center max-w-3xl mx-auto">
+              <h4 className="font-bold text-lg mb-2">Everything combines</h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Any template + any layout + any color = your unique CV. Change
+                one without affecting the others. Adjust fonts, spacing, and
+                accent colors in real time.
+              </p>
+            </div>
           </ScrollReveal>
         </div>
       </section>
@@ -2272,6 +2547,214 @@ export function LandingPage() {
               </ScrollReveal>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* API KEY SECURITY */}
+      <section className="relative py-24 sm:py-28 overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute right-0 top-1/3 w-[500px] h-[500px] bg-green-500/10 rounded-full blur-[120px] pointer-events-none" />
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[600px] h-[400px] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
+        </div>
+
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <ScrollReveal>
+            <div className="text-center mb-16">
+              <Badge
+                variant="outline"
+                className="mb-4 border-green-500/20 text-green-700 dark:text-green-400 inline-flex items-center gap-2"
+              >
+                <Shield className="h-3.5 w-3.5" />
+                Your Secrets Safe
+              </Badge>
+              <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+                API Keys.{" "}
+                <GradientText>Memory-Only. Never Persisted.</GradientText>
+              </h2>
+              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
+                Unlike other tools, we never save your API keys. They exist only
+                in memory during your session and are automatically deleted when
+                you close the tab.
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            {/* Left: Security Details */}
+            <div className="space-y-6">
+              <ScrollReveal delay={100}>
+                <div className="rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Lock className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-2">
+                        Memory Only - No Persistence
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        API keys are stored{" "}
+                        <strong>only in the app's memory</strong> (React state),
+                        never in localStorage, sessionStorage, cookies, or any
+                        other persistent storage. When you close the tab, the
+                        key is gone forever.
+                      </p>
+                      <code className="text-xs bg-muted/80 p-2 rounded flex items-center gap-2 text-muted-foreground font-mono">
+                        <span className="text-green-600">✓</span>
+                        RAM only (cleared on tab close)
+                      </code>
+                    </div>
+                  </div>
+                </div>
+              </ScrollReveal>
+
+              <ScrollReveal delay={150}>
+                <div className="rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Eye className="h-5 w-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-2">
+                        Masked Display
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Keys are masked in the UI (shown as dots). You can copy
+                        your key, change it, but never view it after entry.
+                      </p>
+                      <code className="text-xs bg-muted/80 p-2 rounded flex items-center gap-2 text-muted-foreground font-mono">
+                        <span className="text-emerald-600">✓</span>
+                        sk-...{Array(20).fill("*").join("")}
+                      </code>
+                    </div>
+                  </div>
+                </div>
+              </ScrollReveal>
+
+              <ScrollReveal delay={200}>
+                <div className="rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="h-10 w-10 rounded-lg bg-cyan-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Zap className="h-5 w-5 text-cyan-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-2">
+                        Auto-Cleared on Close
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Close your browser tab? Your API key is automatically
+                        cleared. Zero residual data. Zero tracking.
+                      </p>
+                      <code className="text-xs bg-muted/80 p-2 rounded flex items-center gap-2 text-muted-foreground font-mono">
+                        <span className="text-cyan-600">✓</span>
+                        Cleared on tab/browser close
+                      </code>
+                    </div>
+                  </div>
+                </div>
+              </ScrollReveal>
+            </div>
+
+            {/* Right: What This Means */}
+            <div className="space-y-6">
+              <ScrollReveal delay={250}>
+                <div className="rounded-lg border border-border/50 bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-6">
+                  <h3 className="font-semibold text-foreground mb-4">
+                    Why Memory Only?
+                  </h3>
+                  <ul className="space-y-3">
+                    <li className="flex items-start gap-3">
+                      <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span className="text-sm text-muted-foreground">
+                        <strong>Zero persistence:</strong> Keys never touch disk
+                        or cloud storage
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span className="text-sm text-muted-foreground">
+                        <strong>Auto-cleanup:</strong> Automatic deletion when
+                        tab closes
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span className="text-sm text-muted-foreground">
+                        <strong>No sync attacks:</strong> Can't be stolen from
+                        cloud backup or device sync
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <span className="text-sm text-muted-foreground">
+                        <strong>You control entry:</strong> Must re-enter each
+                        session - intentional friction = security
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </ScrollReveal>
+
+              <ScrollReveal delay={300}>
+                <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-6">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-2">
+                        Important: Still Vulnerable to XSS
+                      </h4>
+                      <p className="text-sm text-red-700 dark:text-red-400 mb-3">
+                        <strong>
+                          Memory-only is better than localStorage, but not
+                          perfect.
+                        </strong>{" "}
+                        If someone compromises this website with XSS (cross-site
+                        scripting), they could theoretically steal your API key
+                        from memory. We take security seriously (no trackers,
+                        open source, strict CSP), but:
+                      </p>
+                      <ul className="space-y-1 text-xs text-red-700 dark:text-red-400">
+                        <li>
+                          • No storage method is 100% safe if the site itself is
+                          compromised
+                        </li>
+                        <li>
+                          • For mission-critical keys, use a backend service or
+                          API gateway
+                        </li>
+                        <li>
+                          • This is ideal for non-production/testing API keys
+                        </li>
+                        <li>
+                          • We don't store your key - we give you full control
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </ScrollReveal>
+            </div>
+          </div>
+
+          <ScrollReveal delay={350}>
+            <div className="rounded-lg border border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5 p-8 text-center">
+              <h3 className="text-xl font-semibold text-foreground mb-3">
+                Safe By Design, But Not Foolproof
+              </h3>
+              <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
+                Memory-only storage is the best you can do on a client-side app.
+                Your key is never saved to disk or synced anywhere. But we're
+                honest: if you need bulletproof security for production keys,
+                use an API gateway or backend proxy instead.
+              </p>
+              <a
+                href="/privacy"
+                className="text-primary hover:underline text-sm font-medium"
+              >
+                Read our Privacy Policy & Security Details →
+              </a>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -2622,7 +3105,7 @@ export function LandingPage() {
               </p>
               <div className="flex items-center gap-3">
                 <a
-                  href="https://github.com"
+                  href="https://github.com/destbreso/cv-generator"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors"
@@ -2749,7 +3232,7 @@ export function LandingPage() {
                 </a>
                 <span className="text-muted-foreground/30">·</span>
                 <a
-                  href="https://github.com"
+                  href="https://github.com/destbreso/cv-generator"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-foreground transition-colors"
@@ -2776,7 +3259,7 @@ const STEPS = [
     icon: Sparkles,
     title: "Enhance with AI",
     description:
-      "Let AI rewrite bullet points, generate summaries, and suggest improvements — using local Ollama, OpenAI, Anthropic, Groq, or your own endpoint.",
+      "Let AI rewrite bullet points, generate summaries, and suggest improvements — using Ollama, OpenAI, Anthropic, Gemini, Mistral, DeepSeek, Groq, or your own endpoint.",
   },
   {
     icon: Download,
@@ -2807,6 +3290,24 @@ const AI_PROVIDERS = [
     badge: "CLOUD",
   },
   {
+    name: "Google Gemini",
+    description: "Gemini 2.0 Flash & Pro — Google's multimodal AI",
+    icon: Zap,
+    badge: "CLOUD",
+  },
+  {
+    name: "Mistral",
+    description: "Mistral & Mixtral models — efficient European AI",
+    icon: Zap,
+    badge: "CLOUD",
+  },
+  {
+    name: "DeepSeek",
+    description: "DeepSeek V3 & R1 — powerful open-weight reasoning",
+    icon: Zap,
+    badge: "CLOUD",
+  },
+  {
     name: "Groq",
     description: "Blazing-fast inference — LLaMA models at lightning speed",
     icon: Zap,
@@ -2826,18 +3327,24 @@ const TEMPLATES: {
   accent: string;
   layout?: "single" | "sidebar" | "split";
 }[] = [
-  { name: "Classic", accent: "bg-blue-500", layout: "single" },
-  { name: "Modern", accent: "bg-indigo-500", layout: "sidebar" },
   { name: "Minimal", accent: "bg-slate-600", layout: "single" },
+  { name: "Professional", accent: "bg-blue-500", layout: "single" },
+  { name: "Modern", accent: "bg-indigo-500", layout: "sidebar" },
   { name: "Creative", accent: "bg-pink-500", layout: "split" },
   { name: "Executive", accent: "bg-amber-600", layout: "sidebar" },
   { name: "Tech", accent: "bg-emerald-500", layout: "single" },
-  { name: "Elegant", accent: "bg-purple-500", layout: "sidebar" },
-  { name: "Bold", accent: "bg-red-500", layout: "split" },
-  { name: "Clean", accent: "bg-sky-500", layout: "single" },
   { name: "Compact", accent: "bg-teal-500", layout: "sidebar" },
   { name: "Academic", accent: "bg-cyan-600", layout: "single" },
-  { name: "Corporate", accent: "bg-zinc-600", layout: "sidebar" },
+  { name: "Elegant", accent: "bg-purple-500", layout: "sidebar" },
+  { name: "Swiss", accent: "bg-red-500", layout: "single" },
+  { name: "Editorial", accent: "bg-rose-500", layout: "sidebar" },
+  { name: "Startup", accent: "bg-orange-500", layout: "split" },
+  { name: "Harvard", accent: "bg-red-800", layout: "single" },
+  { name: "Oxford", accent: "bg-blue-800", layout: "single" },
+  { name: "Cambridge", accent: "bg-sky-600", layout: "sidebar" },
+  { name: "Princeton", accent: "bg-amber-500", layout: "split" },
+  { name: "Yale", accent: "bg-blue-900", layout: "single" },
+  { name: "MIT", accent: "bg-zinc-700", layout: "sidebar" },
 ];
 
 const LAYOUTS = [
@@ -2864,13 +3371,13 @@ const FEATURES = [
     icon: Bot,
     title: "AI Content Generation",
     description:
-      "Connect 5 AI providers to generate tailored summaries, bullet points, and skill suggestions. Works with local & cloud models.",
+      "Connect 8 AI providers to generate tailored summaries, bullet points, and skill suggestions. Works with local & cloud models.",
   },
   {
     icon: Palette,
-    title: "18+ Professional Templates",
+    title: "18 Templates × 4 Layouts × ∞ Palettes",
     description:
-      "Classic, modern, creative, minimal — customize colors, fonts, and spacing. Upload your own HTML templates too.",
+      "Every template works with every layout and any color. Mix and match freely — thousands of unique combinations from one system.",
   },
   {
     icon: Layers,
@@ -2999,8 +3506,8 @@ const COMPARISON = [
   { feature: "No sign-up required", us: true, others: false },
   { feature: "Data stays on your device", us: true, others: false },
   { feature: "Local AI (Ollama)", us: true, others: false },
-  { feature: "5 AI provider options", us: true, others: false },
-  { feature: "18+ templates", us: true, others: true },
+  { feature: "8 AI provider options", us: true, others: false },
+  { feature: "18 templates × 4 layouts × ∞ palettes", us: true, others: false },
   { feature: "4 layout structures", us: true, others: false },
   { feature: "Real-time preview", us: true, others: true },
   { feature: "Version history & diff", us: true, others: false },
@@ -3008,4 +3515,77 @@ const COMPARISON = [
   { feature: "LinkedIn PDF import", us: true, others: true },
   { feature: "Open source (MIT)", us: true, others: false },
   { feature: "Works offline", us: true, others: false },
+];
+
+// Palette samples for the landing page (mirrors COLOR_PALETTES from cv-store)
+const LANDING_PALETTES = [
+  {
+    name: "Default",
+    primary: "#18181b",
+    secondary: "#71717a",
+    accent: "#3b82f6",
+  },
+  {
+    name: "Ocean",
+    primary: "#0369a1",
+    secondary: "#0891b2",
+    accent: "#06b6d4",
+  },
+  {
+    name: "Forest",
+    primary: "#166534",
+    secondary: "#15803d",
+    accent: "#22c55e",
+  },
+  {
+    name: "Sunset",
+    primary: "#c2410c",
+    secondary: "#ea580c",
+    accent: "#f97316",
+  },
+  {
+    name: "Grape",
+    primary: "#7c3aed",
+    secondary: "#8b5cf6",
+    accent: "#a78bfa",
+  },
+  {
+    name: "Monochrome",
+    primary: "#000000",
+    secondary: "#525252",
+    accent: "#a3a3a3",
+  },
+  {
+    name: "Slate",
+    primary: "#334155",
+    secondary: "#64748b",
+    accent: "#0ea5e9",
+  },
+  { name: "Rose", primary: "#9f1239", secondary: "#e11d48", accent: "#fb7185" },
+  { name: "Teal", primary: "#115e59", secondary: "#0d9488", accent: "#2dd4bf" },
+  {
+    name: "Amber",
+    primary: "#92400e",
+    secondary: "#d97706",
+    accent: "#fbbf24",
+  },
+  { name: "Navy", primary: "#1e3a5f", secondary: "#2563eb", accent: "#60a5fa" },
+  {
+    name: "Coral",
+    primary: "#9a3412",
+    secondary: "#f43f5e",
+    accent: "#fb923c",
+  },
+  {
+    name: "Lavender",
+    primary: "#4c1d95",
+    secondary: "#7c3aed",
+    accent: "#c4b5fd",
+  },
+  {
+    name: "Charcoal",
+    primary: "#1c1917",
+    secondary: "#44403c",
+    accent: "#78716c",
+  },
 ];

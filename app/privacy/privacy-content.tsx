@@ -485,10 +485,10 @@ export function PrivacyContent() {
               </a>{" "}
               or contact the maintainer at{" "}
               <a
-                href="mailto:destbreso@gmail.com"
+                href="mailto:dev.destbreso@gmail.com"
                 className="text-primary hover:underline"
               >
-                destbreso@gmail.com
+                dev.destbreso@gmail.com
               </a>
               .
             </p>

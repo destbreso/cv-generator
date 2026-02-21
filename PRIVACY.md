@@ -148,7 +148,7 @@ If this privacy policy changes, the update will be reflected in this file with a
 
 ## 11. Contact
 
-For privacy-related questions or concerns, please open an issue on the [GitHub repository](https://github.com/destbreso/cv-generator) or contact the maintainer at destbreso@gmail.com.
+For privacy-related questions or concerns, please open an issue on the [GitHub repository](https://github.com/destbreso/cv-generator) or contact the maintainer at dev.destbreso@gmail.com.
 
 ---
 

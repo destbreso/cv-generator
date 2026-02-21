@@ -116,7 +116,7 @@ Single Column, Sidebar Left, Sidebar Right, and Two Column.
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/cv-generator.git
+git clone https://github.com/destbreso/cv-generator.git
 cd cv-generator
 
 # Install dependencies

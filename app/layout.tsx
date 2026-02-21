@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { DesktopGuard } from "@/components/desktop-guard";
 import "./globals.css";
 
 const geist = Geist({
@@ -36,7 +37,7 @@ export default function RootLayout({
           enableColorScheme={false}
           disableTransitionOnChange
         >
-          {children}
+          <DesktopGuard>{children}</DesktopGuard>
           <Toaster />
         </ThemeProvider>
       </body>

@@ -22,6 +22,9 @@ export async function POST(request: NextRequest) {
         break;
       case "openai":
       case "groq":
+      case "gemini":
+      case "mistral":
+      case "deepseek":
       case "custom":
         testUrl = `${baseUrl}/models`;
         if (apiKey) headers["Authorization"] = `Bearer ${apiKey}`;

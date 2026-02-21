@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import type { CVData } from "@/lib/types";
+import { parseLLMError } from "@/lib/llm-errors";
 
 // Allow long-running parsing + LLM extraction
 export const maxDuration = 120;
@@ -11,6 +12,7 @@ export async function POST(request: NextRequest) {
     const baseUrl = formData.get("baseUrl") as string | null;
     const model = formData.get("model") as string | null;
     const apiKey = formData.get("apiKey") as string | null;
+    const provider = (formData.get("provider") as string | null) || "ollama";
 
     if (!file) {
       return Response.json({ error: "No PDF file provided" }, { status: 400 });
@@ -51,9 +53,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Use Ollama to structure the extracted text into CV data
+    // 2. Use LLM to structure the extracted text into CV data
     const prompt = buildLinkedInPrompt(pdfText);
-    const generateEndpoint = `${baseUrl}/api/generate`;
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -62,9 +63,132 @@ export async function POST(request: NextRequest) {
       headers["Authorization"] = `Bearer ${apiKey}`;
     }
 
-    console.log("[linkedin] Sending to LLM for structuring...");
+    console.log("[linkedin] Sending to LLM for structuring...", {
+      provider,
+      model,
+    });
 
-    // Stream from Ollama to keep connection alive
+    const encoder = new TextEncoder();
+
+    // Helper to create SSE response for non-streaming providers
+    const createSSE = (content: string) => {
+      const cvData = tryParseCVData(content);
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(
+            encoder.encode('data: {"status":"extracting"}\n\n'),
+          );
+          if (cvData) {
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ status: "done", cvData })}\n\n`,
+              ),
+            );
+          } else {
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({
+                  status: "error",
+                  error: "Failed to parse structured data from LLM response",
+                  rawContent: content.substring(0, 2000),
+                })}\n\n`,
+              ),
+            );
+          }
+          controller.close();
+        },
+      });
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
+    };
+
+    // ── Non-Ollama providers: single request → SSE wrapper ──
+    if (provider !== "ollama") {
+      let endpoint = baseUrl.replace(/\/+$/, "");
+      let llmResponse: Response | undefined;
+
+      if (
+        provider === "openai" ||
+        provider === "groq" ||
+        provider === "gemini" ||
+        provider === "mistral" ||
+        provider === "deepseek" ||
+        provider === "custom"
+      ) {
+        const base = endpoint.includes("/v1") ? endpoint : `${endpoint}/v1`;
+        const chatEndpoint = `${base}/chat/completions`;
+
+        llmResponse = await fetch(chatEndpoint, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            model,
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are a professional CV data extraction assistant. Return ONLY valid JSON.",
+              },
+              { role: "user", content: prompt },
+            ],
+            temperature: 0.2,
+          }),
+        });
+      } else if (provider === "anthropic") {
+        if (apiKey) {
+          headers["x-api-key"] = apiKey;
+          headers["anthropic-version"] = "2023-06-01";
+          delete headers["Authorization"];
+        }
+        const messagesEndpoint = `${endpoint}/messages`;
+        llmResponse = await fetch(messagesEndpoint, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            model,
+            max_tokens: 4096,
+            system:
+              "You are a professional CV data extraction assistant. Return ONLY valid JSON.",
+            messages: [{ role: "user", content: prompt }],
+          }),
+        });
+      }
+
+      if (!llmResponse) {
+        return Response.json(
+          { error: "Unsupported provider" },
+          { status: 400 },
+        );
+      }
+
+      if (!llmResponse.ok) {
+        const errorText = await llmResponse.text();
+        console.error("[linkedin] LLM error:", errorText);
+        const friendlyError = parseLLMError(llmResponse.status, errorText, provider);
+        return Response.json(
+          { error: friendlyError },
+          { status: 502 },
+        );
+      }
+
+      const data = await llmResponse.json();
+      let content = "";
+      if (provider === "anthropic") {
+        content = data?.content?.[0]?.text || "";
+      } else {
+        content = data?.choices?.[0]?.message?.content || "";
+      }
+
+      return createSSE(content);
+    }
+
+    // ── Ollama provider: NDJSON streaming ──
+    const generateEndpoint = `${baseUrl}/api/generate`;
     const ollamaRes = await fetch(generateEndpoint, {
       method: "POST",
       headers,
@@ -79,13 +203,13 @@ export async function POST(request: NextRequest) {
     if (!ollamaRes.ok) {
       const errorText = await ollamaRes.text();
       console.error("[linkedin] Ollama error:", errorText);
+      const friendlyError = parseLLMError(ollamaRes.status, errorText, "ollama");
       return Response.json(
-        { error: `LLM failed: ${ollamaRes.status}`, details: errorText },
+        { error: friendlyError },
         { status: 502 },
       );
     }
 
-    // Collect the streaming response
     const ollamaReader = ollamaRes.body?.getReader();
     if (!ollamaReader) {
       return Response.json(
@@ -95,18 +219,48 @@ export async function POST(request: NextRequest) {
     }
 
     const decoder = new TextDecoder();
-    const encoder = new TextEncoder();
     let fullContent = "";
     let chunkCount = 0;
 
-    // Use SSE streaming to keep the browser connection alive
     const stream = new ReadableStream({
       async start(controller) {
-        try {
-          controller.enqueue(
-            encoder.encode('data: {"status":"extracting"}\n\n'),
-          );
+        let closed = false;
 
+        const safeEnqueue = (chunk: Uint8Array) => {
+          if (closed) return;
+          try {
+            controller.enqueue(chunk);
+          } catch {
+            closed = true;
+          }
+        };
+
+        const safeClose = () => {
+          if (closed) return;
+          closed = true;
+          try {
+            controller.close();
+          } catch {
+            /* ignore */
+          }
+        };
+
+        const abortHandler = () => {
+          closed = true;
+          try {
+            ollamaReader.cancel();
+          } catch {
+            /* ignore */
+          }
+          safeClose();
+        };
+
+        request.signal.addEventListener("abort", abortHandler, { once: true });
+
+        try {
+          safeEnqueue(encoder.encode('data: {"status":"extracting"}\n\n'));
+
+          let ollamaDone = false;
           while (true) {
             const { done, value } = await ollamaReader.read();
             if (done) break;
@@ -123,17 +277,22 @@ export async function POST(request: NextRequest) {
                   chunkCount++;
                 }
                 if (chunkCount % 10 === 0) {
-                  controller.enqueue(
+                  safeEnqueue(
                     encoder.encode(
                       `data: ${JSON.stringify({ status: "progress", chunks: chunkCount })}\n\n`,
                     ),
                   );
                 }
-                if (parsed.done === true) break;
+                if (parsed.done === true) {
+                  ollamaDone = true;
+                  break;
+                }
               } catch {
                 // skip malformed lines
               }
             }
+
+            if (ollamaDone) break;
           }
 
           console.log(
@@ -143,17 +302,16 @@ export async function POST(request: NextRequest) {
             chunkCount,
           );
 
-          // Parse the structured result
           const cvData = tryParseCVData(fullContent);
 
           if (cvData) {
-            controller.enqueue(
+            safeEnqueue(
               encoder.encode(
                 `data: ${JSON.stringify({ status: "done", cvData })}\n\n`,
               ),
             );
           } else {
-            controller.enqueue(
+            safeEnqueue(
               encoder.encode(
                 `data: ${JSON.stringify({
                   status: "error",
@@ -163,19 +321,17 @@ export async function POST(request: NextRequest) {
               ),
             );
           }
-          controller.close();
+          safeClose();
         } catch (err) {
           console.error("[linkedin] Stream error:", err);
-          try {
-            controller.enqueue(
-              encoder.encode(
-                `data: ${JSON.stringify({ status: "error", error: String(err) })}\n\n`,
-              ),
-            );
-            controller.close();
-          } catch {
-            /* already closed */
-          }
+          safeEnqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({ status: "error", error: String(err) })}\n\n`,
+            ),
+          );
+          safeClose();
+        } finally {
+          request.signal.removeEventListener("abort", abortHandler);
         }
       },
     });

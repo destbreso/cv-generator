@@ -64,7 +64,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: "Which AI providers are supported?",
-        a: "Ollama (local, free), OpenAI (GPT-4o, GPT-4), Anthropic (Claude 3.5+), Groq (fast inference), and any OpenAI-compatible custom endpoint.",
+        a: "Ollama (local, free), OpenAI (GPT-4o, GPT-4), Anthropic (Claude 3.5+), Google Gemini (Gemini 2.0 Flash), Groq (fast inference), Mistral (Mistral Small/Large), DeepSeek (DeepSeek Chat), and any OpenAI-compatible custom endpoint.",
       },
       {
         q: "Why is AI generation slow?",
@@ -73,6 +73,10 @@ const FAQ_SECTIONS = [
       {
         q: "How does the AI tailor my CV?",
         a: "Paste a job description in the Generate tab. The AI analyzes your existing CV data and rewrites content to better match the target role — emphasizing relevant skills, using impactful language, and quantifying achievements. The output keeps the same structure as your original data.",
+      },
+      {
+        q: "Can I customize how the AI writes my CV?",
+        a: "Yes! Open the AI Config panel (⚙️) and scroll to \"AI Writing Instructions\". The default prompt follows professional resume best practices — ATS optimization, XYZ formula for achievements, keyword alignment, and strong action verbs. You can fully customize it to match your industry, tone, or formatting preferences. Click \"Reset to Default\" to restore the original instructions at any time.",
       },
     ],
   },

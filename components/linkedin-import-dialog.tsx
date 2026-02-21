@@ -24,14 +24,29 @@ import {
   ExternalLink,
   Sparkles,
 } from "lucide-react";
+import { InlineAIConfig } from "@/components/inline-ai-config";
 
-export function LinkedInImportDialog() {
-  const { state, importFromLinkedIn } = useCVStore();
+interface LinkedInImportDialogProps {
+  externalOpen?: boolean;
+  onExternalOpenChange?: (open: boolean) => void;
+}
+
+export function LinkedInImportDialog({
+  externalOpen,
+  onExternalOpenChange,
+}: LinkedInImportDialogProps = {}) {
+  const { state, importFromLinkedIn, cancelLinkedInImport } = useCVStore();
   const { isImportingLinkedIn, linkedInImportStatus, isConnected } = state;
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isControlled = externalOpen !== undefined;
+  const open = isControlled ? externalOpen : internalOpen;
+  const setOpen = isControlled
+    ? (v: boolean) => onExternalOpenChange?.(v)
+    : setInternalOpen;
 
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,15 +80,22 @@ export function LinkedInImportDialog() {
   const handleImport = useCallback(async () => {
     if (!selectedFile) return;
     await importFromLinkedIn(selectedFile);
-    // Close dialog after successful import with a brief delay
-    setTimeout(() => {
-      setOpen(false);
-      setSelectedFile(null);
-    }, 2500);
+    // Auto-close only on success (the status check happens after the async call resolves)
   }, [selectedFile, importFromLinkedIn]);
 
   const isError = linkedInImportStatus.startsWith("Error:");
   const isDone = linkedInImportStatus === "Import complete!";
+  const isCancelled = linkedInImportStatus === "Import cancelled.";
+
+  const stages = [
+    { key: "Extracting", label: "Extraction" },
+    { key: "analyzing", label: "Interpretation" },
+    { key: "Structuring", label: "Structuring" },
+  ];
+
+  const activeStageIndex = stages.findIndex((stage) =>
+    linkedInImportStatus.includes(stage.key),
+  );
 
   // Estimate progress from status
   let progressValue = 0;
@@ -85,21 +107,23 @@ export function LinkedInImportDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Linkedin className="h-4 w-4" />
-          LinkedIn
-        </Button>
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2">
+            <Linkedin className="h-4 w-4" />
+            LinkedIn
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Linkedin className="h-5 w-5 text-[#0A66C2]" />
-            Import from LinkedIn
+            Import from PDF
           </DialogTitle>
           <DialogDescription>
-            Upload your LinkedIn profile PDF and AI will extract and structure
-            your CV data automatically.
+            Upload a resume PDF and AI will extract and structure your CV data
+            automatically. Optimized for LinkedIn profile exports.
           </DialogDescription>
         </DialogHeader>
 
@@ -192,28 +216,76 @@ export function LinkedInImportDialog() {
               <div className="flex items-center gap-3">
                 {isDone ? (
                   <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
-                ) : isError ? (
+                ) : isError || isCancelled ? (
                   <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
                 ) : (
                   <Loader2 className="h-5 w-5 animate-spin text-primary shrink-0" />
                 )}
                 <div className="flex-1 space-y-2">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-3">
                     <p
                       className={cn(
-                        "text-sm font-medium",
+                        "text-sm font-medium truncate",
                         isDone && "text-green-600",
-                        isError && "text-destructive",
+                        (isError || isCancelled) && "text-destructive",
                       )}
                     >
                       {linkedInImportStatus}
                     </p>
-                    {!isDone && !isError && (
-                      <Sparkles className="h-3.5 w-3.5 text-muted-foreground animate-pulse" />
+                    {!isDone && !isError && !isCancelled && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-xs shrink-0"
+                        onClick={cancelLinkedInImport}
+                      >
+                        Stop
+                      </Button>
                     )}
                   </div>
                   <Progress value={progressValue} className="h-2" />
                 </div>
+              </div>
+              <div className="grid gap-2 text-xs">
+                {stages.map((stage, index) => {
+                  const isComplete = isDone || index < activeStageIndex;
+                  const isActive =
+                    index === activeStageIndex && !isDone && !isError;
+                  return (
+                    <div
+                      key={stage.key}
+                      className={cn(
+                        "flex items-center gap-2 rounded-md border px-2 py-1",
+                        isComplete && "border-green-500/30 bg-green-500/5",
+                        isActive && "border-primary/30 bg-primary/5",
+                        isError &&
+                          index === activeStageIndex &&
+                          "border-destructive/30 bg-destructive/5",
+                      )}
+                    >
+                      {isComplete ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                      ) : isActive ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                      ) : isError && index === activeStageIndex ? (
+                        <AlertCircle className="h-3.5 w-3.5 text-destructive" />
+                      ) : (
+                        <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
+                      )}
+                      <span
+                        className={cn(
+                          isComplete && "text-green-600",
+                          isActive && "text-primary",
+                          isError &&
+                            index === activeStageIndex &&
+                            "text-destructive",
+                        )}
+                      >
+                        {stage.label}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
               {isDone && (
                 <p className="text-xs text-muted-foreground text-center">
@@ -224,16 +296,8 @@ export function LinkedInImportDialog() {
             </div>
           )}
 
-          {/* Connection warning */}
-          {!isConnected && !isImportingLinkedIn && (
-            <div className="flex items-start gap-2 rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-900/50 dark:bg-yellow-950/20 p-3">
-              <AlertCircle className="h-4 w-4 text-yellow-600 shrink-0 mt-0.5" />
-              <p className="text-xs text-yellow-700 dark:text-yellow-400">
-                LLM connection is not active. Please configure and test your
-                connection in the AI Config panel first.
-              </p>
-            </div>
-          )}
+          {/* AI Provider config — always visible before import */}
+          {!isImportingLinkedIn && <InlineAIConfig variant="compact" />}
 
           {/* Actions */}
           <div className="flex justify-end gap-2">
@@ -252,7 +316,9 @@ export function LinkedInImportDialog() {
                 <Button
                   size="sm"
                   onClick={handleImport}
-                  disabled={!selectedFile || !isConnected}
+                  disabled={
+                    !selectedFile || !isConnected || !state.aiConfig.model
+                  }
                   className="gap-2"
                 >
                   <Sparkles className="h-4 w-4" />
@@ -260,7 +326,7 @@ export function LinkedInImportDialog() {
                 </Button>
               </>
             )}
-            {isImportingLinkedIn && isDone && (
+            {isImportingLinkedIn && (isDone || isError || isCancelled) && (
               <Button
                 size="sm"
                 onClick={() => {
@@ -268,7 +334,7 @@ export function LinkedInImportDialog() {
                   setSelectedFile(null);
                 }}
               >
-                Done
+                {isDone ? "Done" : "Close"}
               </Button>
             )}
           </div>
