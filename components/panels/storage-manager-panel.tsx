@@ -447,7 +447,7 @@ export function StorageManagerPanel() {
             className="gap-1.5"
           >
             <Download className="h-3.5 w-3.5" />
-            Export All
+            Export Workspace
           </Button>
           <Button
             variant="outline"
@@ -456,7 +456,7 @@ export function StorageManagerPanel() {
             className="gap-1.5"
           >
             <Upload className="h-3.5 w-3.5" />
-            Import
+            Load Workspace
           </Button>
 
           {selectedKeys.size > 0 && (
@@ -512,11 +512,22 @@ export function StorageManagerPanel() {
                   This will permanently delete <strong>all</strong> data stored
                   by CV Generator, including your CV data, AI configuration,
                   generation history, and preferences. This action cannot be
-                  undone. Consider exporting a backup first.
+                  undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => {
+                    handleExport();
+                  }}
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Export Workspace First
+                </Button>
                 <AlertDialogAction
                   onClick={handleClearAll}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"

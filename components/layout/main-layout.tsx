@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import {
   ResizableHandle,
@@ -24,6 +24,13 @@ import {
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
   FileText,
   Palette,
   Sparkles,
@@ -37,8 +44,14 @@ import {
   Heart,
   Globe,
   ExternalLink,
+  Download,
+  Upload,
+  FolderOpen,
+  Save,
+  Shield,
 } from "lucide-react";
 import { useCVStore } from "@/lib/cv-store";
+import { exportAllData, importData } from "@/lib/storage-manager";
 import { CVEditorPanel } from "@/components/panels/cv-editor-panel";
 import { TemplatePanel } from "@/components/panels/template-panel";
 import { GeneratePanel } from "@/components/panels/generate-panel";
@@ -50,24 +63,59 @@ import { FAQPanel } from "@/components/panels/faq-panel";
 import { StorageManagerPanel } from "@/components/panels/storage-manager-panel";
 import { cn } from "@/lib/utils";
 import { useGithubEngagement } from "@/hooks/use-github-engagement";
+import { toast } from "sonner";
 
 interface MainLayoutProps {
   className?: string;
 }
 
 export function MainLayout({ className }: MainLayoutProps) {
-  const { state, dispatch, loadFromStorage } = useCVStore();
+  const { state, dispatch, loadFromStorage, saveToStorage } = useCVStore();
   const { panels, isDirty, isConnected, aiConfig, isGenerating } = state;
 
   const [mounted, setMounted] = useState(false);
-  const { showEngagement } = useGithubEngagement();
+  const [splashDone, setSplashDone] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const { showEngagement, showTip } = useGithubEngagement();
   const prevGeneratingRef = useRef(false);
   const prevConnectedRef = useRef(false);
 
+  // Wrap saveToStorage to track last-saved timestamp
+  const handleSave = useCallback(() => {
+    saveToStorage();
+    setLastSavedAt(new Date());
+  }, [saveToStorage]);
+
+  // Format relative time for footer
+  const formatLastSaved = (date: Date) => {
+    const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (diff < 10) return "just now";
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
+  // Tick the footer timestamp every 15s
+  const [, setTick] = useState(0);
   useEffect(() => {
-    setMounted(true);
+    if (!lastSavedAt) return;
+    const id = setInterval(() => setTick((t) => t + 1), 15_000);
+    return () => clearInterval(id);
+  }, [lastSavedAt]);
+
+  useEffect(() => {
     loadFromStorage();
+    // Minimum splash time so the animation can be appreciated
+    const splashTimer = setTimeout(() => setMounted(true), 900);
+    return () => clearTimeout(splashTimer);
   }, [loadFromStorage]);
+
+  // After mounted, wait for fade-out to finish then remove splash
+  useEffect(() => {
+    if (!mounted) return;
+    const t = setTimeout(() => setSplashDone(true), 600);
+    return () => clearTimeout(t);
+  }, [mounted]);
 
   // Trigger engagement after successful AI generation
   useEffect(() => {
@@ -94,10 +142,100 @@ export function MainLayout({ className }: MainLayoutProps) {
     return () => clearTimeout(t);
   }, [showEngagement]);
 
-  if (!mounted) {
+  // Show an editor tip after 2 min of session
+  useEffect(() => {
+    const t = setTimeout(() => showTip(), 2 * 60 * 1000);
+    return () => clearTimeout(t);
+  }, [showTip]);
+
+  // ── Workspace export/import handlers ──
+  const handleExportWorkspace = () => {
+    const data = exportAllData();
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `cv-generator-workspace-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Workspace exported");
+  };
+
+  const handleImportWorkspace = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      const result = importData(text);
+      if (result.imported > 0) {
+        loadFromStorage();
+        toast.success(`Workspace loaded — ${result.imported} keys restored`);
+      }
+      if (result.errors.length > 0) {
+        toast.error(`${result.errors.length} error(s) during import`);
+      }
+    };
+    input.click();
+  };
+
+  if (!splashDone) {
     return (
-      <div className="h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      <div
+        className={cn(
+          "h-screen flex flex-col items-center justify-center bg-background transition-opacity duration-500 ease-out",
+          mounted ? "opacity-0 scale-[1.02]" : "opacity-100 scale-100",
+        )}
+        style={{
+          transition: "opacity 500ms ease-out, transform 500ms ease-out",
+        }}
+      >
+        {/* Logo icon — scale in */}
+        <div
+          className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-5"
+          style={{
+            animation: "splashIconIn 0.6s cubic-bezier(0.16,1,0.3,1) both",
+          }}
+        >
+          <FileText className="h-7 w-7 text-primary" />
+        </div>
+
+        {/* Brand name — fade up */}
+        <h1
+          className="text-lg font-semibold text-foreground tracking-tight mb-1"
+          style={{
+            animation:
+              "splashTextIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.15s both",
+          }}
+        >
+          CV Generator
+        </h1>
+
+        {/* Tagline */}
+        <p
+          className="text-xs text-muted-foreground mb-6"
+          style={{
+            animation: "splashTextIn 0.5s cubic-bezier(0.16,1,0.3,1) 0.3s both",
+          }}
+        >
+          Preparing your workspace…
+        </p>
+
+        {/* Shimmer bar */}
+        <div
+          className="w-32 h-0.5 rounded-full bg-border overflow-hidden"
+          style={{
+            animation:
+              "splashTextIn 0.4s cubic-bezier(0.16,1,0.3,1) 0.45s both",
+          }}
+        >
+          <div
+            className="h-full w-1/3 rounded-full bg-primary/60"
+            style={{ animation: "splashShimmer 1.2s ease-in-out infinite" }}
+          />
+        </div>
       </div>
     );
   }
@@ -109,6 +247,9 @@ export function MainLayout({ className }: MainLayoutProps) {
           "h-screen flex flex-col bg-background overflow-hidden",
           className,
         )}
+        style={{
+          animation: "splashTextIn 0.4s cubic-bezier(0.16,1,0.3,1) both",
+        }}
       >
         {/* Top Bar */}
         <header className="h-14 border-b border-border flex items-center justify-between px-4 bg-card/50 backdrop-blur">
@@ -131,14 +272,49 @@ export function MainLayout({ className }: MainLayoutProps) {
                 </Badge>
               )}
             </div>
-            <Link
-              href="/privacy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-muted-foreground hover:text-primary transition-colors"
-            >
-              Privacy
-            </Link>
+
+            {/* Workspace dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="relative h-8 gap-1.5 px-2.5 text-xs"
+                >
+                  <FolderOpen className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Workspace</span>
+                  {isDirty && (
+                    <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-yellow-500 ring-2 ring-card/50" />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuItem onClick={handleSave}>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleExportWorkspace}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Workspace
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleImportWorkspace}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Load Workspace
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Shield className="h-4 w-4 mr-2" />
+                    Privacy Policy
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <div className="flex items-center gap-2">
@@ -440,6 +616,22 @@ export function MainLayout({ className }: MainLayoutProps) {
               </div>
 
               <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  <div
+                    className={cn(
+                      "h-1.5 w-1.5 rounded-full",
+                      isDirty ? "bg-yellow-500" : "bg-green-500/60",
+                    )}
+                  />
+                  <span>
+                    {isDirty
+                      ? "Not saved"
+                      : lastSavedAt
+                        ? `Saved ${formatLastSaved(lastSavedAt)}`
+                        : "Saved"}
+                  </span>
+                </div>
+                <span className="text-border">·</span>
                 <div className="flex items-center gap-1">
                   <div
                     className={cn(

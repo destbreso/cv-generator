@@ -122,6 +122,10 @@ const FAQ_SECTIONS = [
         a: "Yes. Use Export (↓) to save your CV data as a JSON file, and Import (↑) to load it back. Your data is also auto-saved to localStorage. For full data management (backup, restore, inspect, delete), use the Storage Manager panel.",
       },
       {
+        q: "How do I use my workspace on another device or browser?",
+        a: "Your entire workspace — CV data, templates, favorites, palettes, AI config, and history — can be exported as a single/auditable JSON file. Click 'Export Workspace' in the Storage Manager (database icon) or use the ↓ shortcut in the header bar. On the other device, click 'Load Workspace' or ↑ to import the file. This is also a great way to create backups before making big changes.",
+      },
+      {
         q: "What page formats are supported?",
         a: "A4 (210 × 297 mm) and US Letter (215.9 × 279.4 mm). Switch between them in the preview toolbar.",
       },

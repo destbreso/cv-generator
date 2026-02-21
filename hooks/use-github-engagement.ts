@@ -39,7 +39,8 @@ const MESSAGES: EngagementMessage[] = [
   {
     id: "contribute",
     text: "Want to improve CV Generator?",
-    description: "We welcome contributions — bug fixes, features, translations.",
+    description:
+      "We welcome contributions — bug fixes, features, translations.",
     actionLabel: "Contribute",
     actionUrl: `${REPO_URL}/blob/main/CONTRIBUTING.md`,
     weight: 2,
@@ -71,10 +72,66 @@ const MESSAGES: EngagementMessage[] = [
   {
     id: "privacy-first",
     text: "Your data never leaves your browser",
-    description: "We're committed to privacy. Star us if you agree that matters.",
+    description:
+      "We're committed to privacy. Star us if you agree that matters.",
     actionLabel: "⭐ Support privacy",
     actionUrl: REPO_URL,
     weight: 2,
+  },
+];
+
+/* ────────────────────────────────────────────────
+   Tips pool — actionable editor tips, shown as
+   info toasts (no link, self-dismissing)
+   ──────────────────────────────────────────────── */
+interface TipMessage {
+  id: string;
+  text: string;
+  description: string;
+}
+
+const TIPS: TipMessage[] = [
+  {
+    id: "tip-workspace-export",
+    text: "💾 Tip: Export your workspace",
+    description:
+      "Use ↓ in the toolbar or Storage Manager to save everything — CV, templates, favorites, history — as a JSON file. Load it on any device.",
+  },
+  {
+    id: "tip-workspace-backup",
+    text: "🛡️ Tip: Protect your work",
+    description:
+      "Browser data can be lost if you clear cookies or switch browsers. Export your workspace regularly to keep a backup.",
+  },
+  {
+    id: "tip-favorites",
+    text: "⭐ Tip: Save favorite presets",
+    description:
+      "Found the perfect template + layout + color combo? Save it as a favorite in the Design tab so you can re-apply it in one click.",
+  },
+  {
+    id: "tip-custom-palette",
+    text: "🎨 Tip: Save custom palettes",
+    description:
+      "Created a custom color palette? Click 'Save this palette' to keep it alongside the built-in ones. It'll persist across sessions.",
+  },
+  {
+    id: "tip-keyboard",
+    text: "⌨️ Tip: Quick workspace access",
+    description:
+      "The ↓ and ↑ buttons in the header bar let you export & load your workspace without opening Storage Manager.",
+  },
+  {
+    id: "tip-multi-device",
+    text: "📱 Tip: Use on multiple devices",
+    description:
+      "Export your workspace on one device, then load it on another. Your entire setup — data, config, favorites — transfers instantly.",
+  },
+  {
+    id: "tip-storage-manager",
+    text: "🗄️ Tip: Full control over your data",
+    description:
+      "The Storage Manager (database icon) lets you inspect, search, and delete individual keys. You can also see exactly how much space you're using.",
   },
 ];
 
@@ -224,5 +281,45 @@ export function useGithubEngagement() {
     stateRef.current = s;
   }, [getState]);
 
-  return { showEngagement, trackMilestone };
+  /**
+   * Show a random editor tip — separate pool & persistence from
+   * engagement messages. Tips are purely informational (no action link).
+   * Max 5 tips total, min 10 min gap, shown once each.
+   */
+  const showTip = useCallback(() => {
+    const TIPS_KEY = "cv-gen-tips";
+    let tipsState: { shown: string[]; lastShown: number; total: number };
+    try {
+      const raw = localStorage.getItem(TIPS_KEY);
+      tipsState = raw ? JSON.parse(raw) : { shown: [], lastShown: 0, total: 0 };
+    } catch {
+      tipsState = { shown: [], lastShown: 0, total: 0 };
+    }
+
+    // Cap & rate-limit
+    if (tipsState.total >= 5) return;
+    if (Date.now() - tipsState.lastShown < 10 * 60 * 1000) return;
+
+    // 40% chance per trigger
+    if (Math.random() > 0.4) return;
+
+    const pool = TIPS.filter((t) => !tipsState.shown.includes(t.id));
+    if (pool.length === 0) return;
+
+    const tip = pool[Math.floor(Math.random() * pool.length)];
+
+    tipsState.shown.push(tip.id);
+    tipsState.lastShown = Date.now();
+    tipsState.total++;
+    try {
+      localStorage.setItem(TIPS_KEY, JSON.stringify(tipsState));
+    } catch {}
+
+    toast.info(tip.text, {
+      description: tip.description,
+      duration: 10000,
+    });
+  }, []);
+
+  return { showEngagement, trackMilestone, showTip };
 }

@@ -77,8 +77,8 @@ function RotatingWords({
       setTimeout(() => {
         setIndex((i) => (i + 1) % words.length);
         setIsAnimating(false);
-      }, 400);
-    }, 3000);
+      }, 700);
+    }, 4500);
     return () => clearInterval(interval);
   }, [words.length]);
 
@@ -93,10 +93,10 @@ function RotatingWords({
       </span>
       <span
         className={cn(
-          "absolute inset-0 flex items-center justify-center whitespace-nowrap transition-all duration-500 ease-out",
+          "absolute inset-0 flex items-center justify-center whitespace-nowrap transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
           isAnimating
-            ? "opacity-0 -translate-y-[30%] scale-95"
-            : "opacity-100 translate-y-0 scale-100",
+            ? "opacity-0 -translate-y-[20%] scale-[0.97] blur-[2px]"
+            : "opacity-100 translate-y-0 scale-100 blur-0",
         )}
       >
         {words[index]}
