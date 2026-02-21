@@ -416,6 +416,26 @@ export interface LayoutOption {
   icon: string;
 }
 
+/** A saved template+layout+palette combo */
+export interface FavoritePreset {
+  id: string;
+  name: string;
+  templateId: string;
+  layoutId: string;
+  paletteId: string;
+  customPalette: TemplatePaletteColors | null;
+  priority: number; // lower = higher priority
+  createdAt: number;
+}
+
+/** A user-saved custom palette */
+export interface SavedPalette {
+  id: string;
+  name: string;
+  colors: TemplatePaletteColors;
+  createdAt: number;
+}
+
 export const TEMPLATES: TemplateOption[] = [
   {
     id: "minimal",
@@ -639,6 +659,10 @@ export interface CVAppState {
   customPalette: TemplatePaletteColors | null;
   selectedLayoutId: string;
 
+  // Favorites & Custom Palettes
+  favoritePresets: FavoritePreset[];
+  savedPalettes: SavedPalette[];
+
   // AI Configuration
   aiConfig: AIProviderConfig;
   apiKeys: Partial<Record<AIProvider, string>>; // Per-provider API keys (memory only)
@@ -700,7 +724,16 @@ type CVAction =
   | { type: "CLEAR_DATA" }
   | { type: "APPLY_GENERATED" }
   | { type: "SET_IMPORTING_LINKEDIN"; payload: boolean }
-  | { type: "SET_LINKEDIN_IMPORT_STATUS"; payload: string };
+  | { type: "SET_LINKEDIN_IMPORT_STATUS"; payload: string }
+  // Favorites
+  | { type: "ADD_FAVORITE_PRESET"; payload: FavoritePreset }
+  | { type: "REMOVE_FAVORITE_PRESET"; payload: string }
+  | { type: "REORDER_FAVORITE_PRESETS"; payload: FavoritePreset[] }
+  | { type: "APPLY_FAVORITE_PRESET"; payload: FavoritePreset }
+  // Custom palettes
+  | { type: "ADD_SAVED_PALETTE"; payload: SavedPalette }
+  | { type: "REMOVE_SAVED_PALETTE"; payload: string }
+  | { type: "UPDATE_SAVED_PALETTE"; payload: SavedPalette };
 
 // Initial state
 const initialState: CVAppState = {
@@ -712,6 +745,8 @@ const initialState: CVAppState = {
   selectedPaletteId: "default",
   customPalette: null,
   selectedLayoutId: "single",
+  favoritePresets: [],
+  savedPalettes: [],
   aiConfig: {
     provider:
       process.env.NEXT_PUBLIC_DISABLE_OLLAMA === "true" ? "openai" : "ollama",
@@ -950,6 +985,63 @@ function cvReducer(state: CVAppState, action: CVAction): CVAppState {
     case "SET_LINKEDIN_IMPORT_STATUS":
       return { ...state, linkedInImportStatus: action.payload };
 
+    // ── Favorite Presets ──
+    case "ADD_FAVORITE_PRESET":
+      return {
+        ...state,
+        favoritePresets: [...state.favoritePresets, action.payload],
+      };
+
+    case "REMOVE_FAVORITE_PRESET":
+      return {
+        ...state,
+        favoritePresets: state.favoritePresets.filter(
+          (f) => f.id !== action.payload,
+        ),
+      };
+
+    case "REORDER_FAVORITE_PRESETS":
+      return { ...state, favoritePresets: action.payload };
+
+    case "APPLY_FAVORITE_PRESET": {
+      const preset = action.payload;
+      return {
+        ...state,
+        selectedTemplateId: preset.templateId,
+        selectedLayoutId: preset.layoutId,
+        selectedPaletteId: preset.paletteId,
+        customPalette: preset.customPalette,
+      };
+    }
+
+    // ── Custom Palettes ──
+    case "ADD_SAVED_PALETTE":
+      return {
+        ...state,
+        savedPalettes: [...state.savedPalettes, action.payload],
+      };
+
+    case "REMOVE_SAVED_PALETTE":
+      return {
+        ...state,
+        savedPalettes: state.savedPalettes.filter(
+          (p) => p.id !== action.payload,
+        ),
+        // If deleted palette was active, revert to default
+        selectedPaletteId:
+          state.selectedPaletteId === action.payload
+            ? "default"
+            : state.selectedPaletteId,
+      };
+
+    case "UPDATE_SAVED_PALETTE":
+      return {
+        ...state,
+        savedPalettes: state.savedPalettes.map((p) =>
+          p.id === action.payload.id ? action.payload : p,
+        ),
+      };
+
     default:
       return state;
   }
@@ -986,6 +1078,9 @@ const STORAGE_KEYS = {
   templateId: "cv-template-id",
   paletteId: "cv-palette-id",
   layoutId: "cv-layout-id",
+  favoritePresets: "cv-favorite-presets",
+  savedPalettes: "cv-saved-palettes",
+  customPalette: "cv-custom-palette",
 };
 
 // API keys are ONLY stored in memory (React state), NEVER persisted to localStorage/sessionStorage
@@ -1045,6 +1140,27 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEYS.templateId, state.selectedTemplateId);
     localStorage.setItem(STORAGE_KEYS.paletteId, state.selectedPaletteId);
     localStorage.setItem(STORAGE_KEYS.layoutId, state.selectedLayoutId);
+
+    // Save custom palette colors
+    if (state.customPalette) {
+      localStorage.setItem(
+        STORAGE_KEYS.customPalette,
+        JSON.stringify(state.customPalette),
+      );
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.customPalette);
+    }
+
+    // Save favorites & custom palettes
+    localStorage.setItem(
+      STORAGE_KEYS.favoritePresets,
+      JSON.stringify(state.favoritePresets),
+    );
+    localStorage.setItem(
+      STORAGE_KEYS.savedPalettes,
+      JSON.stringify(state.savedPalettes),
+    );
+
     dispatch({ type: "MARK_CLEAN" });
   }, [state]);
 
@@ -1081,6 +1197,17 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
 
     const layoutId = localStorage.getItem(STORAGE_KEYS.layoutId);
     if (layoutId) stored.selectedLayoutId = layoutId;
+
+    // Load custom palette colors
+    const customPaletteRaw = localStorage.getItem(STORAGE_KEYS.customPalette);
+    if (customPaletteRaw) stored.customPalette = JSON.parse(customPaletteRaw);
+
+    // Load favorites & custom palettes
+    const favorites = localStorage.getItem(STORAGE_KEYS.favoritePresets);
+    if (favorites) stored.favoritePresets = JSON.parse(favorites);
+
+    const savedPalettes = localStorage.getItem(STORAGE_KEYS.savedPalettes);
+    if (savedPalettes) stored.savedPalettes = JSON.parse(savedPalettes);
 
     dispatch({ type: "LOAD_STATE", payload: stored });
   }, []);
