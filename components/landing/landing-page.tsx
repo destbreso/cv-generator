@@ -3458,13 +3458,13 @@ export function LandingPage() {
                 Why Free?
               </Badge>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-4">
-                Because this is how{" "}
-                <GradientText>I think software should work</GradientText>
+                Because tools that help people{" "}
+                <GradientText>should be free</GradientText>
               </h2>
               <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                This started as a personal project while exploring practical
-                applications of LLMs, tools that support our work without making
-                decisions for us.
+                I build software for a living, and I charge for it. But I
+                believe tools that genuinely help people who need them shouldn't
+                have a paywall.
                 <br />
                 <span className="font-medium text-foreground">
                   Built for the community, open source, free forever.
