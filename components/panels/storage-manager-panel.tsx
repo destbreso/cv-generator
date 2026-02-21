@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import {
   Database,
   Trash2,
@@ -257,14 +258,24 @@ export function StorageManagerPanel() {
             <span className="text-xs font-medium">AI Provider API Keys</span>
             <div className="ml-auto">
               {(() => {
-                const configuredCount = Object.values(state.apiKeys || {}).filter(Boolean).length
-                  + (state.aiConfig?.apiKey && !state.apiKeys?.[state.aiConfig.provider] ? 1 : 0);
+                const configuredCount =
+                  Object.values(state.apiKeys || {}).filter(Boolean).length +
+                  (state.aiConfig?.apiKey &&
+                  !state.apiKeys?.[state.aiConfig.provider]
+                    ? 1
+                    : 0);
                 return configuredCount > 0 ? (
-                  <Badge variant="outline" className="text-[10px] h-5 border-green-500/30 text-green-600 dark:text-green-400 bg-green-500/5">
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] h-5 border-green-500/30 text-green-600 dark:text-green-400 bg-green-500/5"
+                  >
                     {configuredCount} active (this session)
                   </Badge>
                 ) : (
-                  <Badge variant="outline" className="text-[10px] h-5 text-muted-foreground">
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] h-5 text-muted-foreground"
+                  >
                     None configured
                   </Badge>
                 );
@@ -274,10 +285,21 @@ export function StorageManagerPanel() {
 
           {/* Per-provider key indicators */}
           <div className="flex flex-wrap gap-1.5">
-            {(["openai", "anthropic", "groq", "gemini", "mistral", "deepseek", "custom"] as const).map((provider) => {
+            {(
+              [
+                "openai",
+                "anthropic",
+                "groq",
+                "gemini",
+                "mistral",
+                "deepseek",
+                "custom",
+              ] as const
+            ).map((provider) => {
               const hasKey = !!(
                 state.apiKeys?.[provider] ||
-                (state.aiConfig?.provider === provider && state.aiConfig?.apiKey)
+                (state.aiConfig?.provider === provider &&
+                  state.aiConfig?.apiKey)
               );
               return (
                 <span
@@ -289,8 +311,25 @@ export function StorageManagerPanel() {
                       : "bg-muted/50 text-muted-foreground/60 border-border",
                   )}
                 >
-                  <span className={cn("h-1.5 w-1.5 rounded-full", hasKey ? "bg-green-500" : "bg-muted-foreground/30")} />
-                  {provider === "openai" ? "OpenAI" : provider === "anthropic" ? "Anthropic" : provider === "groq" ? "Groq" : provider === "gemini" ? "Gemini" : provider === "mistral" ? "Mistral" : provider === "deepseek" ? "DeepSeek" : "Custom"}
+                  <span
+                    className={cn(
+                      "h-1.5 w-1.5 rounded-full",
+                      hasKey ? "bg-green-500" : "bg-muted-foreground/30",
+                    )}
+                  />
+                  {provider === "openai"
+                    ? "OpenAI"
+                    : provider === "anthropic"
+                      ? "Anthropic"
+                      : provider === "groq"
+                        ? "Groq"
+                        : provider === "gemini"
+                          ? "Gemini"
+                          : provider === "mistral"
+                            ? "Mistral"
+                            : provider === "deepseek"
+                              ? "DeepSeek"
+                              : "Custom"}
                 </span>
               );
             })}
@@ -300,18 +339,21 @@ export function StorageManagerPanel() {
             <Info className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
             <div className="text-[11px] text-muted-foreground leading-relaxed space-y-1">
               <p>
-                <strong>Memory only</strong> — API keys live exclusively in browser
-                RAM, stored separately per provider. They are <strong>never</strong> written
-                to localStorage, cookies, or any persistent storage.
+                <strong>Memory only</strong> — API keys live exclusively in
+                browser RAM, stored separately per provider. They are{" "}
+                <strong>never</strong> written to localStorage, cookies, or any
+                persistent storage.
               </p>
               <p>
-                Closing this tab permanently deletes all keys. You'll need to re-enter
-                them next session. This is by design for maximum security.
+                Closing this tab permanently deletes all keys. You'll need to
+                re-enter them next session. This is by design for maximum
+                security.
               </p>
             </div>
           </div>
           <p className="text-[10px] text-muted-foreground/60 italic">
-            To configure: AI Settings panel (⚙️). To remove: close this browser tab.
+            To configure: AI Settings panel (⚙️). To remove: close this browser
+            tab.
           </p>
         </div>
       </div>
@@ -321,7 +363,9 @@ export function StorageManagerPanel() {
       {/* ── Persistent Data Header ──────────────────────────────────────── */}
       <div className="flex items-center gap-2">
         <HardDrive className="h-4 w-4 text-muted-foreground" />
-        <h3 className="text-sm font-semibold">Persistent Data (localStorage)</h3>
+        <h3 className="text-sm font-semibold">
+          Persistent Data (localStorage)
+        </h3>
       </div>
 
       {/* ── Summary Cards ──────────────────────────────────────────────────── */}
@@ -354,30 +398,30 @@ export function StorageManagerPanel() {
             {Object.entries(summary.byCategory)
               .filter(([cat]) => cat !== "secrets")
               .map(([cat, info]) => {
-              const meta = CATEGORY_META[cat];
-              const Icon = CATEGORY_ICONS[cat] || Package;
-              return (
-                <div
-                  key={cat}
-                  className="flex items-center gap-2 rounded-md border border-border bg-card/30 px-3 py-2"
-                >
-                  <Icon
-                    className={cn(
-                      "h-3.5 w-3.5",
-                      meta?.color ?? "text-muted-foreground",
-                    )}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium truncate">
-                      {meta?.label ?? cat}
-                    </div>
-                    <div className="text-[10px] text-muted-foreground">
-                      {info.count} keys · {info.sizeFormatted}
+                const meta = CATEGORY_META[cat];
+                const Icon = CATEGORY_ICONS[cat] || Package;
+                return (
+                  <div
+                    key={cat}
+                    className="flex items-center gap-2 rounded-md border border-border bg-card/30 px-3 py-2"
+                  >
+                    <Icon
+                      className={cn(
+                        "h-3.5 w-3.5",
+                        meta?.color ?? "text-muted-foreground",
+                      )}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-medium truncate">
+                        {meta?.label ?? cat}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {info.count} keys · {info.sizeFormatted}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         </div>
       )}
@@ -650,7 +694,12 @@ export function StorageManagerPanel() {
             </p>
             <div className="flex flex-wrap gap-1.5 mt-1">
               {knownItems
-                .filter((i) => !i.exists && i.storage !== "memory" && i.category !== "secrets")
+                .filter(
+                  (i) =>
+                    !i.exists &&
+                    i.storage !== "memory" &&
+                    i.category !== "secrets",
+                )
                 .map((item) => (
                   <Tooltip key={item.key}>
                     <TooltipTrigger asChild>
@@ -687,14 +736,14 @@ export function StorageManagerPanel() {
           generation feature, which sends CV data to your configured LLM
           endpoint). You have full control to inspect, export, or delete any
           data at any time.{" "}
-          <a
+          <Link
             href="/privacy"
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary hover:underline"
           >
             Read full Privacy Policy →
-          </a>
+          </Link>
         </p>
       </div>
     </div>

@@ -26,7 +26,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const PROVIDERS: {
+const isOllamaEnabled = process.env.NEXT_PUBLIC_DISABLE_OLLAMA !== "true";
+
+const ALL_PROVIDERS: {
   id: AIProvider;
   name: string;
   icon: React.ReactNode;
@@ -82,6 +84,8 @@ const PROVIDERS: {
   },
 ];
 
+const PROVIDERS = ALL_PROVIDERS;
+
 interface InlineAIConfigProps {
   /** Compact: shows only badge + expand. Full: always shows config */
   variant?: "compact" | "full";
@@ -118,10 +122,14 @@ export function InlineAIConfig({
   const hasKey = !!aiConfig.apiKey;
 
   // Only show providers the user can actually use right now:
-  // - providers that don't need a key (Ollama)
+  // - providers that don't need a key (Ollama — if enabled)
   // - any provider that has a key stored in the per-provider apiKeys map
+  // - Ollama always shown (but disabled if not enabled)
   const usableProviders = PROVIDERS.filter(
-    (p) => !p.needsKey || !!state.apiKeys?.[p.id],
+    (p) =>
+      p.id === "ollama" ||
+      !p.needsKey ||
+      !!state.apiKeys?.[p.id],
   );
 
   // If the currently selected provider needs a key but doesn't have one,
@@ -221,21 +229,30 @@ export function InlineAIConfig({
 
         {/* Provider pills — only usable ones */}
         <div className="flex flex-wrap gap-1.5">
-          {usableProviders.map((p) => (
+          {usableProviders.map((p) => {
+            const isDisabledOllama = p.id === "ollama" && !isOllamaEnabled;
+            return (
             <button
               key={p.id}
-              onClick={() => handleProviderChange(p.id)}
+              onClick={() => !isDisabledOllama && handleProviderChange(p.id)}
+              disabled={isDisabledOllama}
               className={cn(
                 "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-all",
-                aiConfig.provider === p.id
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border hover:border-primary/40 text-muted-foreground",
+                isDisabledOllama
+                  ? "border-border opacity-50 cursor-not-allowed text-muted-foreground"
+                  : aiConfig.provider === p.id
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border hover:border-primary/40 text-muted-foreground",
               )}
             >
               {p.icon}
               {p.name}
+              {isDisabledOllama && (
+                <span className="text-[10px] opacity-70">Local only</span>
+              )}
             </button>
-          ))}
+            );
+          })}
           {/* If no keyed providers are available, hint to configure */}
           {usableProviders.length <= 1 && (
             <button

@@ -92,14 +92,14 @@ export function MainLayout({ className }: MainLayoutProps) {
                 </Badge>
               )}
             </div>
-            <a
+            <Link
               href="/privacy"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-muted-foreground hover:text-primary transition-colors"
             >
               Privacy
-            </a>
+            </Link>
           </div>
 
           <div className="flex items-center gap-2">

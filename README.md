@@ -219,7 +219,65 @@ cv-generator/
 
 ---
 
-## 📋 FAQ
+## � Deployment (Cloudflare Workers)
+
+This project is configured for deployment on **Cloudflare Workers** using [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare).
+
+### Prerequisites
+
+- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) installed (`npm i -g wrangler`)
+- A Cloudflare account (free tier works)
+- Authenticated via `wrangler login`
+
+### Configuration files
+
+| File                  | Purpose                                                                       |
+|-----------------------|-------------------------------------------------------------------------------|
+| `wrangler.jsonc`      | Cloudflare Workers config (name, compatibility, assets)                       |
+| `open-next.config.ts` | OpenNext adapter — sets `buildCommand: "pnpm build"` and R2 incremental cache |
+| `.env.production`     | Production env vars (built into the bundle at build time)                     |
+| `.env.example`        | Template for local `.env` — copy and adjust                                   |
+
+### Environment Variables
+
+| Variable                     | Values                      | Default  | Description                                                               |
+|------------------------------|-----------------------------|----------|---------------------------------------------------------------------------|
+| `NEXT_PUBLIC_DEFAULT_THEME`  | `light` · `dark` · `modern` | `modern` | Default UI theme                                                          |
+| `NEXT_PUBLIC_DISABLE_OLLAMA` | `true` · `false`            | `false`  | Disable Ollama provider (set `true` in production — Ollama is local only) |
+
+### Build & Deploy
+
+```bash
+# 1. Stub @vercel/og files to stay under the 3 MiB free-tier bundle limit
+for f in node_modules/.pnpm/next@16.*/node_modules/next/dist/compiled/@vercel/og/{resvg.wasm,yoga.wasm,index.edge.js}; do
+  echo "// stub" > "$f"
+done
+
+# 2. Build for Cloudflare Workers
+pnpm build:cf
+
+# 3. Deploy
+pnpm deploy:cf
+```
+
+Or as a one-liner:
+
+```bash
+for f in node_modules/.pnpm/next@16.*/node_modules/next/dist/compiled/@vercel/og/{resvg.wasm,yoga.wasm,index.edge.js}; do echo "// stub" > "$f"; done && pnpm build:cf && pnpm deploy:cf
+```
+
+### Local Preview (Cloudflare)
+
+```bash
+pnpm preview:cf
+```
+
+> **Note:** The `@vercel/og` stubs are lost after every `pnpm install`. You must re-stub before each build.  
+> The `.env*` files are gitignored — never commit secrets. Use `.env.example` as a reference.
+
+---
+
+## �📋 FAQ
 
 Common questions are answered in the app's built-in FAQ section (click **FAQ** in the sidebar).
 

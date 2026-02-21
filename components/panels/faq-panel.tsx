@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   Accordion,
   AccordionContent,
@@ -76,7 +77,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: "Can I customize how the AI writes my CV?",
-        a: "Yes! Open the AI Config panel (⚙️) and scroll to \"AI Writing Instructions\". The default prompt follows professional resume best practices — ATS optimization, XYZ formula for achievements, keyword alignment, and strong action verbs. You can fully customize it to match your industry, tone, or formatting preferences. Click \"Reset to Default\" to restore the original instructions at any time.",
+        a: 'Yes! Open the AI Config panel (⚙️) and scroll to "AI Writing Instructions". The default prompt follows professional resume best practices — ATS optimization, XYZ formula for achievements, keyword alignment, and strong action verbs. You can fully customize it to match your industry, tone, or formatting preferences. Click "Reset to Default" to restore the original instructions at any time.',
       },
     ],
   },
@@ -210,14 +211,14 @@ export function FAQPanel() {
       <div className="text-center pb-4 space-y-1">
         <p className="text-xs text-muted-foreground">
           Read our full{" "}
-          <a
+          <Link
             href="/privacy"
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary hover:underline"
           >
             Privacy Policy
-          </a>
+          </Link>
           .
         </p>
         <p className="text-xs text-muted-foreground">

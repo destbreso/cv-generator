@@ -34,6 +34,7 @@ import {
   Linkedin,
   WifiOff,
   AlertTriangle,
+  Clock,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -2078,7 +2079,10 @@ export function LandingPage() {
               </ScrollReveal>
 
               <ScrollReveal delay={250}>
-                <div className="rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6 hover:border-green-500/30 transition-colors">
+                <div className="relative rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6 hover:border-green-500/30 transition-colors">
+                  <Badge variant="outline" className="absolute top-3 right-3 text-[10px] px-1.5 py-0.5 border-amber-500/50 text-amber-500 bg-amber-500/10">
+                    WIP
+                  </Badge>
                   <div className="flex items-start gap-3 mb-4">
                     <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <History className="h-5 w-5 text-green-600" />
@@ -2098,11 +2102,11 @@ export function LandingPage() {
                           Full change history
                         </li>
                         <li className="flex items-center gap-2">
-                          <Check className="h-3.5 w-3.5 text-green-600" />
+                          <Clock className="h-3.5 w-3.5 text-amber-500" />
                           Side-by-side comparison
                         </li>
                         <li className="flex items-center gap-2">
-                          <Check className="h-3.5 w-3.5 text-green-600" />
+                          <Clock className="h-3.5 w-3.5 text-amber-500" />
                           Selective merging
                         </li>
                       </ul>
@@ -2747,12 +2751,12 @@ export function LandingPage() {
                 honest: if you need bulletproof security for production keys,
                 use an API gateway or backend proxy instead.
               </p>
-              <a
+              <Link
                 href="/privacy"
                 className="text-primary hover:underline text-sm font-medium"
               >
                 Read our Privacy Policy & Security Details →
-              </a>
+              </Link>
             </div>
           </ScrollReveal>
         </div>

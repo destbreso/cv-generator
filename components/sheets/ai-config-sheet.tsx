@@ -45,7 +45,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const PROVIDERS: {
+const isOllamaEnabled = process.env.NEXT_PUBLIC_DISABLE_OLLAMA !== "true";
+
+const ALL_PROVIDERS: {
   id: AIProvider;
   name: string;
   description: string;
@@ -108,6 +110,8 @@ const PROVIDERS: {
     needsKey: true,
   },
 ];
+
+const PROVIDERS = ALL_PROVIDERS;
 
 export function AIConfigSheet() {
   const { state, dispatch, testConnection, loadModels, saveToStorage } =
@@ -199,15 +203,20 @@ export function AIConfigSheet() {
         <div className="space-y-3">
           <Label>AI Provider</Label>
           <div className="grid grid-cols-2 gap-2">
-            {PROVIDERS.map((provider) => (
+            {PROVIDERS.map((provider) => {
+              const isDisabledOllama = provider.id === "ollama" && !isOllamaEnabled;
+              return (
               <button
                 key={provider.id}
-                onClick={() => handleProviderChange(provider.id)}
+                onClick={() => !isDisabledOllama && handleProviderChange(provider.id)}
+                disabled={isDisabledOllama}
                 className={cn(
                   "relative flex items-center gap-3 p-3 rounded-lg border text-left transition-all",
-                  aiConfig.provider === provider.id
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/50",
+                  isDisabledOllama
+                    ? "border-border opacity-50 cursor-not-allowed"
+                    : aiConfig.provider === provider.id
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50",
                 )}
               >
                 {provider.needsKey && (() => {
@@ -250,13 +259,21 @@ export function AIConfigSheet() {
                   {provider.icon}
                 </div>
                 <div className="min-w-0">
-                  <div className="font-medium text-sm">{provider.name}</div>
+                  <div className="font-medium text-sm flex items-center gap-1.5">
+                    {provider.name}
+                    {isDisabledOllama && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground border border-border">
+                        Local only
+                      </span>
+                    )}
+                  </div>
                   <div className="text-xs text-muted-foreground">
                     {provider.description}
                   </div>
                 </div>
               </button>
-            ))}
+              );
+            })}
           </div>
         </div>
 

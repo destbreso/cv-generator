@@ -8,6 +8,7 @@ import {
   useRef,
   type ReactNode,
 } from "react";
+import { apiPath } from "@/lib/api";
 import { toast } from "sonner";
 import type {
   CVData,
@@ -712,9 +713,14 @@ const initialState: CVAppState = {
   customPalette: null,
   selectedLayoutId: "single",
   aiConfig: {
-    provider: "ollama",
-    baseUrl: "http://localhost:11434",
-    model: "llama3",
+    provider:
+      process.env.NEXT_PUBLIC_DISABLE_OLLAMA === "true" ? "openai" : "ollama",
+    baseUrl:
+      process.env.NEXT_PUBLIC_DISABLE_OLLAMA === "true"
+        ? "https://api.openai.com/v1"
+        : "http://localhost:11434",
+    model:
+      process.env.NEXT_PUBLIC_DISABLE_OLLAMA === "true" ? "gpt-4o" : "llama3",
     systemPrompt: "",
   },
   apiKeys: {},
@@ -1085,7 +1091,7 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
 
   const testConnection = useCallback(async (): Promise<boolean> => {
     try {
-      const response = await fetch("/api/test-connection", {
+      const response = await fetch(apiPath("/api/test-connection"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(state.aiConfig),
@@ -1108,7 +1114,7 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
 
   const loadModels = useCallback(async () => {
     try {
-      const response = await fetch("/api/list-models", {
+      const response = await fetch(apiPath("/api/list-models"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1165,7 +1171,7 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
     generationAbortRef.current = controller;
 
     try {
-      const response = await fetch("/api/generate-cv", {
+      const response = await fetch(apiPath("/api/generate-cv"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: controller.signal,
@@ -1415,7 +1421,7 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
           formData.append("apiKey", state.aiConfig.apiKey);
         }
 
-        const response = await fetch("/api/parse-linkedin-pdf", {
+        const response = await fetch(apiPath("/api/parse-linkedin-pdf"), {
           method: "POST",
           body: formData,
           signal: controller.signal,

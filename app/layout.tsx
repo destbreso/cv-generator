@@ -32,7 +32,7 @@ export default function RootLayout({
       <body className={`${geist.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme={process.env.NEXT_PUBLIC_DEFAULT_THEME || "modern"}
           themes={["light", "dark", "modern"]}
           enableColorScheme={false}
           disableTransitionOnChange
