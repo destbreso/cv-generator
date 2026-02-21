@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -170,7 +170,7 @@ function TemplateMini({
         />
         <div
           className={cn(
-            "relative w-full aspect-[8.5/11] rounded-lg border border-border/60 bg-card p-2.5 shadow-sm",
+            "relative w-full aspect-[8.5/11] rounded-md sm:rounded-lg border border-border/60 bg-card p-1.5 sm:p-2.5 shadow-sm",
             "transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-1.5 group-hover:border-primary/30",
           )}
         >
@@ -268,7 +268,7 @@ function TemplateMini({
             </div>
           )}
         </div>
-        <p className="text-xs text-center text-muted-foreground mt-2 group-hover:text-foreground transition-colors font-medium">
+        <p className="text-[10px] sm:text-xs text-center text-muted-foreground mt-1.5 sm:mt-2 group-hover:text-foreground transition-colors font-medium">
           {name}
         </p>
       </div>
@@ -292,7 +292,7 @@ function LayoutPreview({
       <div className="group text-center">
         <div
           className={cn(
-            "relative mx-auto w-24 aspect-[8.5/11] rounded-lg border-2 border-dashed border-border/60 p-1.5",
+            "relative mx-auto w-16 sm:w-24 aspect-[8.5/11] rounded-md sm:rounded-lg border-2 border-dashed border-border/60 p-1 sm:p-1.5",
             "transition-all duration-300 group-hover:border-primary/50 group-hover:shadow-lg group-hover:shadow-primary/5",
             "bg-gradient-to-br from-card to-muted/30",
           )}
@@ -430,6 +430,340 @@ function FeatureCard({
   );
 }
 
+const MOBILE_FEATURES_INITIAL = 6;
+
+function FeaturesGrid() {
+  const [page, setPage] = useState(0);
+  const perPage = 6;
+  const totalPages = Math.ceil(FEATURES.length / perPage);
+  const start = page * perPage;
+  const visible = FEATURES.slice(start, start + perPage);
+
+  return (
+    <>
+      {/* Desktop: paginated grid (6 per page, 2 rows × 3 cols) */}
+      <div className="hidden md:block">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 min-h-[340px]">
+          {visible.map((f, i) => (
+            <ScrollReveal key={f.title} delay={i * 60}>
+              <FeatureCard
+                icon={f.icon}
+                title={f.title}
+                description={f.description}
+                delay={0}
+              />
+            </ScrollReveal>
+          ))}
+        </div>
+        <div className="flex items-center justify-center gap-3 mt-8">
+          <button
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={page === 0}
+            className="h-8 w-8 rounded-full border border-border/50 flex items-center justify-center text-muted-foreground disabled:opacity-30 hover:bg-muted/50 transition-colors text-sm"
+            aria-label="Previous features"
+          >
+            ‹
+          </button>
+          <div className="flex gap-1.5">
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setPage(i)}
+                className={cn(
+                  "h-2 rounded-full transition-all duration-300",
+                  i === page
+                    ? "w-6 bg-primary"
+                    : "w-2 bg-muted-foreground/25 hover:bg-muted-foreground/40",
+                )}
+                aria-label={`Page ${i + 1}`}
+              />
+            ))}
+          </div>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            disabled={page === totalPages - 1}
+            className="h-8 w-8 rounded-full border border-border/50 flex items-center justify-center text-muted-foreground disabled:opacity-30 hover:bg-muted/50 transition-colors text-sm"
+            aria-label="Next features"
+          >
+            ›
+          </button>
+        </div>
+        <p className="text-center text-xs text-muted-foreground mt-2">
+          {start + 1}–{Math.min(start + perPage, FEATURES.length)} of{" "}
+          {FEATURES.length} features
+        </p>
+      </div>
+
+      {/* Mobile: card deck */}
+      <MobileCardDeck
+        items={FEATURES.map((f) => ({ key: f.title, ...f }))}
+        renderCard={(f: (typeof FEATURES)[0] & { key: string }) => (
+          <FeatureCard
+            icon={f.icon}
+            title={f.title}
+            description={f.description}
+            delay={0}
+          />
+        )}
+      />
+    </>
+  );
+}
+
+/* ════════════════════════════════════════════
+   MOBILE-ONLY: Wheel Carousel (CoverFlow)
+   Center item scales up, sides shrink & fade
+   ════════════════════════════════════════════ */
+function MobileWheelCarousel({
+  items,
+  renderItem,
+  itemWidth = 90,
+  centerScale = 1.35,
+  label,
+}: {
+  items: { key: string }[];
+  renderItem: (item: any, index: number, isCenter: boolean) => React.ReactNode;
+  itemWidth?: number;
+  centerScale?: number;
+  label?: string;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [centerIdx, setCenterIdx] = useState(0);
+  const gap = 10;
+  const step = itemWidth + gap;
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    // scrollLeft is relative to the padded content; first item starts at 0
+    const scrollCenter = el.scrollLeft + el.offsetWidth / 2;
+    // Account for the left padding that centers the first item
+    const paddingLeft = el.offsetWidth / 2 - itemWidth / 2;
+    const adjusted = scrollCenter - paddingLeft;
+    const newIdx = Math.round(adjusted / step);
+    setCenterIdx(Math.max(0, Math.min(newIdx, items.length - 1)));
+  }, [items.length, itemWidth, step]);
+
+  // Auto-center on first item
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollLeft = 0;
+    // Run handler once to set initial centerIdx
+    handleScroll();
+  }, [itemWidth, handleScroll]);
+
+  return (
+    <div className="md:hidden -mx-4 px-4 mb-8 overflow-hidden">
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="flex overflow-x-auto py-8 snap-x snap-mandatory scrollbar-hide"
+        style={{
+          WebkitOverflowScrolling: "touch",
+          paddingLeft: `calc(50% - ${itemWidth / 2}px)`,
+          paddingRight: `calc(50% - ${itemWidth / 2}px)`,
+          gap: `${gap}px`,
+        }}
+      >
+        {items.map((item, i) => {
+          const distance = Math.abs(i - centerIdx);
+          const scale =
+            distance === 0 ? centerScale : distance === 1 ? 1 : 0.85;
+          const opacity = distance === 0 ? 1 : distance === 1 ? 0.7 : 0.45;
+
+          return (
+            <div
+              key={item.key}
+              className="snap-center shrink-0 transition-all duration-300 ease-out"
+              style={{
+                width: itemWidth,
+                transform: `scale(${scale})`,
+                opacity,
+                zIndex: items.length - distance,
+              }}
+            >
+              {renderItem(item, i, distance === 0)}
+            </div>
+          );
+        })}
+      </div>
+      {label && (
+        <p className="text-[10px] text-muted-foreground text-center mt-1">
+          {label}
+        </p>
+      )}
+      {/* Progress dots */}
+      <div className="flex justify-center gap-1 mt-2">
+        {items.map((_, i) => (
+          <div
+            key={i}
+            className={cn(
+              "h-1 rounded-full transition-all duration-300",
+              i === centerIdx ? "w-4 bg-primary" : "w-1 bg-muted-foreground/25",
+            )}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════
+   MOBILE-ONLY: Touch-Driven Card Deck
+   Swipe left/right to flip through cards.
+   Behind cards peek with slight rotation.
+   Compact — no extra vertical space.
+   ════════════════════════════════════════════ */
+function MobileCardDeck({
+  items,
+  renderCard,
+}: {
+  items: { key: string }[];
+  renderCard: (item: any, index: number) => React.ReactNode;
+}) {
+  const [active, setActive] = useState(0);
+  const dragX = useRef(0);
+  const dragging = useRef(false);
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Deterministic slight rotations for organic "messy deck" look
+  const rotations = useRef(
+    items.map((_, i) => {
+      const seed = (i * 17 + 5) % 11;
+      return (seed - 5) * 0.7; // roughly -3.5 to +3.5 degrees
+    }),
+  ).current;
+
+  const go = useCallback(
+    (dir: 1 | -1) => {
+      setActive((a) => Math.max(0, Math.min(a + dir, items.length - 1)));
+    },
+    [items.length],
+  );
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    startX.current = e.touches[0].clientX;
+    startY.current = e.touches[0].clientY;
+    dragging.current = true;
+    dragX.current = 0;
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!dragging.current) return;
+    dragX.current = e.touches[0].clientX - startX.current;
+    // Apply live drag transform
+    if (cardRef.current) {
+      const dx = dragX.current;
+      const rot = dx * 0.05;
+      cardRef.current.style.transform = `translateX(${dx}px) rotate(${rot}deg)`;
+      cardRef.current.style.transition = "none";
+    }
+  };
+
+  const onTouchEnd = () => {
+    dragging.current = false;
+    const dx = dragX.current;
+    if (cardRef.current) {
+      cardRef.current.style.transition = "transform 0.35s ease-out";
+      cardRef.current.style.transform = "translateX(0) rotate(0deg)";
+    }
+    if (Math.abs(dx) > 50) {
+      go(dx < 0 ? 1 : -1);
+    }
+    dragX.current = 0;
+  };
+
+  return (
+    <div className="md:hidden">
+      <div
+        className="relative overflow-hidden"
+        style={{ minHeight: "180px" }}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        {items.map((item, i) => {
+          const offset = i - active;
+          const absOffset = Math.abs(offset);
+          const isActive = offset === 0;
+          const isBehind = offset > 0 && offset <= 3;
+          const isVisible = absOffset <= 3;
+
+          if (!isVisible) return null;
+
+          return (
+            <div
+              key={item.key}
+              ref={isActive ? cardRef : undefined}
+              className={cn(
+                "transition-all duration-350 ease-out select-none",
+                isActive
+                  ? "relative z-30"
+                  : "absolute inset-x-0 top-0 pointer-events-none",
+              )}
+              style={{
+                transform: isActive
+                  ? "translateX(0) rotate(0deg)"
+                  : offset < 0
+                    ? `translateX(${offset * 20}px) scale(${0.95 + absOffset * 0.01}) rotate(${-3 - absOffset}deg)`
+                    : `translateY(${offset * 6}px) scale(${1 - offset * 0.03}) rotate(${rotations[i]}deg)`,
+                opacity: isActive
+                  ? 1
+                  : offset < 0
+                    ? 0
+                    : Math.max(1 - offset * 0.25, 0.2),
+                zIndex: isActive ? 30 : isBehind ? 20 - offset : 10 - absOffset,
+              }}
+            >
+              {/* Solid background to prevent see-through */}
+              <div className="bg-background rounded-2xl shadow-md shadow-black/5 border border-border/40">
+                {renderCard(item, i)}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {/* Navigation */}
+      <div className="flex items-center justify-center gap-3 mt-4">
+        <button
+          onClick={() => go(-1)}
+          disabled={active === 0}
+          className="h-7 w-7 rounded-full border border-border/50 flex items-center justify-center text-muted-foreground disabled:opacity-30 hover:bg-muted/50 transition-colors text-xs"
+          aria-label="Previous"
+        >
+          ‹
+        </button>
+        <div className="flex gap-1">
+          {items.map((_, i) => (
+            <div
+              key={i}
+              className={cn(
+                "h-1.5 rounded-full transition-all duration-300",
+                i === active
+                  ? "w-5 bg-primary"
+                  : i < active
+                    ? "w-2 bg-primary/40"
+                    : "w-1.5 bg-muted-foreground/25",
+              )}
+            />
+          ))}
+        </div>
+        <button
+          onClick={() => go(1)}
+          disabled={active === items.length - 1}
+          className="h-7 w-7 rounded-full border border-border/50 flex items-center justify-center text-muted-foreground disabled:opacity-30 hover:bg-muted/50 transition-colors text-xs"
+          aria-label="Next"
+        >
+          ›
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AIProviderCard({
   name,
   description,
@@ -520,43 +854,28 @@ function EditorPreviewWithThemes() {
     <>
       <InteractiveEditorPreview selectedTheme={selectedTheme} />
       <ScrollReveal delay={400}>
-        <div className="flex justify-center gap-3 mt-6 flex-wrap">
+        <div className="flex justify-center gap-1 sm:gap-3 mt-3 sm:mt-6">
           {Object.entries(themeStyles).map(([key, t]) => (
             <button
               key={key}
               onClick={() => setSelectedTheme(key)}
               className={cn(
-                "flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 transition-all duration-300",
-                "hover:scale-105 cursor-pointer",
+                "flex items-center gap-1 sm:gap-2 px-2 py-1 sm:px-4 sm:py-2.5 rounded-md sm:rounded-lg border sm:border-2 transition-all duration-300",
+                "hover:scale-105 cursor-pointer text-[10px] sm:text-sm",
                 selectedTheme === key
-                  ? "border-primary bg-primary/10 text-primary font-semibold shadow-lg"
+                  ? "border-primary bg-primary/10 text-primary font-semibold shadow-md"
                   : "border-border/40 bg-card/60 text-muted-foreground hover:border-primary/30",
               )}
             >
-              {/* Theme preview swatch */}
-              <div className="flex items-center gap-1.5">
-                <div
-                  className="h-3 w-3 rounded-sm border border-border/50"
-                  style={{
-                    backgroundColor: t.bg.startsWith("linear")
-                      ? "#1a1a1a"
-                      : t.bg,
-                  }}
-                />
-                <div
-                  className="h-3 w-3 rounded-sm border border-border/50"
-                  style={{ backgroundColor: t.accent }}
-                />
-                <div
-                  className="h-3 w-3 rounded-sm border border-border/50"
-                  style={{ backgroundColor: t.accentLight }}
-                />
-              </div>
-              <span className="text-sm font-medium">{t.name}</span>
+              <div
+                className="h-2 w-2 sm:h-3 sm:w-3 rounded-sm border border-border/50 shrink-0"
+                style={{ backgroundColor: t.accent }}
+              />
+              <span className="whitespace-nowrap">{t.name}</span>
             </button>
           ))}
         </div>
-        <p className="text-center text-xs text-muted-foreground mt-3">
+        <p className="text-center text-[10px] sm:text-xs text-muted-foreground mt-2 sm:mt-3">
           Three distinct editor environments. Same powerful tool.
         </p>
       </ScrollReveal>
@@ -768,7 +1087,7 @@ function InteractiveEditorPreview({
         </div>
 
         {/* Editor panel */}
-        <div className="flex-1 p-5 overflow-hidden">
+        <div className="flex-1 p-3 sm:p-5 overflow-hidden">
           {/* TAB 0: Content */}
           {activeTab === 0 && (
             <div className="space-y-4 animate-in fade-in slide-in-from-left-2 duration-300">
@@ -1486,7 +1805,7 @@ export function LandingPage() {
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-border/30 bg-background/70 backdrop-blur-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-1.5 sm:gap-2.5">
               <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/15 flex items-center justify-center">
                 <FileText className="h-4 w-4 text-primary" />
               </div>
@@ -1495,12 +1814,12 @@ export function LandingPage() {
               </span>
               <Badge
                 variant="secondary"
-                className="text-[10px] px-1.5 py-0 h-4 bg-primary/10 text-primary border-0"
+                className="hidden sm:inline-flex text-[10px] px-1.5 py-0 h-4 bg-primary/10 text-primary border-0"
               >
                 FREE
               </Badge>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <a
                 href="https://github.com/destbreso/cv-generator"
                 target="_blank"
@@ -1515,7 +1834,8 @@ export function LandingPage() {
                   className="gap-1.5 shadow-md shadow-primary/10"
                 >
                   <Terminal className="h-3.5 w-3.5" />
-                  Open Editor
+                  <span className="hidden sm:inline">Open Editor</span>
+                  <span className="sm:hidden">Editor</span>
                 </Button>
               </Link>
             </div>
@@ -1543,7 +1863,7 @@ export function LandingPage() {
           <FloatingDot className="top-[55%] left-[40%]" size={4} delay={2} />
         </div>
 
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-32 text-center">
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-20 sm:pb-32 text-center">
           {/* <ScrollReveal delay={100}>
             <div
               className={cn(
@@ -1565,7 +1885,7 @@ export function LandingPage() {
           </ScrollReveal> */}
 
           <ScrollReveal delay={200}>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6">
               Build your{" "}
               <RotatingWords
                 words={["perfect", "standout", "winning", "polished"]}
@@ -1580,12 +1900,12 @@ export function LandingPage() {
           </ScrollReveal>
 
           <ScrollReveal delay={300}>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-4 leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-4 leading-relaxed">
               Maintain one complete record of your career. Generate tailored CVs
               for every opportunity. All in your browser. No sign-up, no data
               collection.
             </p>
-            <p className="text-base text-primary font-medium mb-12">
+            <p className="text-base text-primary font-medium mb-8 sm:mb-12">
               Stop duplicating. Start generating.
             </p>
           </ScrollReveal>
@@ -1596,13 +1916,13 @@ export function LandingPage() {
                 <Button
                   size="lg"
                   className={cn(
-                    "gap-2 px-10 h-14 text-base font-semibold",
+                    "gap-2 px-6 sm:px-10 h-11 sm:h-14 text-sm sm:text-base font-semibold",
                     "shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30",
                     "transition-all duration-300 hover:scale-[1.02]",
                   )}
                 >
                   <Zap className="h-4 w-4" />
-                  Start Building - Free
+                  Start Building
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
@@ -1610,7 +1930,7 @@ export function LandingPage() {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="gap-2 px-8 h-14 text-base border-border/60 hover:border-primary/30 hover:bg-primary/5"
+                  className="gap-2 px-5 sm:px-8 h-11 sm:h-14 text-sm sm:text-base border-border/60 hover:border-primary/30 hover:bg-primary/5"
                 >
                   See How It Works
                   <ChevronDown className="h-4 w-4" />
@@ -1620,7 +1940,7 @@ export function LandingPage() {
           </ScrollReveal>
 
           <ScrollReveal delay={500}>
-            <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 mt-14">
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 lg:gap-10 mt-14">
               {[
                 { value: 18, suffix: "+", label: "Templates", icon: Palette },
                 { value: 8, suffix: "", label: "AI Providers", icon: Bot },
@@ -1630,7 +1950,7 @@ export function LandingPage() {
                 <div key={stat.label} className="text-center">
                   <div className="flex items-center justify-center gap-1 mb-1">
                     <stat.icon className="h-3.5 w-3.5 text-primary/60" />
-                    <span className="text-2xl sm:text-3xl font-bold text-foreground">
+                    <span className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
                       {stat.label === "Forever" ? (
                         <>
                           {stat.suffix}
@@ -1657,7 +1977,7 @@ export function LandingPage() {
       </section>
 
       {/* THE PROBLEM */}
-      <section className="relative py-24 sm:py-32 overflow-hidden">
+      <section className="relative py-14 sm:py-24 md:py-32 overflow-hidden">
         {/* Animated background elements */}
         <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/5 to-background" />
         <div
@@ -1671,20 +1991,20 @@ export function LandingPage() {
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <ScrollReveal>
-            <div className="text-center mb-16">
+            <div className="text-center mb-10 sm:mb-16">
               <Badge
                 variant="outline"
                 className="mb-4 border-amber-500/30 text-amber-700 dark:text-amber-400 bg-amber-500/5"
               >
                 The Problem
               </Badge>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-6">
                 We've been thinking about CVs{" "}
                 <span className="text-amber-600 dark:text-amber-500">
                   all wrong
                 </span>
               </h2>
-              <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
                 A Word doc here, a Google Doc there, a LinkedIn profile that’s
                 slightly different, a PDF you emailed last year. Every time you
                 need a CV, you copy-paste, reformat, and lose track of what’s
@@ -1699,12 +2019,12 @@ export function LandingPage() {
           </ScrollReveal>
 
           {/* Two-column layout: Concept + Practical Issues */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-8 sm:mb-12">
             {/* Left: The Conceptual Problem */}
             <ScrollReveal delay={100}>
               <div
                 className={cn(
-                  "rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 p-8",
+                  "rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 p-5 sm:p-8",
                   "backdrop-blur-sm shadow-xl shadow-primary/5",
                 )}
               >
@@ -1747,8 +2067,8 @@ export function LandingPage() {
 
             {/* Right: The Commercial Problem */}
             <ScrollReveal delay={200}>
-              <div className="space-y-4">
-                {[
+              {(() => {
+                const problemItems = [
                   {
                     icon: Lock,
                     title: "No Paywalls",
@@ -1773,32 +2093,52 @@ export function LandingPage() {
                     description:
                       "MIT licensed. Built for the community, not a VC-funded business model.",
                   },
-                ].map((item) => {
+                ];
+
+                const renderProblemCard = (item: (typeof problemItems)[0]) => {
                   const Icon = item.icon;
                   return (
-                    <ScrollReveal delay={250} key={item.title}>
-                      <div
-                        className={cn(
-                          "flex items-start gap-3 p-4 rounded-xl border border-border/50 bg-card/30",
-                          "transition-all duration-300 hover:border-primary/30 hover:bg-primary/5",
-                        )}
-                      >
-                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                          <Icon className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm mb-1">
-                            {item.title}
-                          </h4>
-                          <p className="text-sm text-muted-foreground leading-relaxed">
-                            {item.description}
-                          </p>
-                        </div>
+                    <div
+                      className={cn(
+                        "flex items-start gap-3 p-4 rounded-xl border border-border/50 bg-card/80",
+                        "transition-all duration-300 hover:border-primary/30 hover:bg-primary/5",
+                      )}
+                    >
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <Icon className="h-5 w-5 text-primary" />
                       </div>
-                    </ScrollReveal>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-sm mb-1">
+                          {item.title}
+                        </h4>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
                   );
-                })}
-              </div>
+                };
+
+                return (
+                  <>
+                    {/* Desktop: stacked list */}
+                    <div className="hidden lg:block space-y-4">
+                      {problemItems.map((item) => (
+                        <ScrollReveal delay={250} key={item.title}>
+                          {renderProblemCard(item)}
+                        </ScrollReveal>
+                      ))}
+                    </div>
+                    {/* Mobile: card deck */}
+                    <MobileCardDeck
+                      items={problemItems.map((p) => ({ key: p.title, ...p }))}
+                      renderCard={(
+                        item: (typeof problemItems)[0] & { key: string },
+                      ) => renderProblemCard(item)}
+                    />
+                  </>
+                );
+              })()}
             </ScrollReveal>
           </div>
 
@@ -1843,21 +2183,21 @@ export function LandingPage() {
       {/* HOW IT WORKS */}
       <section
         id="how-it-works"
-        className="bg-muted/30 py-24 sm:py-28 scroll-mt-14"
+        className="bg-muted/30 py-14 sm:py-24 md:py-28 scroll-mt-14"
       >
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <ScrollReveal>
-            <div className="text-center mb-16">
+            <div className="text-center mb-10 sm:mb-16">
               <Badge
                 variant="outline"
                 className="mb-4 border-primary/20 text-primary"
               >
                 How It Works
               </Badge>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-4">
                 Three steps to your <GradientText>new CV</GradientText>
               </h2>
-              <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+              <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto">
                 Simple, fast, and private. From blank page to polished resume in
                 minutes.
               </p>
@@ -1906,30 +2246,30 @@ export function LandingPage() {
       </section>
 
       {/* EDITOR PREVIEW */}
-      <section className="py-24 sm:py-28 relative overflow-hidden bg-gradient-to-b from-background via-muted/5 to-background">
+      <section className="py-14 sm:py-24 md:py-28 relative overflow-hidden bg-gradient-to-b from-background via-muted/5 to-background">
         {/* Animated accent elements */}
         <div
-          className="absolute top-0 right-1/3 w-[700px] h-[700px] bg-primary/5 rounded-full blur-[150px] pointer-events-none"
+          className="hidden sm:block absolute top-0 right-1/3 w-[700px] h-[700px] bg-primary/5 rounded-full blur-[150px] pointer-events-none"
           style={{ animation: "glow 12s ease-in-out infinite" }}
         />
         <div
-          className="absolute -bottom-1/4 left-1/4 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[140px] pointer-events-none"
+          className="hidden sm:block absolute -bottom-1/4 left-1/4 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[140px] pointer-events-none"
           style={{ animation: "glow 14s ease-in-out infinite 3s" }}
         />
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <ScrollReveal>
-            <div className="text-center mb-12">
+            <div className="text-center mb-8 sm:mb-12">
               <Badge
                 variant="outline"
                 className="mb-4 border-primary/20 text-primary"
               >
                 Live Preview
               </Badge>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-4">
                 A powerful editor, right in your browser
               </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
                 Side-by-side editing with real-time preview. Collapsible
                 sections, keyboard shortcuts, and three beautiful themes.
               </p>
@@ -1945,14 +2285,14 @@ export function LandingPage() {
       </section>
 
       {/* POWERFUL EDITOR + OPTIONAL AI */}
-      <section className="relative py-24 sm:py-28 overflow-hidden">
+      <section className="relative py-14 sm:py-24 md:py-28 overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute left-1/2 -translate-x-1/2 top-16 w-[600px] h-[400px] bg-gradient-to-b from-accent/15 to-transparent rounded-full blur-[100px] pointer-events-none" />
         </div>
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <ScrollReveal>
-            <div className="text-center mb-16">
+            <div className="text-center mb-10 sm:mb-16">
               <Badge
                 variant="outline"
                 className="mb-4 border-primary/20 text-primary inline-flex items-center gap-2"
@@ -1960,7 +2300,7 @@ export function LandingPage() {
                 <Zap className="h-3.5 w-3.5" />
                 Complete Control
               </Badge>
-              <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">
                 Powerful Editor. <GradientText>Optional AI</GradientText>.
               </h2>
               <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -1970,155 +2310,195 @@ export function LandingPage() {
             </div>
           </ScrollReveal>
 
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
-            {/* Left: Editor Power */}
-            <div className="space-y-6">
-              <ScrollReveal delay={100}>
-                <div className="rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6 hover:border-primary/30 transition-colors">
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <FileText className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground mb-2">
-                        Full Manual Control
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Manually edit, refine, and polish your resume with
-                        intuitive controls. Every section editable, every word
-                        yours.
-                      </p>
-                      <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-                        <li className="flex items-center gap-2">
-                          <Check className="h-3.5 w-3.5 text-primary" />
-                          Real-time preview
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <Check className="h-3.5 w-3.5 text-primary" />
-                          18 templates × 4 layouts × ∞ palettes
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <Check className="h-3.5 w-3.5 text-primary" />
-                          Multiple layout options
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </ScrollReveal>
+          {(() => {
+            const editorCards = [
+              {
+                key: "manual",
+                icon: FileText,
+                iconColor: "text-primary",
+                iconBg: "bg-primary/10",
+                hoverBorder: "hover:border-primary/30",
+                title: "Full Manual Control",
+                desc: "Manually edit, refine, and polish your resume with intuitive controls. Every section editable, every word yours.",
+                checks: [
+                  {
+                    icon: Check,
+                    color: "text-primary",
+                    text: "Real-time preview",
+                  },
+                  {
+                    icon: Check,
+                    color: "text-primary",
+                    text: "18 templates × 4 layouts × ∞ palettes",
+                  },
+                  {
+                    icon: Check,
+                    color: "text-primary",
+                    text: "Multiple layout options",
+                  },
+                ],
+              },
+              {
+                key: "import",
+                icon: Cpu,
+                iconColor: "text-blue-600",
+                iconBg: "bg-blue-500/10",
+                hoverBorder: "hover:border-accent/30",
+                title: "Import & Structure",
+                desc: "Import your LinkedIn PDF or any existing resume. Our parser automatically extracts and organizes your information.",
+                checks: [
+                  {
+                    icon: Check,
+                    color: "text-blue-600",
+                    text: "PDF auto-parsing",
+                  },
+                  {
+                    icon: Check,
+                    color: "text-blue-600",
+                    text: "Smart data extraction",
+                  },
+                  {
+                    icon: Check,
+                    color: "text-blue-600",
+                    text: "Ready to customize",
+                  },
+                ],
+              },
+              {
+                key: "ai",
+                icon: Sparkles,
+                iconColor: "text-purple-600",
+                iconBg: "bg-purple-500/10",
+                hoverBorder: "hover:border-purple-500/30",
+                title: "Optional AI Refinement",
+                desc: "If you want AI help, connect any of 8 providers (Ollama, OpenAI, Anthropic, Gemini, Mistral, DeepSeek, Groq, or custom). Completely optional.",
+                checks: [
+                  {
+                    icon: Check,
+                    color: "text-purple-600",
+                    text: "8 provider choices",
+                  },
+                  {
+                    icon: Check,
+                    color: "text-purple-600",
+                    text: "No account needed",
+                  },
+                  {
+                    icon: Check,
+                    color: "text-purple-600",
+                    text: "You stay in control",
+                  },
+                ],
+              },
+              {
+                key: "history",
+                icon: History,
+                iconColor: "text-green-600",
+                iconBg: "bg-green-500/10",
+                hoverBorder: "hover:border-green-500/30",
+                title: "Version History & Diff",
+                desc: "Every AI generation is saved. Compare versions side-by-side with our diff viewer. Pick exactly what you want to keep.",
+                badge: "WIP",
+                checks: [
+                  {
+                    icon: Check,
+                    color: "text-green-600",
+                    text: "Full change history",
+                  },
+                  {
+                    icon: Clock,
+                    color: "text-amber-500",
+                    text: "Side-by-side comparison",
+                  },
+                  {
+                    icon: Clock,
+                    color: "text-amber-500",
+                    text: "Selective merging",
+                  },
+                ],
+              },
+            ];
 
-              <ScrollReveal delay={200}>
-                <div className="rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6 hover:border-accent/30 transition-colors">
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Cpu className="h-5 w-5 text-blue-600" />
+            const renderEditorCard = (card: (typeof editorCards)[0]) => {
+              const Icon = card.icon;
+              return (
+                <div
+                  className={cn(
+                    "relative rounded-lg border border-border/50 bg-card/80 backdrop-blur p-5 transition-colors h-full",
+                    card.hoverBorder,
+                  )}
+                >
+                  {card.badge && (
+                    <Badge
+                      variant="outline"
+                      className="absolute top-3 right-3 text-[10px] px-1.5 py-0.5 border-amber-500/50 text-amber-500 bg-amber-500/10"
+                    >
+                      {card.badge}
+                    </Badge>
+                  )}
+                  <div className="flex items-start gap-3 mb-3">
+                    <div
+                      className={cn(
+                        "h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5",
+                        card.iconBg,
+                      )}
+                    >
+                      <Icon className={cn("h-5 w-5", card.iconColor)} />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground mb-2">
-                        Import & Structure
+                      <h3 className="font-semibold text-foreground mb-1.5">
+                        {card.title}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        Import your LinkedIn PDF or any existing resume. Our
-                        parser automatically extracts and organizes your
-                        information.
+                        {card.desc}
                       </p>
-                      <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-                        <li className="flex items-center gap-2">
-                          <Check className="h-3.5 w-3.5 text-blue-600" />
-                          PDF auto-parsing
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <Check className="h-3.5 w-3.5 text-blue-600" />
-                          Smart data extraction
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <Check className="h-3.5 w-3.5 text-blue-600" />
-                          Ready to customize
-                        </li>
+                      <ul className="mt-2 space-y-1.5 text-sm text-muted-foreground">
+                        {card.checks.map((c) => {
+                          const CIcon = c.icon;
+                          return (
+                            <li
+                              key={c.text}
+                              className="flex items-center gap-2"
+                            >
+                              <CIcon className={cn("h-3.5 w-3.5", c.color)} />
+                              {c.text}
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   </div>
                 </div>
-              </ScrollReveal>
-            </div>
+              );
+            };
 
-            {/* Right: Optional AI */}
-            <div className="space-y-6">
-              <ScrollReveal delay={150}>
-                <div className="rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6 hover:border-purple-500/30 transition-colors">
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className="h-10 w-10 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Sparkles className="h-5 w-5 text-purple-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground mb-2">
-                        Optional AI Refinement
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        If you want AI help, connect any of 8 providers (Ollama,
-                        OpenAI, Anthropic, Gemini, Mistral, DeepSeek, Groq, or
-                        custom). Completely optional.
-                      </p>
-                      <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-                        <li className="flex items-center gap-2">
-                          <Check className="h-3.5 w-3.5 text-purple-600" />8
-                          provider choices
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <Check className="h-3.5 w-3.5 text-purple-600" />
-                          No account needed
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <Check className="h-3.5 w-3.5 text-purple-600" />
-                          You stay in control
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
+            return (
+              <>
+                {/* Desktop: 2x2 grid with equal-height cards per row */}
+                <div className="hidden md:grid md:grid-cols-2 gap-6 mb-8 sm:mb-12">
+                  {[
+                    editorCards[0],
+                    editorCards[2],
+                    editorCards[1],
+                    editorCards[3],
+                  ].map((c, i) => (
+                    <ScrollReveal key={c.key} delay={100 + (i % 2) * 50}>
+                      <div className="h-full">{renderEditorCard(c)}</div>
+                    </ScrollReveal>
+                  ))}
                 </div>
-              </ScrollReveal>
-
-              <ScrollReveal delay={250}>
-                <div className="relative rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6 hover:border-green-500/30 transition-colors">
-                  <Badge
-                    variant="outline"
-                    className="absolute top-3 right-3 text-[10px] px-1.5 py-0.5 border-amber-500/50 text-amber-500 bg-amber-500/10"
-                  >
-                    WIP
-                  </Badge>
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <History className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground mb-2">
-                        Version History & Diff
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Every AI generation is saved. Compare versions
-                        side-by-side with our diff viewer. Pick exactly what you
-                        want to keep.
-                      </p>
-                      <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-                        <li className="flex items-center gap-2">
-                          <Check className="h-3.5 w-3.5 text-green-600" />
-                          Full change history
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <Clock className="h-3.5 w-3.5 text-amber-500" />
-                          Side-by-side comparison
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <Clock className="h-3.5 w-3.5 text-amber-500" />
-                          Selective merging
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
+                {/* Mobile: card deck */}
+                <div className="mb-8">
+                  <MobileCardDeck
+                    items={editorCards}
+                    renderCard={(card: (typeof editorCards)[0]) =>
+                      renderEditorCard(card)
+                    }
+                  />
                 </div>
-              </ScrollReveal>
-            </div>
-          </div>
+              </>
+            );
+          })()}
 
           <ScrollReveal delay={300}>
             <div className="rounded-lg border border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5 p-8 text-center">
@@ -2132,7 +2512,10 @@ export function LandingPage() {
                 perfectly without it.
               </p>
               <Link href="/editor">
-                <Button size="lg" className="gap-2">
+                <Button
+                  size="lg"
+                  className="gap-2 h-10 sm:h-11 text-sm sm:text-base"
+                >
                   <Terminal className="h-4 w-4" />
                   Try Editor Now
                 </Button>
@@ -2143,7 +2526,7 @@ export function LandingPage() {
       </section>
 
       {/* AI PROVIDERS */}
-      <section className="relative py-24 sm:py-28 overflow-hidden">
+      <section className="relative py-14 sm:py-24 md:py-28 overflow-hidden">
         <div className="absolute inset-0 bg-muted/30" />
         <WaveDivider flip className="absolute top-0 left-0 right-0" />
         <div className="absolute top-1/2 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
@@ -2159,10 +2542,10 @@ export function LandingPage() {
                   <Bot className="h-3 w-3 mr-1" />
                   AI Integration
                 </Badge>
-                <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-4">
                   Your AI, <GradientText>your rules</GradientText>
                 </h2>
-                <p className="text-lg text-muted-foreground mb-3 leading-relaxed">
+                <p className="text-base sm:text-lg text-muted-foreground mb-3 leading-relaxed">
                   Connect any AI provider to generate tailored summaries,
                   enhance bullet points, and optimize your CV for specific
                   roles.
@@ -2202,11 +2585,25 @@ export function LandingPage() {
               </ScrollReveal>
             </div>
 
-            <div className="space-y-3">
+            {/* Desktop: full stacked list */}
+            <div className="hidden lg:block space-y-3">
               {AI_PROVIDERS.map((p, i) => (
                 <AIProviderCard key={p.name} {...p} delay={i * 80} />
               ))}
             </div>
+            {/* Mobile: card deck */}
+            <MobileCardDeck
+              items={AI_PROVIDERS.map((p) => ({ key: p.name, ...p }))}
+              renderCard={(p: (typeof AI_PROVIDERS)[0] & { key: string }) => (
+                <AIProviderCard
+                  name={p.name}
+                  description={p.description}
+                  icon={p.icon}
+                  badge={p.badge}
+                  delay={0}
+                />
+              )}
+            />
           </div>
         </div>
 
@@ -2214,10 +2611,10 @@ export function LandingPage() {
       </section>
 
       {/* TEMPLATES & LAYOUTS */}
-      <section id="templates" className="py-24 sm:py-28 scroll-mt-14">
+      <section id="templates" className="py-14 sm:py-24 md:py-28 scroll-mt-14">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <ScrollReveal>
-            <div className="text-center mb-14">
+            <div className="text-center mb-8 sm:mb-14">
               <Badge
                 variant="outline"
                 className="mb-4 border-primary/20 text-primary"
@@ -2225,12 +2622,12 @@ export function LandingPage() {
                 <Palette className="h-3 w-3 mr-1" />
                 Design System
               </Badge>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-4">
                 <AnimatedCounter end={18} /> templates ×{" "}
                 <AnimatedCounter end={4} /> layouts ×{" "}
                 <GradientText>∞ color palettes</GradientText>
               </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
                 Pick a template, choose a layout structure, tweak the color
                 palette, and everything combines.{" "}
                 <span className="text-foreground font-medium">
@@ -2244,7 +2641,7 @@ export function LandingPage() {
           {/* Templates grid */}
           <ScrollReveal delay={100}>
             <div className="text-center mb-6">
-              <h3 className="text-xl font-bold tracking-tight mb-2">
+              <h3 className="text-lg sm:text-xl font-bold tracking-tight mb-2">
                 Templates
               </h3>
               <p className="text-sm text-muted-foreground max-w-lg mx-auto">
@@ -2254,7 +2651,34 @@ export function LandingPage() {
             </div>
           </ScrollReveal>
 
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 sm:gap-5 max-w-4xl mx-auto mb-16">
+          {/* Templates: wheel carousel on mobile, grid on desktop */}
+          <MobileWheelCarousel
+            items={TEMPLATES.map((t) => ({ key: t.name, ...t }))}
+            itemWidth={90}
+            centerScale={1.4}
+            // label="← Swipe to explore all 18 templates →"
+            renderItem={(
+              t: (typeof TEMPLATES)[0] & { key: string },
+              _i: number,
+              isCenter: boolean,
+            ) => (
+              <div
+                className={cn(
+                  "transition-all duration-300",
+                  isCenter && "drop-shadow-lg",
+                )}
+              >
+                <TemplateMini
+                  name={t.name}
+                  accent={t.accent}
+                  layout={t.layout}
+                  delay={0}
+                />
+              </div>
+            )}
+          />
+          {/* Desktop grid */}
+          <div className="hidden md:grid grid-cols-6 gap-5 max-w-4xl mx-auto mb-10 sm:mb-16">
             {TEMPLATES.map((t, i) => (
               <TemplateMini
                 key={t.name}
@@ -2269,7 +2693,7 @@ export function LandingPage() {
           {/* Layouts */}
           <ScrollReveal>
             <div className="text-center mb-10">
-              <h3 className="text-xl font-bold tracking-tight mb-2">
+              <h3 className="text-lg sm:text-xl font-bold tracking-tight mb-2">
                 Layout Structures
               </h3>
               <p className="text-sm text-muted-foreground max-w-lg mx-auto">
@@ -2279,7 +2703,33 @@ export function LandingPage() {
             </div>
           </ScrollReveal>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-2xl mx-auto mb-16">
+          {/* Layouts: wheel carousel on mobile, grid on desktop */}
+          <MobileWheelCarousel
+            items={LAYOUTS.map((l) => ({ key: l.name, ...l }))}
+            itemWidth={120}
+            centerScale={1.25}
+            renderItem={(
+              l: (typeof LAYOUTS)[0] & { key: string },
+              _i: number,
+              isCenter: boolean,
+            ) => (
+              <div
+                className={cn(
+                  "transition-all duration-300",
+                  isCenter && "drop-shadow-lg",
+                )}
+              >
+                <LayoutPreview
+                  name={l.name}
+                  description={l.description}
+                  structure={l.structure}
+                  delay={0}
+                />
+              </div>
+            )}
+          />
+          {/* Desktop grid */}
+          <div className="hidden md:grid grid-cols-4 gap-4 sm:gap-6 max-w-2xl mx-auto mb-10 sm:mb-16">
             {LAYOUTS.map((l, i) => (
               <LayoutPreview key={l.name} {...l} delay={i * 100} />
             ))}
@@ -2288,7 +2738,7 @@ export function LandingPage() {
           {/* Color Palettes */}
           <ScrollReveal delay={200}>
             <div className="text-center mb-8">
-              <h3 className="text-xl font-bold tracking-tight mb-2">
+              <h3 className="text-lg sm:text-xl font-bold tracking-tight mb-2">
                 Infinite Color Palettes
               </h3>
               <p className="text-sm text-muted-foreground max-w-lg mx-auto">
@@ -2354,7 +2804,7 @@ export function LandingPage() {
       {/* FEATURES */}
       <section
         id="features"
-        className="relative py-24 sm:py-32 overflow-hidden scroll-mt-14 bg-gradient-to-b from-background via-muted/5 to-muted/10"
+        className="relative py-14 sm:py-24 md:py-32 overflow-hidden scroll-mt-14 bg-gradient-to-b from-background via-muted/5 to-muted/10"
       >
         {/* Animated background */}
         <div
@@ -2366,43 +2816,33 @@ export function LandingPage() {
 
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
           <ScrollReveal>
-            <div className="text-center mb-16">
+            <div className="text-center mb-10 sm:mb-16">
               <Badge
                 variant="outline"
                 className="mb-4 border-primary/20 text-primary"
               >
                 Features
               </Badge>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-4">
                 Everything you need to <GradientText>land the job</GradientText>
               </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
                 A complete toolkit for building professional resumes. From
                 AI-powered writing to pixel-perfect export.
               </p>
             </div>
           </ScrollReveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {FEATURES.map((f, i) => (
-              <FeatureCard
-                key={f.title}
-                icon={f.icon}
-                title={f.title}
-                description={f.description}
-                delay={i * 70}
-              />
-            ))}
-          </div>
+          <FeaturesGrid />
         </div>
 
         <WaveDivider className="absolute bottom-0 left-0 right-0 -mb-px" />
       </section>
 
       {/* DATA TRANSPARENCY */}
-      <section className="py-24 sm:py-28">
+      <section className="py-14 sm:py-24 md:py-28">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <ScrollReveal direction="left">
               <div
                 className={cn(
@@ -2462,7 +2902,7 @@ export function LandingPage() {
                   ))}
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {[
                     { icon: RefreshCw, label: "Refresh" },
                     { icon: Download, label: "Export" },
@@ -2489,10 +2929,10 @@ export function LandingPage() {
                   <Shield className="h-3 w-3 mr-1" />
                   Full Transparency
                 </Badge>
-                <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-4">
                   Your data, <GradientText>completely visible</GradientText>
                 </h2>
-                <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
+                <p className="text-base sm:text-lg text-muted-foreground mb-6 leading-relaxed">
                   The built-in Storage Manager gives you full visibility and
                   control over every piece of data stored by CV Generator —
                   directly in your browser.
@@ -2558,7 +2998,7 @@ export function LandingPage() {
       </section>
 
       {/* API KEY SECURITY */}
-      <section className="relative py-24 sm:py-28 overflow-hidden">
+      <section className="relative py-14 sm:py-24 md:py-28 overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute right-0 top-1/3 w-[500px] h-[500px] bg-green-500/10 rounded-full blur-[120px] pointer-events-none" />
           <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[600px] h-[400px] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
@@ -2566,7 +3006,7 @@ export function LandingPage() {
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <ScrollReveal>
-            <div className="text-center mb-16">
+            <div className="text-center mb-10 sm:mb-16">
               <Badge
                 variant="outline"
                 className="mb-4 border-green-500/20 text-green-700 dark:text-green-400 inline-flex items-center gap-2"
@@ -2574,7 +3014,7 @@ export function LandingPage() {
                 <Shield className="h-3.5 w-3.5" />
                 Your Secrets Safe
               </Badge>
-              <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">
                 API Keys.{" "}
                 <GradientText>Memory-Only. Never Persisted.</GradientText>
               </h2>
@@ -2586,162 +3026,237 @@ export function LandingPage() {
             </div>
           </ScrollReveal>
 
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
-            {/* Left: Security Details */}
-            <div className="space-y-6">
-              <ScrollReveal delay={100}>
-                <div className="rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6">
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Lock className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground mb-2">
-                        Memory Only - No Persistence
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        API keys are stored{" "}
-                        <strong>only in the app's memory</strong> (React state),
-                        never in localStorage, sessionStorage, cookies, or any
-                        other persistent storage. When you close the tab, the
-                        key is gone forever.
-                      </p>
-                      <code className="text-xs bg-muted/80 p-2 rounded flex items-center gap-2 text-muted-foreground font-mono">
-                        <span className="text-green-600">✓</span>
-                        RAM only (cleared on tab close)
-                      </code>
-                    </div>
+          {(() => {
+            const securityCards = [
+              {
+                key: "memory",
+                title: "Memory Only - No Persistence",
+                icon: Lock,
+                iconBg: "bg-green-500/10",
+                iconColor: "text-green-600",
+                desc: "API keys are stored only in the app's memory (React state), never in localStorage, sessionStorage, cookies, or any other persistent storage.",
+                code: "RAM only (cleared on tab close)",
+                codeColor: "text-green-600",
+              },
+              {
+                key: "masked",
+                title: "Masked Display",
+                icon: Eye,
+                iconBg: "bg-emerald-500/10",
+                iconColor: "text-emerald-600",
+                desc: "Keys are masked in the UI (shown as dots). You can copy your key, change it, but never view it after entry.",
+                code: "sk-...********************",
+                codeColor: "text-emerald-600",
+              },
+              {
+                key: "auto-clear",
+                title: "Auto-Cleared on Close",
+                icon: Zap,
+                iconBg: "bg-cyan-500/10",
+                iconColor: "text-cyan-600",
+                desc: "Close your browser tab? Your API key is automatically cleared. Zero residual data. Zero tracking.",
+                code: "Cleared on tab/browser close",
+                codeColor: "text-cyan-600",
+              },
+              {
+                key: "why",
+                title: "Why Memory Only?",
+                icon: Shield,
+                iconBg: "bg-green-500/10",
+                iconColor: "text-green-600",
+                desc: "Zero persistence · Auto-cleanup · No sync attacks · Intentional friction = security. Keys never touch disk or cloud storage.",
+                isList: true,
+              },
+              {
+                key: "xss",
+                title: "Important: Still Vulnerable to XSS",
+                icon: AlertTriangle,
+                iconBg: "bg-red-500/10",
+                iconColor: "text-red-600",
+                desc: "Memory-only is better than localStorage, but not perfect. For mission-critical keys, use a backend service or API gateway.",
+                isWarning: true,
+              },
+            ];
+
+            return (
+              <>
+                {/* Desktop: original 2-col grid */}
+                <div className="hidden md:grid md:grid-cols-2 gap-8 mb-8 sm:mb-12">
+                  <div className="space-y-6">
+                    <ScrollReveal delay={100}>
+                      <div className="rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6">
+                        <div className="flex items-start gap-3 mb-4">
+                          <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Lock className="h-5 w-5 text-green-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-foreground mb-2">
+                              Memory Only - No Persistence
+                            </h3>
+                            <p className="text-sm text-muted-foreground mb-3">
+                              API keys are stored{" "}
+                              <strong>only in the app&apos;s memory</strong>{" "}
+                              (React state), never in localStorage,
+                              sessionStorage, cookies, or any other persistent
+                              storage.
+                            </p>
+                            <code className="text-xs bg-muted/80 p-2 rounded flex items-center gap-2 text-muted-foreground font-mono">
+                              <span className="text-green-600">✓</span>RAM only
+                              (cleared on tab close)
+                            </code>
+                          </div>
+                        </div>
+                      </div>
+                    </ScrollReveal>
+                    <ScrollReveal delay={150}>
+                      <div className="rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6">
+                        <div className="flex items-start gap-3 mb-4">
+                          <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Eye className="h-5 w-5 text-emerald-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-foreground mb-2">
+                              Masked Display
+                            </h3>
+                            <p className="text-sm text-muted-foreground mb-3">
+                              Keys are masked in the UI (shown as dots). You can
+                              copy your key, change it, but never view it after
+                              entry.
+                            </p>
+                            <code className="text-xs bg-muted/80 p-2 rounded flex items-center gap-2 text-muted-foreground font-mono">
+                              <span className="text-emerald-600">✓</span>sk-...
+                              {Array(20).fill("*").join("")}
+                            </code>
+                          </div>
+                        </div>
+                      </div>
+                    </ScrollReveal>
+                    <ScrollReveal delay={200}>
+                      <div className="rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6">
+                        <div className="flex items-start gap-3 mb-4">
+                          <div className="h-10 w-10 rounded-lg bg-cyan-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Zap className="h-5 w-5 text-cyan-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-foreground mb-2">
+                              Auto-Cleared on Close
+                            </h3>
+                            <p className="text-sm text-muted-foreground mb-3">
+                              Close your browser tab? Your API key is
+                              automatically cleared. Zero residual data. Zero
+                              tracking.
+                            </p>
+                            <code className="text-xs bg-muted/80 p-2 rounded flex items-center gap-2 text-muted-foreground font-mono">
+                              <span className="text-cyan-600">✓</span>Cleared on
+                              tab/browser close
+                            </code>
+                          </div>
+                        </div>
+                      </div>
+                    </ScrollReveal>
+                  </div>
+                  {/* Right: What This Means */}
+                  <div className="space-y-6">
+                    <ScrollReveal delay={250}>
+                      <div className="rounded-lg border border-border/50 bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-6">
+                        <h3 className="font-semibold text-foreground mb-4">
+                          Why Memory Only?
+                        </h3>
+                        <ul className="space-y-3">
+                          {[
+                            "Zero persistence: Keys never touch disk or cloud storage",
+                            "Auto-cleanup: Automatic deletion when tab closes",
+                            "No sync attacks: Can't be stolen from cloud backup or device sync",
+                            "You control entry: Must re-enter each session - intentional friction = security",
+                          ].map((t) => (
+                            <li key={t} className="flex items-start gap-3">
+                              <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                              <span className="text-sm text-muted-foreground">
+                                <strong>{t.split(":")[0]}:</strong>
+                                {t.split(":").slice(1).join(":")}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </ScrollReveal>
+                    <ScrollReveal delay={300}>
+                      <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-6">
+                        <div className="flex items-start gap-3">
+                          <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <h4 className="font-semibold text-foreground mb-2">
+                              Important: Still Vulnerable to XSS
+                            </h4>
+                            <p className="text-sm text-red-700 dark:text-red-400 mb-3">
+                              <strong>
+                                Memory-only is better than localStorage, but not
+                                perfect.
+                              </strong>{" "}
+                              For mission-critical keys, use a backend service
+                              or API gateway.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </ScrollReveal>
                   </div>
                 </div>
-              </ScrollReveal>
 
-              <ScrollReveal delay={150}>
-                <div className="rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6">
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Eye className="h-5 w-5 text-emerald-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground mb-2">
-                        Masked Display
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        Keys are masked in the UI (shown as dots). You can copy
-                        your key, change it, but never view it after entry.
-                      </p>
-                      <code className="text-xs bg-muted/80 p-2 rounded flex items-center gap-2 text-muted-foreground font-mono">
-                        <span className="text-emerald-600">✓</span>
-                        sk-...{Array(20).fill("*").join("")}
-                      </code>
-                    </div>
-                  </div>
+                {/* Mobile: card deck */}
+                <div className="mb-8">
+                  <MobileCardDeck
+                    items={securityCards}
+                    renderCard={(card: (typeof securityCards)[0]) => {
+                      const Icon = card.icon;
+                      return (
+                        <div
+                          className={cn(
+                            "rounded-lg border p-5",
+                            card.isWarning
+                              ? "border-red-500/30 bg-red-500/5"
+                              : "border-border/50 bg-card/80 backdrop-blur",
+                          )}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={cn(
+                                "h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5",
+                                card.iconBg,
+                              )}
+                            >
+                              <Icon className={cn("h-5 w-5", card.iconColor)} />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-foreground mb-1.5">
+                                {card.title}
+                              </h3>
+                              <p
+                                className={cn(
+                                  "text-sm mb-2 leading-relaxed",
+                                  card.isWarning
+                                    ? "text-red-700 dark:text-red-400"
+                                    : "text-muted-foreground",
+                                )}
+                              >
+                                {card.desc}
+                              </p>
+                              {card.code && (
+                                <code className="text-xs bg-muted/80 p-2 rounded flex items-center gap-2 text-muted-foreground font-mono">
+                                  <span className={card.codeColor}>✓</span>
+                                  {card.code}
+                                </code>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }}
+                  />
                 </div>
-              </ScrollReveal>
-
-              <ScrollReveal delay={200}>
-                <div className="rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6">
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className="h-10 w-10 rounded-lg bg-cyan-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Zap className="h-5 w-5 text-cyan-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground mb-2">
-                        Auto-Cleared on Close
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        Close your browser tab? Your API key is automatically
-                        cleared. Zero residual data. Zero tracking.
-                      </p>
-                      <code className="text-xs bg-muted/80 p-2 rounded flex items-center gap-2 text-muted-foreground font-mono">
-                        <span className="text-cyan-600">✓</span>
-                        Cleared on tab/browser close
-                      </code>
-                    </div>
-                  </div>
-                </div>
-              </ScrollReveal>
-            </div>
-
-            {/* Right: What This Means */}
-            <div className="space-y-6">
-              <ScrollReveal delay={250}>
-                <div className="rounded-lg border border-border/50 bg-gradient-to-br from-green-500/10 to-emerald-500/10 p-6">
-                  <h3 className="font-semibold text-foreground mb-4">
-                    Why Memory Only?
-                  </h3>
-                  <ul className="space-y-3">
-                    <li className="flex items-start gap-3">
-                      <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm text-muted-foreground">
-                        <strong>Zero persistence:</strong> Keys never touch disk
-                        or cloud storage
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm text-muted-foreground">
-                        <strong>Auto-cleanup:</strong> Automatic deletion when
-                        tab closes
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm text-muted-foreground">
-                        <strong>No sync attacks:</strong> Can't be stolen from
-                        cloud backup or device sync
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm text-muted-foreground">
-                        <strong>You control entry:</strong> Must re-enter each
-                        session - intentional friction = security
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-              </ScrollReveal>
-
-              <ScrollReveal delay={300}>
-                <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-6">
-                  <div className="flex items-start gap-3">
-                    <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-semibold text-foreground mb-2">
-                        Important: Still Vulnerable to XSS
-                      </h4>
-                      <p className="text-sm text-red-700 dark:text-red-400 mb-3">
-                        <strong>
-                          Memory-only is better than localStorage, but not
-                          perfect.
-                        </strong>{" "}
-                        If someone compromises this website with XSS (cross-site
-                        scripting), they could theoretically steal your API key
-                        from memory. We take security seriously (no trackers,
-                        open source, strict CSP), but:
-                      </p>
-                      <ul className="space-y-1 text-xs text-red-700 dark:text-red-400">
-                        <li>
-                          • No storage method is 100% safe if the site itself is
-                          compromised
-                        </li>
-                        <li>
-                          • For mission-critical keys, use a backend service or
-                          API gateway
-                        </li>
-                        <li>
-                          • This is ideal for non-production/testing API keys
-                        </li>
-                        <li>
-                          • We don't store your key - we give you full control
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </ScrollReveal>
-            </div>
-          </div>
+              </>
+            );
+          })()}
 
           <ScrollReveal delay={350}>
             <div className="rounded-lg border border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5 p-8 text-center">
@@ -2766,7 +3281,7 @@ export function LandingPage() {
       </section>
 
       {/* PRIVACY */}
-      <section className="relative py-24 sm:py-28 overflow-hidden">
+      <section className="relative py-14 sm:py-24 md:py-28 overflow-hidden">
         <div className="absolute inset-0 bg-card border-y border-border/30" />
         <div
           className="absolute inset-0 opacity-[0.02]"
@@ -2779,7 +3294,7 @@ export function LandingPage() {
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <ScrollReveal>
-            <div className="text-center mb-14">
+            <div className="text-center mb-8 sm:mb-14">
               <Badge
                 variant="outline"
                 className="mb-4 border-primary/20 text-primary"
@@ -2787,17 +3302,18 @@ export function LandingPage() {
                 <Lock className="h-3 w-3 mr-1" />
                 Privacy First
               </Badge>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-4">
                 Your data never leaves your device
               </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
                 Unlike other resume builders, we don&apos;t store your personal
                 information on any server. Everything stays in your browser.
               </p>
             </div>
           </ScrollReveal>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Desktop: grid */}
+          <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {PRIVACY_POINTS.map((p, i) => (
               <ScrollReveal key={p.title} delay={i * 90}>
                 <div
@@ -2823,41 +3339,62 @@ export function LandingPage() {
               </ScrollReveal>
             ))}
           </div>
+          {/* Mobile: card deck */}
+          <MobileCardDeck
+            items={PRIVACY_POINTS.map((p) => ({ key: p.title, ...p }))}
+            renderCard={(p: (typeof PRIVACY_POINTS)[0] & { key: string }) => (
+              <div className="rounded-2xl border border-border/40 bg-background/80 p-5 text-center">
+                <div
+                  className={cn(
+                    "h-12 w-12 rounded-xl mx-auto mb-3 flex items-center justify-center",
+                    "bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/10",
+                  )}
+                >
+                  <p.icon className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-sm mb-1">{p.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {p.description}
+                </p>
+              </div>
+            )}
+          />
         </div>
       </section>
 
       {/* COMPARISON */}
-      <section className="py-24 sm:py-28">
+      <section className="py-14 sm:py-24 md:py-28">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <ScrollReveal>
-            <div className="text-center mb-12">
+            <div className="text-center mb-6 sm:mb-12">
               <Badge
                 variant="outline"
-                className="mb-4 border-primary/20 text-primary"
+                className="mb-3 sm:mb-4 border-primary/20 text-primary"
               >
                 Comparison
               </Badge>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+              <h2 className="text-xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-2 sm:mb-4">
                 Why <GradientText>CV Generator</GradientText>?
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-xs sm:text-base text-muted-foreground">
                 See how we compare to traditional resume builders.
               </p>
             </div>
           </ScrollReveal>
 
           <ScrollReveal delay={150}>
-            <div className="rounded-2xl border border-border/50 overflow-hidden shadow-lg shadow-primary/5">
-              <table className="w-full text-sm">
+            <div className="rounded-xl sm:rounded-2xl border border-border/50 overflow-hidden shadow-lg shadow-primary/5">
+              <table className="w-full text-[11px] sm:text-sm">
                 <thead>
                   <tr className="bg-gradient-to-r from-primary/10 to-primary/5">
-                    <th className="text-left p-4 font-medium text-muted-foreground">
+                    <th className="text-left px-2.5 py-2 sm:p-4 font-medium text-muted-foreground">
                       Feature
                     </th>
-                    <th className="p-4 font-bold text-primary text-center">
-                      CV Generator
+                    <th className="px-2 py-2 sm:p-4 font-bold text-primary text-center whitespace-nowrap">
+                      CV Gen
+                      <span className="hidden sm:inline">erator</span>
                     </th>
-                    <th className="p-4 font-medium text-muted-foreground text-center">
+                    <th className="px-2 py-2 sm:p-4 font-medium text-muted-foreground text-center">
                       Others
                     </th>
                   </tr>
@@ -2871,19 +3408,21 @@ export function LandingPage() {
                         i % 2 === 0 && "bg-muted/10",
                       )}
                     >
-                      <td className="p-4 font-medium">{row.feature}</td>
-                      <td className="p-4 text-center">
+                      <td className="px-2.5 py-1.5 sm:p-4 font-medium">
+                        {row.feature}
+                      </td>
+                      <td className="px-2 py-1.5 sm:p-4 text-center">
                         {row.us ? (
-                          <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10">
-                            <Check className="h-3.5 w-3.5 text-primary" />
+                          <div className="inline-flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-primary/10">
+                            <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
                           </div>
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
                       </td>
-                      <td className="p-4 text-center">
+                      <td className="px-2 py-1.5 sm:p-4 text-center">
                         {row.others ? (
-                          <Check className="h-3.5 w-3.5 text-muted-foreground/40 mx-auto" />
+                          <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground/40 mx-auto" />
                         ) : (
                           <span className="text-muted-foreground/40">—</span>
                         )}
@@ -2898,7 +3437,7 @@ export function LandingPage() {
       </section>
 
       {/* WHY FREE? */}
-      <section className="relative py-24 sm:py-32 overflow-hidden bg-gradient-to-b from-muted/10 via-background to-background">
+      <section className="relative py-14 sm:py-24 md:py-32 overflow-hidden bg-gradient-to-b from-muted/10 via-background to-background">
         {/* Animated background elements */}
         <div
           className="absolute top-0 right-1/4 w-[700px] h-[700px] bg-primary/8 rounded-full blur-[150px] pointer-events-none"
@@ -2911,18 +3450,18 @@ export function LandingPage() {
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <ScrollReveal>
-            <div className="text-center mb-14">
+            <div className="text-center mb-8 sm:mb-14">
               <Badge
                 variant="outline"
                 className="mb-4 border-primary/20 text-primary"
               >
                 Why Free?
               </Badge>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-4">
                 Because this is how{" "}
                 <GradientText>I think software should work</GradientText>
               </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 This started as a personal project while exploring practical
                 applications of LLMs, tools that support our work without making
                 decisions for us.
@@ -2934,62 +3473,98 @@ export function LandingPage() {
             </div>
           </ScrollReveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            {[
+          {(() => {
+            const whyFreeCards = [
               {
                 icon: Globe,
                 title: "Open Source",
                 description:
                   "MIT licensed. Fork it, study it, improve it. Full transparency.",
-                delay: 0,
               },
               {
                 icon: Shield,
                 title: "Privacy First",
                 description:
                   "No data collection means zero server costs to pass on to you.",
-                delay: 100,
               },
               {
                 icon: Star,
                 title: "Community Driven",
                 description:
                   "Built by developers, for developers. Your feedback shapes the roadmap.",
-                delay: 200,
               },
-            ].map((item) => {
-              const Icon = item.icon;
-              return (
-                <ScrollReveal key={item.title} delay={item.delay}>
-                  <div
-                    className={cn(
-                      "group text-center rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6",
-                      "transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5",
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        "h-14 w-14 rounded-xl mx-auto mb-4 flex items-center justify-center",
-                        "bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/10",
-                        "transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/10",
-                      )}
-                    >
-                      <Icon className="h-6 w-6 text-primary" />
-                    </div>
-                    <h3 className="font-bold text-base mb-2">{item.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {item.description}
-                    </p>
-                  </div>
-                </ScrollReveal>
-              );
-            })}
-          </div>
+            ];
+            return (
+              <>
+                {/* Desktop */}
+                <div className="hidden md:grid md:grid-cols-3 gap-6 mb-8 sm:mb-12">
+                  {whyFreeCards.map((item, i) => {
+                    const Icon = item.icon;
+                    return (
+                      <ScrollReveal key={item.title} delay={i * 100}>
+                        <div
+                          className={cn(
+                            "group text-center rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm p-6",
+                            "transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5",
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              "h-14 w-14 rounded-xl mx-auto mb-4 flex items-center justify-center",
+                              "bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/10",
+                              "transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/10",
+                            )}
+                          >
+                            <Icon className="h-6 w-6 text-primary" />
+                          </div>
+                          <h3 className="font-bold text-base mb-2">
+                            {item.title}
+                          </h3>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {item.description}
+                          </p>
+                        </div>
+                      </ScrollReveal>
+                    );
+                  })}
+                </div>
+                {/* Mobile */}
+                <div className="mb-8 sm:mb-12 md:hidden">
+                  <MobileCardDeck
+                    items={whyFreeCards.map((c) => ({ key: c.title, ...c }))}
+                    renderCard={(
+                      item: (typeof whyFreeCards)[0] & { key: string },
+                    ) => {
+                      const Icon = item.icon;
+                      return (
+                        <div className="text-center rounded-2xl border border-border/50 bg-card/80 p-6">
+                          <div
+                            className={cn(
+                              "h-14 w-14 rounded-xl mx-auto mb-4 flex items-center justify-center",
+                              "bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/10",
+                            )}
+                          >
+                            <Icon className="h-6 w-6 text-primary" />
+                          </div>
+                          <h3 className="font-bold text-base mb-2">
+                            {item.title}
+                          </h3>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {item.description}
+                          </p>
+                        </div>
+                      );
+                    }}
+                  />
+                </div>
+              </>
+            );
+          })()}
 
           <ScrollReveal delay={300}>
             <div
               className={cn(
-                "rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 p-8",
+                "rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 p-5 sm:p-8",
                 "backdrop-blur-sm",
               )}
             >
@@ -3043,7 +3618,7 @@ export function LandingPage() {
       </section>
 
       {/* FINAL CTA */}
-      <section className="relative py-28 sm:py-36 overflow-hidden">
+      <section className="relative py-16 sm:py-28 md:py-36 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/[0.03] to-background" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-primary/5 rounded-full blur-[150px] pointer-events-none" />
 
@@ -3057,10 +3632,10 @@ export function LandingPage() {
                 />
               ))}
             </div>
-            <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-6">
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-extrabold tracking-tight mb-6">
               Ready to build your CV?
             </h2>
-            <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg text-muted-foreground mb-10 max-w-xl mx-auto leading-relaxed">
               No registration. No credit card. No data collection. Open the
               editor and start building your professional resume right now.
             </p>
@@ -3068,7 +3643,7 @@ export function LandingPage() {
               <Button
                 size="lg"
                 className={cn(
-                  "gap-2.5 px-12 h-16 text-lg font-semibold",
+                  "gap-2.5 px-6 sm:px-12 h-10 sm:h-14 md:h-16 text-sm sm:text-base md:text-lg font-semibold",
                   "shadow-2xl shadow-primary/25 hover:shadow-primary/35",
                   "transition-all duration-300 hover:scale-[1.03]",
                 )}

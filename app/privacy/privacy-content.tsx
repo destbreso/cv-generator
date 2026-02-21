@@ -24,7 +24,7 @@ export function PrivacyContent() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur">
-        <div className="max-w-4xl mx-auto px-8 h-14 flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-4 sm:px-8 h-14 flex items-center justify-between">
           <Link href="/">
             <Button variant="ghost" size="sm" className="gap-2">
               <ArrowLeft className="h-4 w-4" />
@@ -42,14 +42,14 @@ export function PrivacyContent() {
       </header>
 
       {/* Content */}
-      <main className="max-w-4xl mx-auto px-8 py-12">
+      <main className="max-w-4xl mx-auto px-4 sm:px-8 py-8 sm:py-12">
         {/* Title */}
         <div className="mb-10">
           <div className="flex items-center gap-3 mb-3">
             <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
               <Shield className="h-5 w-5 text-primary" />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
               Privacy Policy
             </h1>
           </div>

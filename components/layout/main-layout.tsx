@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   ResizableHandle,
@@ -33,7 +33,10 @@ import {
   EyeOff,
   Bot,
   HelpCircle,
-  Home,
+  Github,
+  Heart,
+  Globe,
+  ExternalLink,
 } from "lucide-react";
 import { useCVStore } from "@/lib/cv-store";
 import { CVEditorPanel } from "@/components/panels/cv-editor-panel";
@@ -46,6 +49,7 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import { FAQPanel } from "@/components/panels/faq-panel";
 import { StorageManagerPanel } from "@/components/panels/storage-manager-panel";
 import { cn } from "@/lib/utils";
+import { useGithubEngagement } from "@/hooks/use-github-engagement";
 
 interface MainLayoutProps {
   className?: string;
@@ -56,11 +60,39 @@ export function MainLayout({ className }: MainLayoutProps) {
   const { panels, isDirty, isConnected, aiConfig, isGenerating } = state;
 
   const [mounted, setMounted] = useState(false);
+  const { showEngagement } = useGithubEngagement();
+  const prevGeneratingRef = useRef(false);
+  const prevConnectedRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
     loadFromStorage();
   }, [loadFromStorage]);
+
+  // Trigger engagement after successful AI generation
+  useEffect(() => {
+    if (prevGeneratingRef.current && !isGenerating) {
+      // Generation just finished — wait a beat then maybe show
+      const t = setTimeout(() => showEngagement("generation"), 3000);
+      return () => clearTimeout(t);
+    }
+    prevGeneratingRef.current = isGenerating;
+  }, [isGenerating, showEngagement]);
+
+  // Trigger engagement after connecting to AI provider
+  useEffect(() => {
+    if (!prevConnectedRef.current && isConnected) {
+      const t = setTimeout(() => showEngagement("connect"), 5000);
+      return () => clearTimeout(t);
+    }
+    prevConnectedRef.current = isConnected;
+  }, [isConnected, showEngagement]);
+
+  // Idle trigger — after 3 min of active session
+  useEffect(() => {
+    const t = setTimeout(() => showEngagement("idle"), 3 * 60 * 1000);
+    return () => clearTimeout(t);
+  }, [showEngagement]);
 
   if (!mounted) {
     return (
@@ -72,14 +104,21 @@ export function MainLayout({ className }: MainLayoutProps) {
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className={cn("h-screen flex flex-col bg-background", className)}>
+      <div
+        className={cn(
+          "h-screen flex flex-col bg-background overflow-hidden",
+          className,
+        )}
+      >
         {/* Top Bar */}
         <header className="h-14 border-b border-border flex items-center justify-between px-4 bg-card/50 backdrop-blur">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <FileText className="h-4 w-4 text-primary" />
-              </div>
+              <Link href="/" title="Back to Home">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors">
+                  <FileText className="h-4 w-4 text-primary" />
+                </div>
+              </Link>
               <span className="font-semibold text-foreground">
                 CV Generator
               </span>
@@ -103,18 +142,6 @@ export function MainLayout({ className }: MainLayoutProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Home Button */}
-            <Link href="/">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9"
-                title="Back to Home"
-              >
-                <Home className="h-4 w-4" />
-              </Button>
-            </Link>
-
             {/* AI Status + Config Sheet Trigger */}
             <Sheet
               open={panels.showAIConfig}
@@ -186,10 +213,10 @@ export function MainLayout({ className }: MainLayoutProps) {
           </div>
         </header>
 
-        {/* Main Content */}
+        {/* Main Content + Footer */}
         <div className="flex-1 flex overflow-hidden">
           {/* Sidebar */}
-          <aside className="w-14 border-r border-border bg-card/30 flex flex-col">
+          <aside className="w-14 border-r border-border bg-card/30 flex flex-col overflow-hidden">
             {/* Workflow steps */}
             <nav className="flex-1 py-4 flex flex-col items-center gap-1">
               <SidebarButton
@@ -249,139 +276,193 @@ export function MainLayout({ className }: MainLayoutProps) {
                 }
               />
             </div>
+
+            {/* Reserved corner space */}
+            <div className="h-7 border-t border-border/50 shrink-0" />
           </aside>
 
-          {/* Resizable Panels */}
-          <ResizablePanelGroup direction="horizontal" className="flex-1">
-            {/* Left Panel - Editor/Templates */}
-            <ResizablePanel
-              defaultSize={panels.showPreview ? 50 : 100}
-              minSize={30}
-              className="flex flex-col"
-            >
-              <Tabs
-                value={panels.activePanel}
-                onValueChange={(v) =>
-                  dispatch({
-                    type: "SET_ACTIVE_PANEL",
-                    payload: v as typeof panels.activePanel,
-                  })
-                }
-                className="flex-1 flex flex-col min-h-0"
+          {/* Right area: panels + footer */}
+          <div className="flex-1 flex flex-col min-w-0">
+            <ResizablePanelGroup direction="horizontal" className="flex-1">
+              {/* Left Panel - Editor/Templates */}
+              <ResizablePanel
+                defaultSize={panels.showPreview ? 50 : 100}
+                minSize={30}
+                className="flex flex-col"
               >
-                {/* Workflow step tabs */}
-                <div className="border-b border-border">
-                  <TabsList className="flex items-center px-4 h-11 bg-transparent rounded-none w-full justify-start gap-0">
-                    {(
-                      [
-                        {
-                          value: "editor" as const,
-                          icon: FileText,
-                          label: "Your Data",
-                          step: 1,
-                        },
-                        {
-                          value: "history" as const,
-                          icon: Sparkles,
-                          label: "AI Enhance",
-                          step: 2,
-                        },
-                        {
-                          value: "templates" as const,
-                          icon: Palette,
-                          label: "Design & Export",
-                          step: 3,
-                        },
-                      ] as const
-                    ).map((tab, i) => {
-                      const isActive = panels.activePanel === tab.value;
-                      const workflowSteps = [
-                        "editor",
-                        "history",
-                        "templates",
-                      ] as const;
-                      const activeStepIdx = workflowSteps.indexOf(
-                        panels.activePanel as (typeof workflowSteps)[number],
-                      );
-                      const isPast = activeStepIdx > i;
+                <Tabs
+                  value={panels.activePanel}
+                  onValueChange={(v) =>
+                    dispatch({
+                      type: "SET_ACTIVE_PANEL",
+                      payload: v as typeof panels.activePanel,
+                    })
+                  }
+                  className="flex-1 flex flex-col min-h-0"
+                >
+                  {/* Workflow step tabs */}
+                  <div className="border-b border-border">
+                    <TabsList className="flex items-center px-4 h-11 bg-transparent rounded-none w-full justify-start gap-0">
+                      {(
+                        [
+                          {
+                            value: "editor" as const,
+                            icon: FileText,
+                            label: "Your Data",
+                            step: 1,
+                          },
+                          {
+                            value: "history" as const,
+                            icon: Sparkles,
+                            label: "AI Enhance",
+                            step: 2,
+                          },
+                          {
+                            value: "templates" as const,
+                            icon: Palette,
+                            label: "Design & Export",
+                            step: 3,
+                          },
+                        ] as const
+                      ).map((tab, i) => {
+                        const isActive = panels.activePanel === tab.value;
+                        const workflowSteps = [
+                          "editor",
+                          "history",
+                          "templates",
+                        ] as const;
+                        const activeStepIdx = workflowSteps.indexOf(
+                          panels.activePanel as (typeof workflowSteps)[number],
+                        );
+                        const isPast = activeStepIdx > i;
 
-                      return (
-                        <div key={tab.value} className="flex items-center">
-                          {i > 0 && (
-                            <div
-                              className={cn(
-                                "w-8 h-px mx-1 transition-colors",
-                                isPast ? "bg-primary/40" : "bg-border",
-                              )}
-                            />
-                          )}
-                          <TabsTrigger
-                            value={tab.value}
-                            className={cn(
-                              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200",
-                              "bg-transparent shadow-none border-0 outline-none",
-                              "hover:bg-muted/60",
-                              "data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none",
-                              !isActive && "text-muted-foreground",
+                        return (
+                          <div key={tab.value} className="flex items-center">
+                            {i > 0 && (
+                              <div
+                                className={cn(
+                                  "w-8 h-px mx-1 transition-colors",
+                                  isPast ? "bg-primary/40" : "bg-border",
+                                )}
+                              />
                             )}
-                          >
-                            <div
+                            <TabsTrigger
+                              value={tab.value}
                               className={cn(
-                                "h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold border transition-colors",
-                                isActive
-                                  ? "bg-primary text-primary-foreground border-primary"
-                                  : isPast
-                                    ? "bg-primary/20 text-primary border-primary/30"
-                                    : "border-muted-foreground/30 text-muted-foreground",
+                                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200",
+                                "bg-transparent shadow-none border-0 outline-none",
+                                "hover:bg-muted/60",
+                                "data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none",
+                                !isActive && "text-muted-foreground",
                               )}
                             >
-                              {tab.step}
-                            </div>
-                            <span className="hidden sm:inline">
-                              {tab.label}
-                            </span>
-                          </TabsTrigger>
-                        </div>
-                      );
-                    })}
-                  </TabsList>
+                              <div
+                                className={cn(
+                                  "h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold border transition-colors",
+                                  isActive
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : isPast
+                                      ? "bg-primary/20 text-primary border-primary/30"
+                                      : "border-muted-foreground/30 text-muted-foreground",
+                                )}
+                              >
+                                {tab.step}
+                              </div>
+                              <span className="hidden sm:inline">
+                                {tab.label}
+                              </span>
+                            </TabsTrigger>
+                          </div>
+                        );
+                      })}
+                    </TabsList>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto">
+                    <TabsContent value="editor" className="m-0 p-4">
+                      <CVEditorPanel />
+                    </TabsContent>
+                    <TabsContent value="templates" className="m-0 p-4">
+                      <TemplatePanel />
+                    </TabsContent>
+                    <TabsContent value="history" className="m-0 p-4">
+                      <GeneratePanel />
+                    </TabsContent>
+                    <TabsContent value="export" className="m-0 p-4">
+                      <HistoryPanel />
+                    </TabsContent>
+                    <TabsContent value="storage" className="m-0 p-4">
+                      <StorageManagerPanel />
+                    </TabsContent>
+                    <TabsContent value="faq" className="m-0 p-4">
+                      <FAQPanel />
+                    </TabsContent>
+                  </div>
+                </Tabs>
+              </ResizablePanel>
+
+              {/* Resizable Handle */}
+              {panels.showPreview && (
+                <>
+                  <ResizableHandle withHandle className="bg-border/50" />
+
+                  {/* Right Panel - Preview */}
+                  <ResizablePanel defaultSize={50} minSize={30}>
+                    <PreviewPanel />
+                  </ResizablePanel>
+                </>
+              )}
+            </ResizablePanelGroup>
+
+            {/* Footer Bar */}
+            <footer className="h-7 border-t border-border/50 bg-card/30 backdrop-blur flex items-center justify-between px-3 text-[10px] text-muted-foreground shrink-0 select-none">
+              <div className="flex items-center gap-3">
+                <a
+                  href="https://github.com/destbreso/cv-generator"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 hover:text-foreground transition-colors"
+                >
+                  <Github className="h-3 w-3" />
+                  <span>GitHub</span>
+                </a>
+                <span className="text-border">·</span>
+                <a
+                  href="https://github.com/destbreso/cv-generator/blob/main/CONTRIBUTING.md"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 hover:text-foreground transition-colors"
+                >
+                  <Heart className="h-2.5 w-2.5" />
+                  <span>Contribute</span>
+                  <ExternalLink className="h-2 w-2 opacity-50" />
+                </a>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  <div
+                    className={cn(
+                      "h-1.5 w-1.5 rounded-full",
+                      isConnected ? "bg-green-500" : "bg-muted-foreground/40",
+                    )}
+                  />
+                  <span>
+                    {isConnected ? `AI: ${aiConfig.provider}` : "AI: Off"}
+                  </span>
                 </div>
-
-                <div className="flex-1 overflow-y-auto">
-                  <TabsContent value="editor" className="m-0 p-4">
-                    <CVEditorPanel />
-                  </TabsContent>
-                  <TabsContent value="templates" className="m-0 p-4">
-                    <TemplatePanel />
-                  </TabsContent>
-                  <TabsContent value="history" className="m-0 p-4">
-                    <GeneratePanel />
-                  </TabsContent>
-                  <TabsContent value="export" className="m-0 p-4">
-                    <HistoryPanel />
-                  </TabsContent>
-                  <TabsContent value="storage" className="m-0 p-4">
-                    <StorageManagerPanel />
-                  </TabsContent>
-                  <TabsContent value="faq" className="m-0 p-4">
-                    <FAQPanel />
-                  </TabsContent>
+                <span className="text-border">·</span>
+                <div className="flex items-center gap-1">
+                  <Globe className="h-2.5 w-2.5 opacity-50" />
+                  <span>MIT License</span>
                 </div>
-              </Tabs>
-            </ResizablePanel>
-
-            {/* Resizable Handle */}
-            {panels.showPreview && (
-              <>
-                <ResizableHandle withHandle className="bg-border/50" />
-
-                {/* Right Panel - Preview */}
-                <ResizablePanel defaultSize={50} minSize={30}>
-                  <PreviewPanel />
-                </ResizablePanel>
-              </>
-            )}
-          </ResizablePanelGroup>
+                <span className="text-border">·</span>
+                <span className="opacity-60">
+                  © {new Date().getFullYear()} CV Generator
+                </span>
+              </div>
+            </footer>
+          </div>
         </div>
       </div>
     </TooltipProvider>

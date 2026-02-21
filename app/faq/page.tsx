@@ -64,18 +64,18 @@ export default function FAQPage() {
 
         <div className="flex items-center gap-3 mb-4">
           <HelpCircle className="h-10 w-10 text-primary" />
-          <h1 className="text-4xl font-bold">Frequently Asked Questions</h1>
+          <h1 className="text-2xl sm:text-4xl font-bold">Frequently Asked Questions</h1>
         </div>
 
-        <p className="text-lg text-muted-foreground mb-12">
+        <p className="text-base sm:text-lg text-muted-foreground mb-12">
           Everything you need to know about CV Generator
         </p>
 
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
           {faqs.map((faq, i) => (
             <div
               key={i}
-              className="rounded-xl border border-border/50 bg-card p-6 hover:border-primary/30 transition-colors"
+              className="rounded-xl border border-border/50 bg-card p-4 sm:p-6 hover:border-primary/30 transition-colors"
             >
               <h2 className="text-lg font-semibold mb-3 flex items-start gap-2">
                 <span className="text-primary">Q:</span>
@@ -88,8 +88,8 @@ export default function FAQPage() {
           ))}
         </div>
 
-        <div className="mt-12 rounded-xl border border-border/50 bg-card p-8 text-center">
-          <h3 className="text-xl font-bold mb-2">Still have questions?</h3>
+        <div className="mt-12 rounded-xl border border-border/50 bg-card p-5 sm:p-8 text-center">
+          <h3 className="text-lg sm:text-xl font-bold mb-2">Still have questions?</h3>
           <p className="text-muted-foreground mb-4">
             Feel free to reach out through LinkedIn or check out the blog for
             more articles.

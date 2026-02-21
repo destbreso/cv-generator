@@ -18,8 +18,27 @@ const Toaster = ({ ...props }: ToasterProps) => {
       duration={5000}
       toastOptions={{
         classNames: {
-          toast: 'group-[.toaster]:shadow-lg',
-          closeButton: 'group-[.toaster]:opacity-60 group-[.toaster]:hover:opacity-100',
+          toast: [
+            'group-[.toaster]:!bg-popover group-[.toaster]:!text-popover-foreground',
+            'group-[.toaster]:!border group-[.toaster]:!border-border',
+            'group-[.toaster]:!shadow-lg group-[.toaster]:!shadow-black/10',
+            'group-[.toaster]:backdrop-blur-none',
+            'group-[.toaster]:rounded-lg',
+          ].join(' '),
+          title: 'group-[.toaster]:!text-foreground group-[.toaster]:!font-semibold',
+          description: 'group-[.toaster]:!text-muted-foreground',
+          actionButton: 'group-[.toaster]:!bg-primary group-[.toaster]:!text-primary-foreground group-[.toaster]:!rounded-md group-[.toaster]:!font-medium',
+          cancelButton: 'group-[.toaster]:!bg-muted group-[.toaster]:!text-muted-foreground group-[.toaster]:!rounded-md',
+          closeButton: [
+            'group-[.toaster]:!bg-popover group-[.toaster]:!text-muted-foreground',
+            'group-[.toaster]:!border group-[.toaster]:!border-border',
+            'group-[.toaster]:hover:!text-foreground group-[.toaster]:hover:!bg-muted',
+            'group-[.toaster]:!opacity-100',
+          ].join(' '),
+          success: 'group-[.toaster]:!border-green-500/30 group-[.toaster]:!bg-green-500/10 group-[.toaster]:![&>svg]:text-green-500',
+          error: 'group-[.toaster]:!border-destructive/30 group-[.toaster]:!bg-destructive/10 group-[.toaster]:![&>svg]:text-destructive',
+          warning: 'group-[.toaster]:!border-yellow-500/30 group-[.toaster]:!bg-yellow-500/10 group-[.toaster]:![&>svg]:text-yellow-500',
+          info: 'group-[.toaster]:!border-primary/30 group-[.toaster]:!bg-primary/10 group-[.toaster]:![&>svg]:text-primary',
         },
       }}
       style={
