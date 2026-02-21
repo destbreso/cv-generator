@@ -908,7 +908,7 @@ function InteractiveEditorPreview({
                             <div className="flex items-center justify-between">
                               <div className="h-2.5 rounded bg-foreground/12 w-1/3" />
                               <div className="text-[9px] text-muted-foreground">
-                                2020 — Present
+                                2020 - Present
                               </div>
                             </div>
                             <div className="h-2 rounded bg-primary/10 w-2/5" />
@@ -1602,7 +1602,7 @@ export function LandingPage() {
                   )}
                 >
                   <Zap className="h-4 w-4" />
-                  Start Building — Free
+                  Start Building - Free
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
@@ -1715,7 +1715,7 @@ export function LandingPage() {
                       Your career is one dataset
                     </h3>
                     <p className="text-muted-foreground leading-relaxed">
-                      Your experience, skills, education — it doesn’t change
+                      Your experience, skills, education... it doesn’t change
                       depending on where you apply. What changes is which parts
                       you highlight. Maintain one record, generate tailored
                       views.
@@ -1858,8 +1858,8 @@ export function LandingPage() {
                 Three steps to your <GradientText>new CV</GradientText>
               </h2>
               <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-                Simple, fast, and private — from blank page to polished resume
-                in minutes.
+                Simple, fast, and private. From blank page to polished resume in
+                minutes.
               </p>
             </div>
           </ScrollReveal>
@@ -1964,7 +1964,7 @@ export function LandingPage() {
                 Powerful Editor. <GradientText>Optional AI</GradientText>.
               </h2>
               <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-                AI can draft, suggest, and optimize — but you always have the
+                AI can draft, suggest, and optimize; but you always have the
                 final word. Or skip it entirely. The editor stands on its own.
               </p>
             </div>
@@ -2080,7 +2080,10 @@ export function LandingPage() {
 
               <ScrollReveal delay={250}>
                 <div className="relative rounded-lg border border-border/50 bg-card/50 backdrop-blur p-6 hover:border-green-500/30 transition-colors">
-                  <Badge variant="outline" className="absolute top-3 right-3 text-[10px] px-1.5 py-0.5 border-amber-500/50 text-amber-500 bg-amber-500/10">
+                  <Badge
+                    variant="outline"
+                    className="absolute top-3 right-3 text-[10px] px-1.5 py-0.5 border-amber-500/50 text-amber-500 bg-amber-500/10"
+                  >
                     WIP
                   </Badge>
                   <div className="flex items-start gap-3 mb-4">
@@ -2125,7 +2128,7 @@ export function LandingPage() {
               <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
                 Edit manually, use AI to refine, or combine both. The tool
                 adapts to your workflow, not the other way around. Skip AI
-                entirely if you want — the editor, templates, and export work
+                entirely if you want. The editor, templates, and export work
                 perfectly without it.
               </p>
               <Link href="/editor">
@@ -2185,7 +2188,7 @@ export function LandingPage() {
                     "Test connection & auto-discover available models",
                     "Custom system prompts for fine-tuned output",
                     "AI generation history with diff viewer",
-                    "Works great without AI too — it's optional",
+                    "Works great without AI too - it's optional",
                   ].map((point) => (
                     <div
                       key={point}
@@ -2229,7 +2232,7 @@ export function LandingPage() {
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 Pick a template, choose a layout structure, tweak the color
-                palette — and everything combines.{" "}
+                palette, and everything combines.{" "}
                 <span className="text-foreground font-medium">
                   Thousands of unique combinations
                 </span>{" "}
@@ -2245,7 +2248,7 @@ export function LandingPage() {
                 Templates
               </h3>
               <p className="text-sm text-muted-foreground max-w-lg mx-auto">
-                From classic corporate to Ivy League — each one defines
+                From classic corporate to Ivy League. Each one defines
                 typography, spacing, and visual personality.
               </p>
             </div>
@@ -2271,7 +2274,7 @@ export function LandingPage() {
               </h3>
               <p className="text-sm text-muted-foreground max-w-lg mx-auto">
                 Control how your CV is structured. Every layout works with every
-                template — mix and match freely.
+                template, mix and match freely.
               </p>
             </div>
           </ScrollReveal>
@@ -2326,7 +2329,7 @@ export function LandingPage() {
                 </div>
               ))}
               {/* Custom palette indicator */}
-              <div className="group relative" title="Custom — pick any color">
+              <div className="group relative" title="Custom - pick any color">
                 <div className="h-9 w-9 sm:h-11 sm:w-11 rounded-full border-2 border-dashed border-primary/40 flex items-center justify-center text-primary/60 text-base font-bold transition-all duration-300 group-hover:scale-125 group-hover:border-primary">
                   +
                 </div>
@@ -2374,7 +2377,7 @@ export function LandingPage() {
                 Everything you need to <GradientText>land the job</GradientText>
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                A complete toolkit for building professional resumes — from
+                A complete toolkit for building professional resumes. From
                 AI-powered writing to pixel-perfect export.
               </p>
             </div>
@@ -2921,8 +2924,8 @@ export function LandingPage() {
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 This started as a personal project while exploring practical
-                applications of LLMs — tools that support our work without
-                making decisions for us.
+                applications of LLMs, tools that support our work without making
+                decisions for us.
                 <br />
                 <span className="font-medium text-foreground">
                   Built for the community, open source, free forever.
@@ -3001,7 +3004,7 @@ export function LandingPage() {
                   <p className="text-sm text-muted-foreground mb-4">
                     Follow my journey exploring LLMs, building open-source
                     tools, and sharing what I learn. Articles, projects, and
-                    experiments — all in public.
+                    experiments. All in public.
                   </p>
                   <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
                     <a
@@ -3071,7 +3074,7 @@ export function LandingPage() {
                 )}
               >
                 <Zap className="h-5 w-5" />
-                Launch Editor — It&apos;s Free
+                Launch Editor. It&apos;s Free
                 <ArrowRight className="h-5 w-5" />
               </Button>
             </Link>

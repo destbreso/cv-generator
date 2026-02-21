@@ -339,7 +339,7 @@ export function StorageManagerPanel() {
             <Info className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
             <div className="text-[11px] text-muted-foreground leading-relaxed space-y-1">
               <p>
-                <strong>Memory only</strong> — API keys live exclusively in
+                <strong>Memory only</strong> - API keys live exclusively in
                 browser RAM, stored separately per provider. They are{" "}
                 <strong>never</strong> written to localStorage, cookies, or any
                 persistent storage.

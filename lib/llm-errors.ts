@@ -52,7 +52,11 @@ export function parseLLMError(
   }
 
   // ── Request too large ──
-  if (status === 413 || lower.includes("too large") || lower.includes("max tokens")) {
+  if (
+    status === 413 ||
+    lower.includes("too large") ||
+    lower.includes("max tokens")
+  ) {
     return `Request too large for ${provider}. Try a shorter input.`;
   }
 

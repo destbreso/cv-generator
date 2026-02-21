@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CV Generator — AI-Powered Resume Builder",
+  title: "CV Generator. AI-Powered Resume Builder",
   description:
     "Create optimized CVs with AI. Local or cloud LLMs, multiple templates, real-time preview.",
 };

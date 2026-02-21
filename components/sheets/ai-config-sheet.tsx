@@ -204,74 +204,81 @@ export function AIConfigSheet() {
           <Label>AI Provider</Label>
           <div className="grid grid-cols-2 gap-2">
             {PROVIDERS.map((provider) => {
-              const isDisabledOllama = provider.id === "ollama" && !isOllamaEnabled;
+              const isDisabledOllama =
+                provider.id === "ollama" && !isOllamaEnabled;
               return (
-              <button
-                key={provider.id}
-                onClick={() => !isDisabledOllama && handleProviderChange(provider.id)}
-                disabled={isDisabledOllama}
-                className={cn(
-                  "relative flex items-center gap-3 p-3 rounded-lg border text-left transition-all",
-                  isDisabledOllama
-                    ? "border-border opacity-50 cursor-not-allowed"
-                    : aiConfig.provider === provider.id
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50",
-                )}
-              >
-                {provider.needsKey && (() => {
-                  const hasKey = !!(apiKeys[provider.id] || (provider.id === aiConfig.provider && aiConfig.apiKey));
-                  return (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span
-                          className={cn(
-                            "absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full border",
-                            hasKey
-                              ? "bg-green-100 dark:bg-green-900/60 border-green-400/50 dark:border-green-600/50"
-                              : "bg-amber-100 dark:bg-amber-900/60 border-amber-300/50 dark:border-amber-700/50",
-                          )}
-                        >
-                          <Key
-                            className={cn(
-                              "h-2 w-2",
-                              hasKey
-                                ? "text-green-600 dark:text-green-400"
-                                : "text-amber-600 dark:text-amber-400",
-                            )}
-                          />
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="text-xs">
-                        {hasKey ? "API key configured" : "API key required"}
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                })()}
-                <div
+                <button
+                  key={provider.id}
+                  onClick={() =>
+                    !isDisabledOllama && handleProviderChange(provider.id)
+                  }
+                  disabled={isDisabledOllama}
                   className={cn(
-                    "h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0",
-                    aiConfig.provider === provider.id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted",
+                    "relative flex items-center gap-3 p-3 rounded-lg border text-left transition-all",
+                    isDisabledOllama
+                      ? "border-border opacity-50 cursor-not-allowed"
+                      : aiConfig.provider === provider.id
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50",
                   )}
                 >
-                  {provider.icon}
-                </div>
-                <div className="min-w-0">
-                  <div className="font-medium text-sm flex items-center gap-1.5">
-                    {provider.name}
-                    {isDisabledOllama && (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground border border-border">
-                        Local only
-                      </span>
+                  {provider.needsKey &&
+                    (() => {
+                      const hasKey = !!(
+                        apiKeys[provider.id] ||
+                        (provider.id === aiConfig.provider && aiConfig.apiKey)
+                      );
+                      return (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span
+                              className={cn(
+                                "absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full border",
+                                hasKey
+                                  ? "bg-green-100 dark:bg-green-900/60 border-green-400/50 dark:border-green-600/50"
+                                  : "bg-amber-100 dark:bg-amber-900/60 border-amber-300/50 dark:border-amber-700/50",
+                              )}
+                            >
+                              <Key
+                                className={cn(
+                                  "h-2 w-2",
+                                  hasKey
+                                    ? "text-green-600 dark:text-green-400"
+                                    : "text-amber-600 dark:text-amber-400",
+                                )}
+                              />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs">
+                            {hasKey ? "API key configured" : "API key required"}
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })()}
+                  <div
+                    className={cn(
+                      "h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0",
+                      aiConfig.provider === provider.id
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted",
                     )}
+                  >
+                    {provider.icon}
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {provider.description}
+                  <div className="min-w-0">
+                    <div className="font-medium text-sm flex items-center gap-1.5">
+                      {provider.name}
+                      {isDisabledOllama && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground border border-border">
+                          Local only
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {provider.description}
+                    </div>
                   </div>
-                </div>
-              </button>
+                </button>
               );
             })}
           </div>
@@ -475,7 +482,7 @@ export function AIConfigSheet() {
             ) : isConnected ? (
               <>
                 <CheckCircle2 className="h-4 w-4" />
-                Connected — Re-test
+                Connected - Re-test
               </>
             ) : (
               <>
