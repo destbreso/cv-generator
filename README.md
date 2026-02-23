@@ -40,18 +40,21 @@ This is what CV Generator does. It's not a "prettier resume template" — it's t
 - Structured editor with collapsible sections for all CV fields
 - Personal info, summary, experience, education, skills, languages, projects, certifications, publications, volunteer work, awards, and interests
 - Import/export CV data as JSON
-- LinkedIn PDF import — upload your LinkedIn profile PDF and auto-populate fields
+- **LinkedIn PDF upload** — upload your LinkedIn profile PDF and auto-populate CV fields
 - Load sample data for quick testing
 
 ### 🤖 AI-Powered Generation
 - Tailor your CV for specific job descriptions with AI
 - **Output language selector** — generate your CV in any of 13 languages (English, Spanish, French, German, Portuguese, Italian, Dutch, Chinese, Japanese, Korean, Arabic, Russian, Hindi) or auto-detect from your input
 - Streaming generation with real-time preview
-- Support for multiple AI providers:
+- Support for 8 AI providers:
   - **Ollama** — Run locally, completely free and private
   - **OpenAI** — GPT-4o, GPT-4
   - **Anthropic** — Claude 3.5+
   - **Groq** — Fast inference
+  - **Google Gemini** — Gemini 2.0 Flash
+  - **Mistral** — Mistral models
+  - **DeepSeek** — DeepSeek Chat
   - **Custom** — Any OpenAI-compatible API
 - Apply AI suggestions directly to your editor
 - Version history with diff viewer
@@ -77,9 +80,10 @@ Single Column, Sidebar Left, Sidebar Right, and Two Column.
 - PDF export via browser print dialog
 - Full `print-color-adjust: exact` support for backgrounds and colors
 
-### 🌓 Theming
+### 🌓 Theming & Offline
 - Light, Dark, and System theme modes
-- 3 built-in color themes
+- Multiple built-in color themes (Console Light, Console Dark, Modern)
+- Works completely offline after first load — no servers needed
 - Consistent design across all components
 
 ### 🗄️ Storage Manager
@@ -154,7 +158,14 @@ Then in the app, click the ⚙️ settings icon → select **Ollama** → **Test
 
 #### Cloud Providers
 
-Click ⚙️ → select your provider (OpenAI, Anthropic, Groq) → enter your API key → test connection.
+Click ⚙️ → select your provider:
+- **OpenAI** → enter API key → test connection
+- **Anthropic** → enter API key → test connection  
+- **Groq** → enter API key → test connection
+- **Google Gemini** → enter API key → test connection
+- **Mistral** → enter API key → test connection
+- **DeepSeek** → enter API key → test connection
+- **Custom** → enter base URL, model name, and API key → test connection
 
 ---
 
@@ -164,8 +175,10 @@ Click ⚙️ → select your provider (OpenAI, Anthropic, Groq) → enter your A
 cv-generator/
 ├── app/
 │   ├── layout.tsx              # Root layout with theme provider
-│   ├── page.tsx                # Home page (CV store provider + main layout)
-│   ├── globals.css             # Global styles, themes, print rules
+│   ├── page.tsx                # Home page (CV store provider + landing page)
+│   ├── globals.css             # Global styles, themes, animations, print rules
+│   ├── editor/
+│   │   └── layout.tsx          # Editor-specific layout with overflow control
 │   └── api/
 │       ├── generate-cv/        # AI generation endpoint (SSE streaming)
 │       ├── test-connection/    # Test AI provider connection
@@ -176,26 +189,38 @@ cv-generator/
 ├── components/
 │   ├── layout/
 │   │   └── main-layout.tsx     # App shell (sidebar, tabs, resizable panels)
+│   ├── landing/
+│   │   ├── landing-page.tsx    # Landing page with hero, features, pricing
+│   │   └── scroll-reveal.tsx   # Scroll animation utility
 │   ├── panels/
 │   │   ├── cv-editor-panel.tsx        # Full CV editor with collapsible sections
 │   │   ├── preview-panel.tsx          # Live preview with pagination & export
-│   │   ├── template-panel.tsx         # Template, color, layout selectors
+│   │   ├── template-panel.tsx         # Template, color, layout, favorites selectors
 │   │   ├── generate-panel.tsx         # AI generation interface
 │   │   ├── history-panel.tsx          # Version history with diffs
 │   │   ├── faq-panel.tsx              # Built-in FAQ section
 │   │   └── storage-manager-panel.tsx  # Storage transparency & management UI
 │   ├── sheets/
 │   │   └── ai-config-sheet.tsx # AI provider configuration sheet
+│   ├── dialogs/                # Reusable modal dialogs
 │   ├── ui/                     # shadcn/ui components
+│   ├── theme-switcher.tsx      # Theme selector component
+│   ├── theme-provider.tsx      # Theme context provider
+│   ├── linkedin-import-dialog.tsx     # LinkedIn PDF import flow
+│   ├── cv-preview.tsx          # CV preview component
+│   ├── diff-viewer.tsx         # Version comparison viewer
 │   └── ...
 ├── lib/
-│   ├── cv-store.tsx            # Global state (useReducer + Context)
+│   ├── cv-store.tsx            # Global state (useReducer + Context with favorites/palettes)
 │   ├── types.ts                # TypeScript interfaces (CVData, etc.)
 │   ├── utils.ts                # Utilities (cn, etc.)
 │   ├── storage-manager.ts      # Storage scanning, export/import, registry
 │   ├── diff-utils.ts           # Diff comparison utilities
 │   └── export-utils.tsx        # Export/print helpers
-├── hooks/                      # Custom React hooks
+├── hooks/
+│   ├── use-github-engagement.ts # GitHub engagement toasts & editor tips
+│   └── ...                     # Custom React hooks
+├── types/                      # Global TypeScript types
 ├── styles/                     # Additional stylesheets
 └── public/                     # Static assets
 ```
@@ -327,7 +352,13 @@ Keep coding. 🚀
 
 ## �🤝 Contributing
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) to keep our community respectful and inclusive.
+
+---
+
+## 🔒 Security
+
+If you discover a security vulnerability, please report it responsibly by emailing **security@destbreso.com** (not via public issues). See [SECURITY.md](SECURITY.md) for details.
 
 ---
 
