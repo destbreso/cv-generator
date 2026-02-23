@@ -358,7 +358,7 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for gu
 
 ## 🔒 Security
 
-If you discover a security vulnerability, please report it responsibly by emailing **security@destbreso.com** (not via public issues). See [SECURITY.md](SECURITY.md) for details.
+If you discover a security vulnerability, please report it responsibly by emailing **dev.destbreso@gmail.com** (not via public issues). See [SECURITY.md](SECURITY.md) for details.
 
 ---
 

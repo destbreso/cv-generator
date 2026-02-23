@@ -108,6 +108,6 @@ This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDU
 
 ## 🔒 Security
 
-For security concerns, please do not open a public issue. Instead, email **security@destbreso.com** with details. See [SECURITY.md](SECURITY.md) for our full security policy.
+For security concerns, please do not open a public issue. Instead, email **dev.destbreso@gmail.com** with details. See [SECURITY.md](SECURITY.md) for our full security policy.
 
 By contributing, you agree that your contributions will be licensed under the MIT License.

@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in CV Generator, please **do not** open a public GitHub issue. Instead, please email **security@destbreso.com** with the following information:
+If you discover a security vulnerability in CV Generator, please **do not** open a public GitHub issue. Instead, please email **sdev.destbreso@gmail.com** with the following information:
 
 1. **Description** — What is the vulnerability and how could it be exploited?
 2. **Location** — Which file(s) or component(s) are affected?
