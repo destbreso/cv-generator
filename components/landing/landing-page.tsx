@@ -1812,6 +1812,11 @@ export function LandingPage() {
               <span className="font-bold text-foreground tracking-tight">
                 CV Generator
               </span>
+              {process.env.NEXT_PUBLIC_APP_VERSION && (
+                <span className="text-[10px] font-medium text-muted-foreground/60 tracking-tight">
+                  v{process.env.NEXT_PUBLIC_APP_VERSION}
+                </span>
+              )}
               <Badge
                 variant="secondary"
                 className="hidden sm:inline-flex text-[10px] px-1.5 py-0 h-4 bg-primary/10 text-primary border-0"

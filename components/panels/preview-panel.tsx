@@ -390,6 +390,11 @@ export function PreviewPanel() {
     };
 
     const candidates: { top: number; bottom: number }[] = [];
+    // Section headings paired with the top of their first entry. Used to make
+    // sure a break never strands a heading at the bottom of a page, separated
+    // from the content it introduces (orphaned heading).
+    const headings: { top: number; bottom: number; firstEntryTop: number }[] =
+      [];
 
     // Header – atomic
     container
@@ -405,9 +410,12 @@ export function PreviewPanel() {
 
       if (entries && entries.length > 1) {
         // Section title (h2) is a separate candidate so it won't be orphaned
-        section
-          .querySelectorAll(":scope > h2")
-          .forEach((el) => candidates.push(rect(el)));
+        const firstEntryTop = rect(entries[0]).top;
+        section.querySelectorAll(":scope > h2").forEach((el) => {
+          const r = rect(el);
+          candidates.push(r);
+          headings.push({ ...r, firstEntryTop });
+        });
         entries.forEach((el) => candidates.push(rect(el)));
       } else {
         // Small / single-entry section – keep atomic
@@ -415,10 +423,28 @@ export function PreviewPanel() {
       }
     });
 
-    // Sidebar blocks (sidebar layouts)
-    container
-      .querySelectorAll("[data-sidebar] > div > div")
-      .forEach((el) => candidates.push(rect(el)));
+    // Sidebar blocks (sidebar layouts) – decompose each block (Contact,
+    // Skills, Languages…) into its individual rows so a tall block (e.g. a
+    // long Skills list) doesn't become one atomic chunk that forces the break
+    // far up the page and leaves page 1 mostly empty. The block title (h3) is
+    // glued to its first row so it can't be orphaned.
+    // Each sidebar block is [data-sidebar] > div(SidebarContent root) > div.
+    container.querySelectorAll("[data-sidebar] > div > div").forEach((block) => {
+      const inner = block.querySelector(":scope > div");
+      const rows = inner ? inner.querySelectorAll(":scope > div") : null;
+
+      if (rows && rows.length > 1) {
+        const h3 = block.querySelector(":scope > h3");
+        if (h3) {
+          const r = rect(h3);
+          candidates.push(r);
+          headings.push({ ...r, firstEntryTop: rect(rows[0]).top });
+        }
+        rows.forEach((el) => candidates.push(rect(el)));
+      } else {
+        candidates.push(rect(block));
+      }
+    });
 
     if (candidates.length === 0) {
       const count = Math.max(1, Math.ceil(totalH / usableContentPx));
@@ -434,23 +460,83 @@ export function PreviewPanel() {
     let cursor = usableContentPx;
     const MIN_ADVANCE = 60; // px – prevent degenerate micro-pages
 
-    while (cursor < totalH) {
-      const straddling = candidates.filter(
-        (r) => r.top < cursor && r.bottom > cursor,
-      );
+    // A page should be at least this full before we accept a higher, cleaner
+    // break. Below it, two dense columns whose row gaps never line up would
+    // otherwise leave page 1 mostly empty — page-1 density matters most.
+    const FILL_FLOOR_RATIO = 0.6;
 
-      if (straddling.length > 0) {
-        const safeY = Math.min(...straddling.map((r) => r.top)) - 8;
-        if (safeY > breaks[breaks.length - 1] + MIN_ADVANCE) {
-          breaks.push(safeY);
-          cursor = safeY + usableContentPx;
-          continue;
+    while (cursor < totalH) {
+      const prev = breaks[breaks.length - 1];
+
+      // 1. Highest CLEAN break ≤ cursor: a line no element straddles in EITHER
+      //    column. Walk upward — clearing the topmost straddler can expose a
+      //    different one (a dense sidebar row vs a main entry flow
+      //    independently), so repeat until the line is clean or we'd fall below
+      //    the previous break.
+      let cleanB = -1;
+      {
+        let y = cursor;
+        for (let i = 0; i < 300; i++) {
+          const straddling = candidates.filter(
+            (r) => r.top < y && r.bottom > y,
+          );
+          if (straddling.length === 0) {
+            cleanB = y;
+            break;
+          }
+          const up = Math.min(...straddling.map((r) => r.top)) - 8;
+          if (up <= prev + MIN_ADVANCE) break;
+          y = up;
         }
       }
 
-      // Clean boundary or element too tall — accept the cut
-      breaks.push(cursor);
-      cursor += usableContentPx;
+      // 2. Prefer the clean break, but not if it wastes most of the page. When
+      //    no clean break keeps the page reasonably full, cut just above the
+      //    element straddling the cursor (one column stays clean; the other
+      //    takes a minimal slice) so page 1 stays dense.
+      const fillFloor = prev + usableContentPx * FILL_FLOOR_RATIO;
+      let b: number;
+      if (cleanB >= fillFloor) {
+        b = cleanB;
+      } else {
+        const straddling = candidates.filter(
+          (r) => r.top < cursor && r.bottom > cursor,
+        );
+        const single =
+          straddling.length > 0
+            ? Math.min(...straddling.map((r) => r.top)) - 8
+            : cursor;
+        b = single >= fillFloor ? single : cursor;
+      }
+
+      // 3. Anti-orphan: if that break would leave a section heading stranded
+      //    at the bottom (heading above the break, its first entry below),
+      //    pull the break up to before the heading so the whole section moves
+      //    to the next page together.
+      let orphanTop = -1;
+      for (const h of headings) {
+        if (
+          h.bottom <= b &&
+          h.top < b &&
+          h.firstEntryTop >= b - 8 &&
+          h.top > orphanTop
+        ) {
+          orphanTop = h.top;
+        }
+      }
+      if (orphanTop >= 0 && orphanTop - 8 > prev + MIN_ADVANCE) {
+        b = orphanTop - 8;
+      }
+
+      // 4. Accept the break if it makes progress; otherwise an element is
+      //    taller than a page — accept the hard cut at cursor.
+      if (b > prev + MIN_ADVANCE) {
+        breaks.push(b);
+        cursor = b + usableContentPx;
+      } else {
+        breaks.push(cursor);
+        cursor += usableContentPx;
+      }
     }
 
     setPageBreaks(breaks);
@@ -465,7 +551,17 @@ export function PreviewPanel() {
     const timer = setTimeout(calculatePages, 50);
     const ro = new ResizeObserver(() => calculatePages());
     ro.observe(node);
+    // Web fonts (Geist) change text metrics when they finish loading. Recompute
+    // once they're ready so the breaks reflect the final layout instead of a
+    // fallback-font measurement (which can mis-place a break / orphan a heading).
+    let cancelled = false;
+    if (typeof document !== "undefined" && document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        if (!cancelled) calculatePages();
+      });
+    }
     return () => {
+      cancelled = true;
       clearTimeout(timer);
       ro.disconnect();
     };

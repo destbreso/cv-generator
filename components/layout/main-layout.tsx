@@ -263,6 +263,11 @@ export function MainLayout({ className }: MainLayoutProps) {
               <span className="font-semibold text-foreground">
                 CV Generator
               </span>
+              {process.env.NEXT_PUBLIC_APP_VERSION && (
+                <span className="text-[10px] font-medium text-muted-foreground/60 tracking-tight">
+                  v{process.env.NEXT_PUBLIC_APP_VERSION}
+                </span>
+              )}
               {isDirty && (
                 <Badge
                   variant="outline"
