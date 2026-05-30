@@ -268,6 +268,35 @@ function mmToPx(mm: number): number {
   return mm * _mmToPx;
 }
 
+/**
+ * Clones the current document's stylesheets (inline <style> tags — which
+ * include next/font's @font-face + the compiled Tailwind — and <link> sheets)
+ * into a string for injection into the export/print window. This makes the
+ * exported PDF render with the EXACT same fonts and styles the on-screen
+ * preview was measured with, so pagination stays faithful. Defensive: returns
+ * "" on any failure so the export still works with its built-in fallback CSS.
+ */
+function collectDocumentStyles(): string {
+  if (typeof document === "undefined") return "";
+  try {
+    let out = "";
+    document.querySelectorAll("style").forEach((s) => {
+      const css = s.textContent;
+      // Skip empty tags and guard against accidental </style> in text.
+      if (css && !css.includes("</style")) out += `<style>${css}</style>\n`;
+    });
+    document
+      .querySelectorAll('link[rel="stylesheet"]')
+      .forEach((l) => {
+        const href = (l as HTMLLinkElement).href; // resolved to absolute URL
+        if (href) out += `<link rel="stylesheet" href="${href}">\n`;
+      });
+    return out;
+  } catch {
+    return "";
+  }
+}
+
 /* ─── Page margins (mm) ─── */
 const PAGE_MARGIN_TOP = 12;
 const PAGE_MARGIN_BOTTOM = 14;
@@ -463,12 +492,18 @@ export function PreviewPanel() {
     const ts = templateStyles;
     const p = palette;
 
+    // Reference the SAME CSS variables the app uses (Geist via next/font) so
+    // the exported PDF renders with the exact fonts the preview was measured
+    // with. The document's stylesheets (which define --font-* and the
+    // @font-face rules) are cloned into the export — see collectDocumentStyles.
+    // The fallbacks inside var() keep things sane if cloning ever fails.
     const fontMap: Record<string, string> = {
       "font-sans":
-        "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-      "font-serif": "Georgia, 'Times New Roman', Times, serif",
+        "var(--font-sans, system-ui), system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+      "font-serif":
+        "var(--font-serif, Georgia), ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif",
       "font-mono":
-        "'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', 'Courier New', monospace",
+        "var(--font-mono, ui-monospace), ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', 'Courier New', monospace",
     };
     const bodyFont = fontMap[ts.bodyFont] || fontMap["font-sans"];
     const headerFont = fontMap[ts.headerFont] || bodyFont;
@@ -750,17 +785,26 @@ export function PreviewPanel() {
       const marginTopMm = PAGE_MARGIN_TOP;
       const marginBottomMm = PAGE_MARGIN_BOTTOM;
 
-      // Build one page div per break
+      // Build one page div per break — mirrors the on-screen preview exactly:
+      // each page is clipped to its own slice [break, nextBreak) so nothing
+      // from the next page bleeds in and gets cut at the bottom edge.
       const pagesHtml = pageBreaks
         .map((breakOffset, idx) => {
+          const nextBreak = pageBreaks[idx + 1];
+          const sliceHeight =
+            nextBreak == null
+              ? viewportPx
+              : Math.min(viewportPx, Math.max(0, nextBreak - breakOffset));
           const footerHtml = `<div class="page-footer"><span>Built with <a href="https://cv.destevez.dev">CV Generator</a></span></div>`;
 
           return `
       <div class="page" style="page-break-after: always; width: ${pageW}; height: ${pageH}; box-sizing: border-box; padding-top: ${marginTopMm}mm; padding-bottom: ${marginBottomMm}mm; overflow: hidden; display: flex; flex-direction: column; position: relative;">
         <div style="height: ${viewportPx}px; overflow: hidden; flex: none;">
-          <div style="margin-top: -${breakOffset}px;">
-            <div class="cv-root" style="height: ${breakOffset + viewportPx}px;">
-              ${innerHtml}
+          <div style="height: ${sliceHeight}px; overflow: hidden;">
+            <div style="margin-top: -${breakOffset}px;">
+              <div class="cv-root" style="height: ${breakOffset + viewportPx}px;">
+                ${innerHtml}
+              </div>
             </div>
           </div>
         </div>
@@ -772,12 +816,22 @@ export function PreviewPanel() {
       // Remove the last page-break-after
       const css = buildExportStyles();
 
+      // Clone the app's real stylesheets (Geist @font-face + Tailwind) so the
+      // export renders identically to the measured preview. <base> lets the
+      // root-relative font/asset URLs inside those sheets resolve. Our own
+      // overrides come AFTER, so the tuned print rules still win.
+      const origin =
+        typeof location !== "undefined" ? location.origin : "";
+      const clonedStyles = collectDocumentStyles();
+
       return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  ${origin ? `<base href="${origin}/">` : ""}
   <title>CV - ${name}</title>
+  ${clonedStyles}
   <style>
     ${css}
 
@@ -835,7 +889,34 @@ ${pagesHtml}
     if (!printWindow) return;
     printWindow.document.write(buildFullHTML(html));
     printWindow.document.close();
-    setTimeout(() => printWindow.print(), 300);
+
+    // Wait for the cloned stylesheets AND web fonts to finish loading before
+    // printing — otherwise the PDF renders with fallback fonts and the layout
+    // drifts from the preview. Falls back to a fixed delay if anything hangs.
+    let printed = false;
+    const doPrint = () => {
+      if (printed || printWindow.closed) return;
+      printed = true;
+      printWindow.focus();
+      printWindow.print();
+    };
+    const waitForFonts = () => {
+      const fonts = (printWindow.document as Document).fonts;
+      if (fonts?.ready) {
+        fonts.ready.then(doPrint).catch(doPrint);
+        // Safety net in case fonts.ready never resolves.
+        setTimeout(doPrint, 2500);
+      } else {
+        setTimeout(doPrint, 600);
+      }
+    };
+    if (printWindow.document.readyState === "complete") {
+      waitForFonts();
+    } else {
+      printWindow.addEventListener("load", waitForFonts, { once: true });
+      // Absolute fallback so we never leave the user staring at a blank tab.
+      setTimeout(doPrint, 3000);
+    }
   }, [buildFullHTML]);
 
   const handleExportHTML = useCallback(
@@ -1112,6 +1193,15 @@ ${pagesHtml}
                 const marginTopPx = mmToPx(PAGE_MARGIN_TOP);
                 const marginBottomPx = mmToPx(PAGE_MARGIN_BOTTOM);
                 const breakOffset = pageBreaks[pageIdx] ?? 0;
+                // Clip this page to exactly its slice [break, nextBreak) so no
+                // content from the next page bleeds in and gets cut at the
+                // bottom edge. The last page has nothing after it, so it uses
+                // the full viewport (lets sidebar backgrounds fill the page).
+                const nextBreak = pageBreaks[pageIdx + 1];
+                const sliceHeight =
+                  nextBreak == null
+                    ? viewportPx
+                    : Math.min(viewportPx, Math.max(0, nextBreak - breakOffset));
 
                 return (
                   <div
@@ -1137,7 +1227,8 @@ ${pagesHtml}
                         flexDirection: "column",
                       }}
                     >
-                      {/* Content area – clips to safe zone between margins */}
+                      {/* Content region – reserves the full inter-margin
+                          area so the footer stays pinned to the page bottom */}
                       <div
                         style={{
                           height: `${viewportPx}px`,
@@ -1145,25 +1236,34 @@ ${pagesHtml}
                           flex: "none",
                         }}
                       >
+                        {/* Clip to the exact page slice so the next page's
+                            content can't appear cut off at the bottom edge */}
                         <div
                           style={{
-                            marginTop: `-${breakOffset}px`,
+                            height: `${sliceHeight}px`,
+                            overflow: "hidden",
                           }}
                         >
-                          {/* Explicit height forces sidebar/bg to fill
-                              the entire visible page region on every page */}
                           <div
                             style={{
-                              height: `${breakOffset + viewportPx}px`,
+                              marginTop: `-${breakOffset}px`,
                             }}
                           >
-                            <CVPreviewContent
-                              data={displayData}
-                              palette={palette}
-                              templateId={selectedTemplateId}
-                              layoutId={selectedLayoutId}
-                              templateStyles={templateStyles}
-                            />
+                            {/* Explicit height forces sidebar/bg to fill
+                                the entire visible page region on every page */}
+                            <div
+                              style={{
+                                height: `${breakOffset + viewportPx}px`,
+                              }}
+                            >
+                              <CVPreviewContent
+                                data={displayData}
+                                palette={palette}
+                                templateId={selectedTemplateId}
+                                layoutId={selectedLayoutId}
+                                templateStyles={templateStyles}
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
