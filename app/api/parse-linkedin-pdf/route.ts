@@ -109,82 +109,119 @@ export async function POST(request: NextRequest) {
 
     // ── Non-Ollama providers: single request → SSE wrapper ──
     if (provider !== "ollama") {
-      let endpoint = baseUrl.replace(/\/+$/, "");
-      let llmResponse: Response | undefined;
+      const endpoint = baseUrl.replace(/\/+$/, "");
 
-      if (
-        provider === "openai" ||
-        provider === "groq" ||
-        provider === "gemini" ||
-        provider === "mistral" ||
-        provider === "deepseek" ||
-        provider === "custom"
-      ) {
-        const base = endpoint.includes("/v1") ? endpoint : `${endpoint}/v1`;
-        const chatEndpoint = `${base}/chat/completions`;
+      // Guard the single (non-streaming) provider request with a timeout and
+      // propagate client cancellation, so a slow/hung provider can't tie up
+      // the whole function.
+      const ac = new AbortController();
+      const PROVIDER_TIMEOUT_MS = 110_000;
+      let providerTimedOut = false;
+      const timeoutId = setTimeout(() => {
+        providerTimedOut = true;
+        ac.abort();
+      }, PROVIDER_TIMEOUT_MS);
+      const onClientAbort = () => ac.abort();
+      request.signal.addEventListener("abort", onClientAbort, { once: true });
 
-        llmResponse = await fetch(chatEndpoint, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            model,
-            messages: [
-              {
-                role: "system",
-                content:
-                  "You are a professional CV data extraction assistant. Return ONLY valid JSON.",
-              },
-              { role: "user", content: prompt },
-            ],
-            temperature: 0.2,
-          }),
-        });
-      } else if (provider === "anthropic") {
-        if (apiKey) {
-          headers["x-api-key"] = apiKey;
-          headers["anthropic-version"] = "2023-06-01";
-          delete headers["Authorization"];
+      try {
+        let llmResponse: Response | undefined;
+
+        if (
+          provider === "openai" ||
+          provider === "groq" ||
+          provider === "gemini" ||
+          provider === "mistral" ||
+          provider === "deepseek" ||
+          provider === "custom"
+        ) {
+          const base = endpoint.includes("/v1") ? endpoint : `${endpoint}/v1`;
+          const chatEndpoint = `${base}/chat/completions`;
+
+          llmResponse = await fetch(chatEndpoint, {
+            method: "POST",
+            headers,
+            signal: ac.signal,
+            body: JSON.stringify({
+              model,
+              messages: [
+                {
+                  role: "system",
+                  content:
+                    "You are a professional CV data extraction assistant. Return ONLY valid JSON.",
+                },
+                { role: "user", content: prompt },
+              ],
+              temperature: 0.2,
+            }),
+          });
+        } else if (provider === "anthropic") {
+          if (apiKey) {
+            headers["x-api-key"] = apiKey;
+            headers["anthropic-version"] = "2023-06-01";
+            delete headers["Authorization"];
+          }
+          const messagesEndpoint = `${endpoint}/messages`;
+          llmResponse = await fetch(messagesEndpoint, {
+            method: "POST",
+            headers,
+            signal: ac.signal,
+            body: JSON.stringify({
+              model,
+              max_tokens: 4096,
+              system:
+                "You are a professional CV data extraction assistant. Return ONLY valid JSON.",
+              messages: [{ role: "user", content: prompt }],
+            }),
+          });
         }
-        const messagesEndpoint = `${endpoint}/messages`;
-        llmResponse = await fetch(messagesEndpoint, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            model,
-            max_tokens: 4096,
-            system:
-              "You are a professional CV data extraction assistant. Return ONLY valid JSON.",
-            messages: [{ role: "user", content: prompt }],
-          }),
-        });
-      }
 
-      if (!llmResponse) {
-        return Response.json(
-          { error: "Unsupported provider" },
-          { status: 400 },
-        );
-      }
+        if (!llmResponse) {
+          return Response.json(
+            { error: "Unsupported provider" },
+            { status: 400 },
+          );
+        }
 
-      if (!llmResponse.ok) {
-        const errorText = await llmResponse.text();
-        console.error("[linkedin] LLM error:", errorText);
-        const friendlyError = parseLLMError(llmResponse.status, errorText, provider);
+        if (!llmResponse.ok) {
+          const errorText = await llmResponse.text();
+          console.error("[linkedin] LLM error:", errorText);
+          const friendlyError = parseLLMError(
+            llmResponse.status,
+            errorText,
+            provider,
+          );
+          return Response.json({ error: friendlyError }, { status: 502 });
+        }
+
+        const data = await llmResponse.json();
+        let content = "";
+        if (provider === "anthropic") {
+          content = data?.content?.[0]?.text || "";
+        } else {
+          content = data?.choices?.[0]?.message?.content || "";
+        }
+
+        return createSSE(content);
+      } catch (err) {
+        if (providerTimedOut) {
+          return Response.json(
+            {
+              error:
+                "The AI provider took too long to respond. Try again or pick a faster model.",
+            },
+            { status: 504 },
+          );
+        }
+        console.error("[linkedin] Provider request failed:", err);
         return Response.json(
-          { error: friendlyError },
+          { error: "Could not reach the AI provider.", details: String(err) },
           { status: 502 },
         );
+      } finally {
+        clearTimeout(timeoutId);
+        request.signal.removeEventListener("abort", onClientAbort);
       }
-
-      const data = await llmResponse.json();
-      let content = "";
-      if (provider === "anthropic") {
-        content = data?.content?.[0]?.text || "";
-      } else {
-        content = data?.choices?.[0]?.message?.content || "";
-      }
-
-      return createSSE(content);
     }
 
     // ── Ollama provider: NDJSON streaming ──

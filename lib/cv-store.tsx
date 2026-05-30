@@ -798,11 +798,77 @@ function setNestedValue(
   return result;
 }
 
+/**
+ * Parses JSON from localStorage without ever throwing. A single corrupted key
+ * (e.g. a write truncated by a storage-quota error) must not brick the whole
+ * editor on load — we log it and fall back to `undefined`.
+ */
+function safeJSONParse<T = unknown>(raw: string | null): T | undefined {
+  if (raw == null) return undefined;
+  try {
+    return JSON.parse(raw) as T;
+  } catch (err) {
+    console.warn("[cv-store] Ignoring corrupted localStorage value:", err);
+    return undefined;
+  }
+}
+
+/**
+ * Guarantees a CVData object has every array/section the UI relies on, so the
+ * live preview never crashes on `data.<section>.map(...)` — regardless of where
+ * the data came from (AI output, LinkedIn import, an old/hand-edited workspace
+ * JSON, or a partial object). Unknown extra fields are preserved.
+ */
+function normalizeCVData(input: unknown): CVData {
+  const d = (input && typeof input === "object" ? input : {}) as Record<
+    string,
+    any
+  >;
+  const arr = (v: unknown): any[] => (Array.isArray(v) ? v : []);
+
+  return {
+    ...d,
+    personalInfo: {
+      name: "",
+      email: "",
+      phone: "",
+      location: "",
+      ...(d.personalInfo && typeof d.personalInfo === "object"
+        ? d.personalInfo
+        : {}),
+    },
+    summary: typeof d.summary === "string" ? d.summary : "",
+    experience: arr(d.experience).map((exp: any) => ({
+      ...exp,
+      achievements: arr(exp?.achievements),
+    })),
+    education: arr(d.education),
+    skills: arr(d.skills).map((sk: any) => ({
+      ...sk,
+      items: arr(sk?.items),
+    })),
+    languages: arr(d.languages),
+    projects: arr(d.projects).map((proj: any) => ({
+      ...proj,
+      technologies: arr(proj?.technologies),
+    })),
+    certifications: arr(d.certifications),
+    publications: arr(d.publications),
+    volunteerWork: arr(d.volunteerWork),
+    awards: arr(d.awards),
+    interests: arr(d.interests),
+  } as CVData;
+}
+
 // Reducer
 function cvReducer(state: CVAppState, action: CVAction): CVAppState {
   switch (action.type) {
     case "SET_CV_DATA":
-      return { ...state, cvData: action.payload, isDirty: true };
+      return {
+        ...state,
+        cvData: normalizeCVData(action.payload),
+        isDirty: true,
+      };
 
     case "UPDATE_CV_FIELD":
       return {
@@ -968,7 +1034,7 @@ function cvReducer(state: CVAppState, action: CVAction): CVAppState {
       if (!state.generatedCVData) return state;
       return {
         ...state,
-        cvData: state.generatedCVData,
+        cvData: normalizeCVData(state.generatedCVData),
         generatedCVData: null,
         generatedContent: "",
         isDirty: true,
@@ -1169,25 +1235,35 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
 
     const stored: Partial<CVAppState> = {};
 
-    const cvData = localStorage.getItem(STORAGE_KEYS.cvData);
-    if (cvData) stored.cvData = JSON.parse(cvData);
+    const cvData = safeJSONParse(
+      localStorage.getItem(STORAGE_KEYS.cvData),
+    );
+    if (cvData) stored.cvData = normalizeCVData(cvData);
 
     // Load AI config from localStorage (but NOT the API key - intentional)
-    const aiConfig = localStorage.getItem(STORAGE_KEYS.aiConfig);
+    const aiConfig = safeJSONParse<CVAppState["aiConfig"]>(
+      localStorage.getItem(STORAGE_KEYS.aiConfig),
+    );
     if (aiConfig) {
-      stored.aiConfig = JSON.parse(aiConfig);
+      stored.aiConfig = aiConfig;
       // API key is intentionally NOT restored from storage
       // For security: user must re-enter API key each session
     }
 
-    const iterations = localStorage.getItem(STORAGE_KEYS.iterations);
-    if (iterations) stored.iterations = JSON.parse(iterations);
+    const iterations = safeJSONParse<CVAppState["iterations"]>(
+      localStorage.getItem(STORAGE_KEYS.iterations),
+    );
+    if (iterations) stored.iterations = iterations;
 
-    const template = localStorage.getItem(STORAGE_KEYS.template);
-    if (template) stored.selectedTemplate = JSON.parse(template);
+    const template = safeJSONParse<CVAppState["selectedTemplate"]>(
+      localStorage.getItem(STORAGE_KEYS.template),
+    );
+    if (template) stored.selectedTemplate = template;
 
-    const customization = localStorage.getItem(STORAGE_KEYS.customization);
-    if (customization) stored.customization = JSON.parse(customization);
+    const customization = safeJSONParse<CVAppState["customization"]>(
+      localStorage.getItem(STORAGE_KEYS.customization),
+    );
+    if (customization) stored.customization = customization;
 
     const templateId = localStorage.getItem(STORAGE_KEYS.templateId);
     if (templateId) stored.selectedTemplateId = templateId;
@@ -1199,15 +1275,21 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
     if (layoutId) stored.selectedLayoutId = layoutId;
 
     // Load custom palette colors
-    const customPaletteRaw = localStorage.getItem(STORAGE_KEYS.customPalette);
-    if (customPaletteRaw) stored.customPalette = JSON.parse(customPaletteRaw);
+    const customPalette = safeJSONParse<CVAppState["customPalette"]>(
+      localStorage.getItem(STORAGE_KEYS.customPalette),
+    );
+    if (customPalette) stored.customPalette = customPalette;
 
     // Load favorites & custom palettes
-    const favorites = localStorage.getItem(STORAGE_KEYS.favoritePresets);
-    if (favorites) stored.favoritePresets = JSON.parse(favorites);
+    const favorites = safeJSONParse<CVAppState["favoritePresets"]>(
+      localStorage.getItem(STORAGE_KEYS.favoritePresets),
+    );
+    if (favorites) stored.favoritePresets = favorites;
 
-    const savedPalettes = localStorage.getItem(STORAGE_KEYS.savedPalettes);
-    if (savedPalettes) stored.savedPalettes = JSON.parse(savedPalettes);
+    const savedPalettes = safeJSONParse<CVAppState["savedPalettes"]>(
+      localStorage.getItem(STORAGE_KEYS.savedPalettes),
+    );
+    if (savedPalettes) stored.savedPalettes = savedPalettes;
 
     dispatch({ type: "LOAD_STATE", payload: stored });
   }, []);
@@ -1296,6 +1378,9 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
 
     const controller = new AbortController();
     generationAbortRef.current = controller;
+    // Set when the idle watchdog (not the user) aborts the request, so the
+    // catch block can show a "timed out" message instead of "cancelled".
+    let stalled = false;
 
     try {
       const response = await fetch(apiPath("/api/generate-cv"), {
@@ -1337,11 +1422,27 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
       let generatedContent = "";
       let buffer = "";
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      // Idle watchdog: if the stream produces no bytes for this long (the
+      // server pings periodically while alive), assume the connection stalled
+      // and abort instead of hanging forever. Re-armed on every chunk.
+      const IDLE_TIMEOUT_MS = 60_000;
+      let idleTimer: ReturnType<typeof setTimeout> | undefined;
+      const armIdleWatchdog = () => {
+        if (idleTimer) clearTimeout(idleTimer);
+        idleTimer = setTimeout(() => {
+          stalled = true;
+          controller.abort();
+        }, IDLE_TIMEOUT_MS);
+      };
 
-        buffer += decoder.decode(value, { stream: true });
+      try {
+        armIdleWatchdog();
+        while (true) {
+          const { done, value } = await reader.read();
+          armIdleWatchdog();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
 
         // Process complete SSE messages (delimited by \n\n)
         const messages = buffer.split("\n\n");
@@ -1379,6 +1480,9 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
             }
           }
         }
+        }
+      } finally {
+        if (idleTimer) clearTimeout(idleTimer);
       }
 
       // Process any remaining buffer
@@ -1400,6 +1504,15 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
         "[cv-store] Generation response received. Content length:",
         generatedContent.length,
       );
+
+      // The stream completed but never delivered a "done" payload (e.g. the
+      // server hit its time budget, or the provider returned nothing). Surface
+      // this as a real error instead of silently reporting success.
+      if (!generatedContent.trim()) {
+        throw new Error(
+          "The AI returned an empty response. Please try again or pick a different model.",
+        );
+      }
 
       // Robustly extract JSON from the generated content
       let generatedCVData: CVData | undefined;
@@ -1474,7 +1587,13 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Generation error:", error);
       if (error instanceof Error) {
-        if (error.name === "AbortError") {
+        if (error.name === "AbortError" && stalled) {
+          // The idle watchdog aborted because the stream stalled.
+          const msg =
+            "The AI provider stopped responding. Please try again.";
+          dispatch({ type: "SET_GENERATION_STATUS", payload: msg });
+          toast.error(msg);
+        } else if (error.name === "AbortError") {
           dispatch({
             type: "SET_GENERATION_STATUS",
             payload: "Generation cancelled.",
@@ -1537,6 +1656,7 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
 
       const controller = new AbortController();
       linkedInAbortRef.current = controller;
+      let stalled = false;
 
       try {
         const formData = new FormData();
@@ -1575,47 +1695,67 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
         let buffer = "";
         let importedData: CVData | null = null;
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+        // Idle watchdog \u2014 abort if the stream stalls (no bytes for a while)
+        // instead of hanging. Re-armed on every chunk.
+        const IDLE_TIMEOUT_MS = 60_000;
+        let idleTimer: ReturnType<typeof setTimeout> | undefined;
+        const armIdleWatchdog = () => {
+          if (idleTimer) clearTimeout(idleTimer);
+          idleTimer = setTimeout(() => {
+            stalled = true;
+            controller.abort();
+          }, IDLE_TIMEOUT_MS);
+        };
 
-          buffer += decoder.decode(value, { stream: true });
+        try {
+          armIdleWatchdog();
+          while (true) {
+            const { done, value } = await reader.read();
+            armIdleWatchdog();
+            if (done) break;
 
-          const messages = buffer.split("\n\n");
-          buffer = messages.pop() || "";
+            buffer += decoder.decode(value, { stream: true });
 
-          for (const msg of messages) {
-            const line = msg.trim();
-            if (!line.startsWith("data: ")) continue;
-            try {
-              const data = JSON.parse(line.slice(6));
-              if (data.status === "extracting") {
-                dispatch({
-                  type: "SET_LINKEDIN_IMPORT_STATUS",
-                  payload: "AI is analyzing your LinkedIn profile\u2026",
-                });
-              } else if (data.status === "progress") {
-                dispatch({
-                  type: "SET_LINKEDIN_IMPORT_STATUS",
-                  payload: `Structuring CV data\u2026 (${data.chunks} chunks)`,
-                });
-              } else if (data.status === "done" && data.cvData) {
-                importedData = data.cvData as CVData;
-              } else if (data.status === "error") {
-                throw new Error(data.error || "Failed to parse LinkedIn data");
-              }
-            } catch (e) {
-              if (
-                e instanceof Error &&
-                e.message !== "Import failed" &&
-                !e.message.includes("Failed to parse")
-              ) {
-                // JSON parse error, skip
-              } else {
-                throw e;
+            const messages = buffer.split("\n\n");
+            buffer = messages.pop() || "";
+
+            for (const msg of messages) {
+              const line = msg.trim();
+              if (!line.startsWith("data: ")) continue;
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.status === "extracting") {
+                  dispatch({
+                    type: "SET_LINKEDIN_IMPORT_STATUS",
+                    payload: "AI is analyzing your LinkedIn profile\u2026",
+                  });
+                } else if (data.status === "progress") {
+                  dispatch({
+                    type: "SET_LINKEDIN_IMPORT_STATUS",
+                    payload: `Structuring CV data\u2026 (${data.chunks} chunks)`,
+                  });
+                } else if (data.status === "done" && data.cvData) {
+                  importedData = data.cvData as CVData;
+                } else if (data.status === "error") {
+                  throw new Error(
+                    data.error || "Failed to parse LinkedIn data",
+                  );
+                }
+              } catch (e) {
+                if (
+                  e instanceof Error &&
+                  e.message !== "Import failed" &&
+                  !e.message.includes("Failed to parse")
+                ) {
+                  // JSON parse error, skip
+                } else {
+                  throw e;
+                }
               }
             }
           }
+        } finally {
+          if (idleTimer) clearTimeout(idleTimer);
         }
 
         // Process remaining buffer
@@ -1646,7 +1786,11 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error("LinkedIn import error:", error);
-        if (error instanceof Error && error.name === "AbortError") {
+        if (error instanceof Error && error.name === "AbortError" && stalled) {
+          const msg = "The AI provider stopped responding. Please try again.";
+          dispatch({ type: "SET_LINKEDIN_IMPORT_STATUS", payload: `Error: ${msg}` });
+          toast.error(msg);
+        } else if (error instanceof Error && error.name === "AbortError") {
           dispatch({
             type: "SET_LINKEDIN_IMPORT_STATUS",
             payload: "Import cancelled.",

@@ -65,86 +65,139 @@ export async function POST(request: NextRequest) {
     }
 
     if (provider !== "ollama") {
-      let endpoint = llmConfig.baseUrl.replace(/\/+$/, "");
-      let response: Response | undefined;
+      const endpoint = llmConfig.baseUrl.replace(/\/+$/, "");
 
-      if (
-        provider === "openai" ||
-        provider === "groq" ||
-        provider === "gemini" ||
-        provider === "mistral" ||
-        provider === "deepseek" ||
-        provider === "custom"
-      ) {
-        const base = endpoint.includes("/v1") ? endpoint : `${endpoint}/v1`;
-        const chatEndpoint = `${base}/chat/completions`;
+      // Chat providers are non-streaming: a single request whose response we
+      // wait for in full. Guard it with a timeout AND propagate client
+      // cancellation, so a hung/slow provider can't tie up the whole function
+      // (and the upstream request is released when the user cancels).
+      const ac = new AbortController();
+      const PROVIDER_TIMEOUT_MS = 110_000;
+      let providerTimedOut = false;
+      const timeoutId = setTimeout(() => {
+        providerTimedOut = true;
+        ac.abort();
+      }, PROVIDER_TIMEOUT_MS);
+      const onClientAbort = () => ac.abort();
+      request.signal.addEventListener("abort", onClientAbort, { once: true });
 
-        if (llmConfig.apiKey) {
-          headers["Authorization"] = `Bearer ${llmConfig.apiKey}`;
+      try {
+        let response: Response | undefined;
+
+        if (
+          provider === "openai" ||
+          provider === "groq" ||
+          provider === "gemini" ||
+          provider === "mistral" ||
+          provider === "deepseek" ||
+          provider === "custom"
+        ) {
+          const base = endpoint.includes("/v1") ? endpoint : `${endpoint}/v1`;
+          const chatEndpoint = `${base}/chat/completions`;
+
+          response = await fetch(chatEndpoint, {
+            method: "POST",
+            headers,
+            signal: ac.signal,
+            body: JSON.stringify({
+              model: llmConfig.model,
+              messages: [
+                { role: "system", content: systemMessage },
+                { role: "user", content: userMessage },
+              ],
+              temperature: 0.2,
+            }),
+          });
+        } else if (provider === "anthropic") {
+          if (llmConfig.apiKey) {
+            headers["x-api-key"] = llmConfig.apiKey;
+            headers["anthropic-version"] = "2023-06-01";
+            // Anthropic authenticates via x-api-key — drop the Bearer header
+            // set earlier so we don't send conflicting credentials.
+            delete headers["Authorization"];
+          }
+
+          const messagesEndpoint = `${endpoint}/messages`;
+          response = await fetch(messagesEndpoint, {
+            method: "POST",
+            headers,
+            signal: ac.signal,
+            body: JSON.stringify({
+              model: llmConfig.model,
+              max_tokens: 4096,
+              system: systemMessage,
+              messages: [{ role: "user", content: userMessage }],
+            }),
+          });
         }
 
-        response = await fetch(chatEndpoint, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            model: llmConfig.model,
-            messages: [
-              { role: "system", content: systemMessage },
-              { role: "user", content: userMessage },
-            ],
-            temperature: 0.2,
-          }),
-        });
-      } else if (provider === "anthropic") {
-        if (llmConfig.apiKey) {
-          headers["x-api-key"] = llmConfig.apiKey;
-          headers["anthropic-version"] = "2023-06-01";
+        if (!response) {
+          return Response.json(
+            { error: "Unsupported provider" },
+            { status: 400 },
+          );
         }
 
-        const messagesEndpoint = `${endpoint}/messages`;
-        response = await fetch(messagesEndpoint, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            model: llmConfig.model,
-            max_tokens: 4096,
-            system: systemMessage,
-            messages: [{ role: "user", content: userMessage }],
-          }),
-        });
-      }
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("[gen] LLM error:", errorText);
+          const friendlyError = parseLLMError(
+            response.status,
+            errorText,
+            provider,
+          );
+          return Response.json(
+            { error: friendlyError, status: response.status, provider },
+            { status: 502 },
+          );
+        }
 
-      if (!response) {
-        return Response.json(
-          { error: "Unsupported provider" },
-          { status: 400 },
-        );
-      }
+        const data = await response.json();
+        let content = "";
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("[gen] LLM error:", errorText);
-        const friendlyError = parseLLMError(
-          response.status,
-          errorText,
-          provider,
-        );
+        if (provider === "anthropic") {
+          content = data?.content?.[0]?.text || "";
+        } else {
+          content = data?.choices?.[0]?.message?.content || "";
+        }
+
+        if (!content.trim()) {
+          return Response.json(
+            {
+              error:
+                "The AI provider returned an empty response. Try again or pick a different model.",
+              provider,
+            },
+            { status: 502 },
+          );
+        }
+
+        return createSSE(content);
+      } catch (err) {
+        if (providerTimedOut) {
+          return Response.json(
+            {
+              error:
+                "The AI provider took too long to respond. Try again or pick a faster model.",
+              provider,
+            },
+            { status: 504 },
+          );
+        }
+        // Client disconnected, or the provider was unreachable.
+        console.error("[gen] Provider request failed:", err);
         return Response.json(
-          { error: friendlyError, status: response.status, provider },
+          {
+            error: "Could not reach the AI provider.",
+            details: String(err),
+            provider,
+          },
           { status: 502 },
         );
+      } finally {
+        clearTimeout(timeoutId);
+        request.signal.removeEventListener("abort", onClientAbort);
       }
-
-      const data = await response.json();
-      let content = "";
-
-      if (provider === "anthropic") {
-        content = data?.content?.[0]?.text || "";
-      } else {
-        content = data?.choices?.[0]?.message?.content || "";
-      }
-
-      return createSSE(content);
     }
 
     const generateEndpoint = `${llmConfig.baseUrl}/api/generate`;
