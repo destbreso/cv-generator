@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useMemo, useEffect, useCallback } from "react";
+import { track } from "@/lib/track";
 import {
   useCVStore,
   COLOR_PALETTES,
@@ -980,6 +981,9 @@ ${pagesHtml}
 
   const handleExportPDF = useCallback(() => {
     if (!measureRef.current) return;
+    // The kind of export only. The filename is built from the person's own
+    // name, so it stays here.
+    track("cv_exported", { type: "pdf" });
     const html = measureRef.current.innerHTML;
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
@@ -1017,6 +1021,7 @@ ${pagesHtml}
 
   const handleExportHTML = useCallback(
     (customFilename?: string) => {
+      track("cv_exported", { type: "html" });
       const html = measureRef.current?.innerHTML || "";
       const fullHTML = buildFullHTML(html);
       const blob = new Blob([fullHTML], { type: "text/html" });

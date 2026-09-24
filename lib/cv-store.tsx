@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { apiPath } from "@/lib/api";
+import { track } from "@/lib/track";
 import { toast } from "sonner";
 import type {
   CVData,
@@ -1382,6 +1383,8 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
     // catch block can show a "timed out" message instead of "cancelled".
     let stalled = false;
 
+    track("cv_generated", { provider: state.aiConfig.provider });
+
     try {
       const response = await fetch(apiPath("/api/generate-cv"), {
         method: "POST",
@@ -1668,6 +1671,7 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
           formData.append("apiKey", state.aiConfig.apiKey);
         }
 
+        track("linkedin_imported", { provider: state.aiConfig.provider });
         const response = await fetch(apiPath("/api/parse-linkedin-pdf"), {
           method: "POST",
           body: formData,
