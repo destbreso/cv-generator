@@ -66,10 +66,11 @@ export function PrivacyContent() {
         {/* TL;DR Banner */}
         <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 mb-10">
           <p className="text-sm font-medium text-center">
-            <strong>TL;DR:</strong> Your data stays in your browser. Nothing is
-            tracked. Nothing is sent anywhere unless you explicitly use a cloud
-            AI provider. You have full control to inspect, export, or delete
-            everything at any time.
+            <strong>TL;DR:</strong> Your data stays in your browser. Your CV
+            content is never sent anywhere unless you explicitly use a cloud AI
+            provider. The site counts anonymous page views, with no cookies and
+            no identifier that could link visits to you. You have full control
+            to inspect, export, or delete everything at any time.
           </p>
         </div>
 
