@@ -46,7 +46,7 @@ This is what CV Generator does. It's not a "prettier resume template" — it's t
 ### 🤖 AI-Powered Generation
 - Tailor your CV for specific job descriptions with AI
 - **Output language selector** — generate your CV in any of 13 languages (English, Spanish, French, German, Portuguese, Italian, Dutch, Chinese, Japanese, Korean, Arabic, Russian, Hindi) or auto-detect from your input
-- Streaming generation with real-time preview
+- Streaming generation with live progress
 - Support for 8 AI providers:
   - **Ollama** — Run locally, completely free and private
   - **OpenAI** — GPT-4o, GPT-4

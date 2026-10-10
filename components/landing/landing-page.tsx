@@ -3853,7 +3853,7 @@ const STEPS = [
     icon: Download,
     title: "Export & apply",
     description:
-      "Choose a template & layout, customize colors and fonts, preview in real time, and export as PDF, HTML, or Markdown — ready for submission.",
+      "Choose a template & layout, customize colors and fonts, preview in real time, and export as PDF or HTML, ready for submission.",
   },
 ];
 
@@ -3983,7 +3983,7 @@ const FEATURES = [
     icon: Download,
     title: "Multi-Format Export",
     description:
-      "Export as PDF, HTML, or Markdown. Print-optimized with proper page breaks and margins for ATS-friendly submissions.",
+      "Export as PDF or HTML. Print-optimized with proper page breaks and margins for ATS-friendly submissions.",
   },
   {
     icon: Database,
