@@ -1,0 +1,28 @@
+{
+  "name": "cv-generator-video",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Remotion compositions for CV Generator's YouTube video. A separate package so the render toolchain never enters the app's install or its build.",
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "video:script": "npx -y tsx src/write-voiceover.ts",
+    "video:audio": "node scripts/elevenlabs.mjs",
+    "video:render": "remotion render src/index.ts Film out/video-raw.mp4 --audio-bitrate=192k && node scripts/loudnorm.mjs out/video-raw.mp4 out/youtube/cv-generator.mp4 && rm out/video-raw.mp4",
+    "video:captions": "npx -y tsx src/write-captions.ts",
+    "video:metadata": "npx -y tsx src/write-metadata.ts",
+    "video:thumbnail": "remotion still src/index.ts Thumb out/youtube/thumbnail.png"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.*",
+    "@remotion/google-fonts": "^4.0.529",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "remotion": "4.0.*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "typescript": "^5.9.2"
+  }
+}

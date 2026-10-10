@@ -1,0 +1,35 @@
+{
+  "aiSeconds": 123,
+  "aiFrames": 73,
+  "applyButton": {
+    "x": 97,
+    "y": 975,
+    "w": 849.5,
+    "h": 36
+  },
+  "readyCard": {
+    "x": 72,
+    "y": 834,
+    "w": 899.5,
+    "h": 202
+  },
+  "summaryBox": {
+    "x": 89,
+    "y": 697,
+    "w": 865.5,
+    "h": 78
+  },
+  "removedSentence": "Proven track record leading development teams, implementing accessibility best practices, and delivering high-performance solutions in healthcare and fintech.",
+  "importJson": {
+    "x": 716.5,
+    "y": 270.40625,
+    "w": 214,
+    "h": 47.703125
+  },
+  "exportJson": {
+    "x": 809,
+    "y": 198,
+    "w": 157.40625,
+    "h": 32
+  }
+}

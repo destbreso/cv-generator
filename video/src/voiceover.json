@@ -1,0 +1,114 @@
+{
+  "voiceId": "nPczCjzI2devNBz1zQrb",
+  "modelId": "eleven_multilingual_v2",
+  "voiceSettings": {
+    "stability": 0.5,
+    "similarity_boost": 0.8,
+    "style": 0.25,
+    "use_speaker_boost": true
+  },
+  "lines": [
+    {
+      "id": "files",
+      "text": "Somewhere on your laptop there's a CV final, a CV final two, and a CV final, really final. None of them is quite up to date."
+    },
+    {
+      "id": "catch",
+      "text": "And the online builders? You fill in every field, pick a design, press download, and only then does it ask for an account, or a card."
+    },
+    {
+      "id": "idea",
+      "text": "Your career is one story. Keep it in one place, and make the CV each job needs from it."
+    },
+    {
+      "id": "data",
+      "text": "That place is CV Generator. Every role, project and skill, in one structured record. Bring it in from your LinkedIn export, or type it once."
+    },
+    {
+      "id": "stance",
+      "text": "It's your real history, and you keep it. It doesn't need embellishing: it's already true. It only needs the right emphasis for each role."
+    },
+    {
+      "id": "ai",
+      "text": "Paste the job you want. The AI works only from your record, and it's told never to invent a title, a skill or a number. It picks what matters for that role, and rewrites the emphasis."
+    },
+    {
+      "id": "review",
+      "text": "Nothing changes until you've read it. Apply it when it's right, and adjust any line by hand. If it went a step too far, take it out."
+    },
+    {
+      "id": "history",
+      "text": "Every version is kept, so you can always go back."
+    },
+    {
+      "id": "design",
+      "text": "How it looks is a separate choice. Eighteen templates, fourteen palettes, four layouts, and the content never moves."
+    },
+    {
+      "id": "export",
+      "text": "And when it's done, the download is just a download. A PDF, exactly as you see it, page breaks and all."
+    },
+    {
+      "id": "control",
+      "text": "Export your record as JSON and import it whenever you want, in another browser or on another computer. It stays yours."
+    },
+    {
+      "id": "private",
+      "text": "There's no account to create. Your record lives in your browser, and if you run it yourself, the AI can be a model on your own machine."
+    },
+    {
+      "id": "card",
+      "text": "CV Generator. Stop duplicating, start generating. The app is free, and so is the code. cvbuilder dot destbreso dot com."
+    }
+  ],
+  "music": {
+    "lengthMs": 125000,
+    "prompt": "Instrumental, light and modern, for a 125-second product video about a resume builder. Clean electronic pulse, soft plucked synths and warm pads, 104 BPM, major key, optimistic and focused, never busy, leaving room for a voiceover. Builds gently in the middle and resolves on a bright sustained chord at the end. No vocals.",
+    "loop": {
+      "seconds": 30,
+      "text": "Light modern ambient background loop for a product video: soft pulsing synth pad with gentle plucked notes, optimistic and calm, 104 BPM, major key, no drums, no vocals, no sudden changes, seamless loop"
+    }
+  },
+  "sfx": [
+    {
+      "id": "pop",
+      "seconds": 0.5,
+      "text": "A soft, short UI pop, like a card appearing on screen, clean and friendly"
+    },
+    {
+      "id": "whoosh",
+      "seconds": 1,
+      "text": "A soft airy swoosh as several cards slide together into one, gentle and short"
+    },
+    {
+      "id": "click",
+      "seconds": 0.5,
+      "text": "One soft mouse click, clean, close"
+    },
+    {
+      "id": "shimmer",
+      "seconds": 2.5,
+      "text": "A bright soft magical shimmer swell, like something being generated, gentle and positive"
+    },
+    {
+      "id": "flip",
+      "seconds": 0.6,
+      "text": "A quick soft page flip of a single sheet of paper"
+    },
+    {
+      "id": "ding",
+      "seconds": 1.2,
+      "text": "A gentle, warm notification chime, a single soft bell tone"
+    },
+    {
+      "id": "riser",
+      "seconds": 4,
+      "text": "A light uplifting riser, airy synth swell rising for four seconds, ends abruptly at the peak, no impact"
+    },
+    {
+      "id": "bloom",
+      "seconds": 3,
+      "text": "A soft cinematic bloom hit, a warm bright chord swell with a short shimmering tail, not aggressive"
+    }
+  ]
+}

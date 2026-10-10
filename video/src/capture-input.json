@@ -1,0 +1,329 @@
+{
+  "persona": {
+    "personalInfo": {
+      "name": "Alex Rivera",
+      "title": "Senior Full-Stack Engineer",
+      "email": "alex@example.com",
+      "phone": "+1 (555) 123-4567",
+      "location": "San Francisco, CA",
+      "website": "https://alexrivera.example",
+      "linkedin": "",
+      "github": "",
+      "portfolio": ""
+    },
+    "summary": "Full-stack engineer with nine years of experience building web products end to end, from data models and APIs to the interfaces people use every day. Comfortable owning a feature from the first sketch to production, and happiest on small teams that ship often.",
+    "experience": [
+      {
+        "id": "exp-1",
+        "company": "Lumacrest Payments",
+        "position": "Senior Full-Stack Engineer",
+        "startDate": "2021-03",
+        "endDate": "Present",
+        "description": "Payments platform for independent retailers.",
+        "achievements": [
+          "Led the rebuild of the merchant dashboard in React and TypeScript, cutting page load time by 40%.",
+          "Designed the reconciliation service in Node.js and PostgreSQL that settles 2M transactions a day.",
+          "Introduced a shared component library adopted by four product teams.",
+          "Mentored five engineers through their first year on the team."
+        ]
+      },
+      {
+        "id": "exp-2",
+        "company": "Fernvale Health",
+        "position": "Full-Stack Engineer",
+        "startDate": "2018-01",
+        "endDate": "2021-02",
+        "description": "Scheduling and records software for community clinics.",
+        "achievements": [
+          "Built the patient scheduling flow used by 300 clinics, with WCAG AA accessibility.",
+          "Moved the reporting pipeline to GraphQL, removing a nightly batch job.",
+          "Reduced appointment no-shows by 18% with SMS reminders and a rescheduling link."
+        ]
+      },
+      {
+        "id": "exp-3",
+        "company": "Brightpine Analytics",
+        "position": "Software Engineer",
+        "startDate": "2016-06",
+        "endDate": "2017-12",
+        "description": "Analytics tools for small marketing teams.",
+        "achievements": [
+          "Shipped the first version of the campaign dashboard in React and D3.",
+          "Wrote the data import that brought in customers from three ad platforms."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "id": "edu-1",
+        "institution": "Northbay University",
+        "degree": "B.S.",
+        "field": "Computer Science",
+        "startDate": "2012",
+        "endDate": "2016"
+      }
+    ],
+    "skills": [
+      {
+        "id": "sk-1",
+        "category": "Frontend",
+        "items": [
+          "React",
+          "TypeScript",
+          "Next.js",
+          "Tailwind CSS",
+          "Accessibility"
+        ]
+      },
+      {
+        "id": "sk-2",
+        "category": "Backend",
+        "items": [
+          "Node.js",
+          "PostgreSQL",
+          "GraphQL",
+          "REST APIs",
+          "Redis"
+        ]
+      },
+      {
+        "id": "sk-3",
+        "category": "Cloud & Tools",
+        "items": [
+          "AWS",
+          "Docker",
+          "Terraform",
+          "CI/CD",
+          "Observability"
+        ]
+      }
+    ],
+    "languages": [
+      {
+        "id": "lang-1",
+        "language": "English",
+        "proficiency": "native"
+      },
+      {
+        "id": "lang-2",
+        "language": "Spanish",
+        "proficiency": "fluent"
+      }
+    ],
+    "projects": [
+      {
+        "id": "pr-1",
+        "name": "Ledgerline",
+        "description": "An open-source budgeting app for households, with shared accounts.",
+        "technologies": [
+          "Next.js",
+          "PostgreSQL"
+        ]
+      },
+      {
+        "id": "pr-2",
+        "name": "Pulsekit",
+        "description": "A small library of real-time dashboard widgets.",
+        "technologies": [
+          "TypeScript",
+          "WebSockets"
+        ]
+      }
+    ],
+    "certifications": [
+      {
+        "id": "cert-1",
+        "name": "AWS Certified Developer, Associate",
+        "issuer": "Amazon Web Services",
+        "date": "2022"
+      }
+    ],
+    "publications": [],
+    "volunteerWork": [],
+    "awards": [],
+    "interests": [
+      "Open source",
+      "Cycling",
+      "Board games"
+    ]
+  },
+  "job": "Senior Frontend Engineer at Mendwell, a healthcare scheduling startup.\n\nWe're looking for someone to lead our patient-facing web app: React and TypeScript, a design system used across products, and accessibility as a requirement, not a nice-to-have. You'll work closely with design, own performance, and mentor two engineers. Experience with healthcare or other regulated products is a plus.",
+  "templates": [
+    {
+      "id": "minimal",
+      "name": "Minimal"
+    },
+    {
+      "id": "professional",
+      "name": "Professional"
+    },
+    {
+      "id": "modern",
+      "name": "Modern"
+    },
+    {
+      "id": "creative",
+      "name": "Creative"
+    },
+    {
+      "id": "executive",
+      "name": "Executive"
+    },
+    {
+      "id": "tech",
+      "name": "Tech"
+    },
+    {
+      "id": "compact",
+      "name": "Compact"
+    },
+    {
+      "id": "academic",
+      "name": "Academic"
+    },
+    {
+      "id": "elegant",
+      "name": "Elegant"
+    },
+    {
+      "id": "swiss",
+      "name": "Swiss"
+    },
+    {
+      "id": "editorial",
+      "name": "Editorial"
+    },
+    {
+      "id": "startup",
+      "name": "Startup"
+    },
+    {
+      "id": "harvard",
+      "name": "Harvard"
+    },
+    {
+      "id": "oxford",
+      "name": "Oxford"
+    },
+    {
+      "id": "cambridge",
+      "name": "Cambridge"
+    },
+    {
+      "id": "princeton",
+      "name": "Princeton"
+    },
+    {
+      "id": "yale",
+      "name": "Yale"
+    },
+    {
+      "id": "mit",
+      "name": "MIT"
+    }
+  ],
+  "palettes": [
+    {
+      "id": "default",
+      "name": "Default",
+      "primary": "#18181b",
+      "accent": "#3b82f6"
+    },
+    {
+      "id": "ocean",
+      "name": "Ocean",
+      "primary": "#0369a1",
+      "accent": "#06b6d4"
+    },
+    {
+      "id": "forest",
+      "name": "Forest",
+      "primary": "#166534",
+      "accent": "#22c55e"
+    },
+    {
+      "id": "sunset",
+      "name": "Sunset",
+      "primary": "#c2410c",
+      "accent": "#f97316"
+    },
+    {
+      "id": "grape",
+      "name": "Grape",
+      "primary": "#7c3aed",
+      "accent": "#a78bfa"
+    },
+    {
+      "id": "mono",
+      "name": "Monochrome",
+      "primary": "#000000",
+      "accent": "#a3a3a3"
+    },
+    {
+      "id": "slate",
+      "name": "Slate",
+      "primary": "#334155",
+      "accent": "#0ea5e9"
+    },
+    {
+      "id": "rose",
+      "name": "Rose",
+      "primary": "#9f1239",
+      "accent": "#fb7185"
+    },
+    {
+      "id": "teal",
+      "name": "Teal",
+      "primary": "#115e59",
+      "accent": "#2dd4bf"
+    },
+    {
+      "id": "amber",
+      "name": "Amber",
+      "primary": "#92400e",
+      "accent": "#fbbf24"
+    },
+    {
+      "id": "navy",
+      "name": "Navy",
+      "primary": "#1e3a5f",
+      "accent": "#60a5fa"
+    },
+    {
+      "id": "coral",
+      "name": "Coral",
+      "primary": "#9a3412",
+      "accent": "#fb923c"
+    },
+    {
+      "id": "lavender",
+      "name": "Lavender",
+      "primary": "#4c1d95",
+      "accent": "#c4b5fd"
+    },
+    {
+      "id": "charcoal",
+      "name": "Charcoal",
+      "primary": "#1c1917",
+      "accent": "#78716c"
+    }
+  ],
+  "layouts": [
+    {
+      "id": "single",
+      "name": "Single Column"
+    },
+    {
+      "id": "sidebar-left",
+      "name": "Sidebar Left"
+    },
+    {
+      "id": "sidebar-right",
+      "name": "Sidebar Right"
+    },
+    {
+      "id": "two-column",
+      "name": "Two Column"
+    }
+  ]
+}

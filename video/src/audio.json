@@ -1,0 +1,1678 @@
+{
+  "vo": {
+    "files": {
+      "file": "audio/vo-files.mp3",
+      "seconds": 8.684263,
+      "hash": "9236cafc7034",
+      "text": "Somewhere on your laptop there's a CV final, a CV final two, and a CV final, really final. None of them is quite up to date.",
+      "words": [
+        {
+          "w": "Somewhere",
+          "start": 0,
+          "end": 0.383
+        },
+        {
+          "w": "on",
+          "start": 0.418,
+          "end": 0.476
+        },
+        {
+          "w": "your",
+          "start": 0.511,
+          "end": 0.615
+        },
+        {
+          "w": "laptop",
+          "start": 0.662,
+          "end": 1.184
+        },
+        {
+          "w": "there's",
+          "start": 1.242,
+          "end": 1.44
+        },
+        {
+          "w": "a",
+          "start": 1.474,
+          "end": 1.498
+        },
+        {
+          "w": "CV",
+          "start": 1.567,
+          "end": 1.904
+        },
+        {
+          "w": "final,",
+          "start": 2.113,
+          "end": 2.624
+        },
+        {
+          "w": "a",
+          "start": 2.682,
+          "end": 2.752
+        },
+        {
+          "w": "CV",
+          "start": 2.81,
+          "end": 3.077
+        },
+        {
+          "w": "final",
+          "start": 3.228,
+          "end": 3.506
+        },
+        {
+          "w": "two,",
+          "start": 3.553,
+          "end": 3.994
+        },
+        {
+          "w": "and",
+          "start": 4.319,
+          "end": 4.47
+        },
+        {
+          "w": "a",
+          "start": 4.528,
+          "end": 4.551
+        },
+        {
+          "w": "CV",
+          "start": 4.609,
+          "end": 4.969
+        },
+        {
+          "w": "final,",
+          "start": 5.178,
+          "end": 5.55
+        },
+        {
+          "w": "really",
+          "start": 5.596,
+          "end": 5.84
+        },
+        {
+          "w": "final.",
+          "start": 5.898,
+          "end": 6.362
+        },
+        {
+          "w": "None",
+          "start": 6.966,
+          "end": 7.163
+        },
+        {
+          "w": "of",
+          "start": 7.187,
+          "end": 7.233
+        },
+        {
+          "w": "them",
+          "start": 7.279,
+          "end": 7.407
+        },
+        {
+          "w": "is",
+          "start": 7.465,
+          "end": 7.535
+        },
+        {
+          "w": "quite",
+          "start": 7.593,
+          "end": 7.802
+        },
+        {
+          "w": "up",
+          "start": 7.825,
+          "end": 7.906
+        },
+        {
+          "w": "to",
+          "start": 7.953,
+          "end": 7.999
+        },
+        {
+          "w": "date.",
+          "start": 8.057,
+          "end": 8.684
+        }
+      ],
+      "lufs": -23.7
+    },
+    "idea": {
+      "file": "audio/vo-idea.mp3",
+      "seconds": 5.479909,
+      "hash": "92149b22a05e",
+      "text": "Your career is one story. Keep it in one place, and make the CV each job needs from it.",
+      "words": [
+        {
+          "w": "Your",
+          "start": 0,
+          "end": 0.221
+        },
+        {
+          "w": "career",
+          "start": 0.279,
+          "end": 0.569
+        },
+        {
+          "w": "is",
+          "start": 0.615,
+          "end": 0.685
+        },
+        {
+          "w": "one",
+          "start": 0.766,
+          "end": 0.952
+        },
+        {
+          "w": "story.",
+          "start": 0.998,
+          "end": 1.474
+        },
+        {
+          "w": "Keep",
+          "start": 1.858,
+          "end": 2.043
+        },
+        {
+          "w": "it",
+          "start": 2.09,
+          "end": 2.148
+        },
+        {
+          "w": "in",
+          "start": 2.183,
+          "end": 2.241
+        },
+        {
+          "w": "one",
+          "start": 2.31,
+          "end": 2.461
+        },
+        {
+          "w": "place,",
+          "start": 2.508,
+          "end": 2.914
+        },
+        {
+          "w": "and",
+          "start": 2.972,
+          "end": 3.123
+        },
+        {
+          "w": "make",
+          "start": 3.181,
+          "end": 3.344
+        },
+        {
+          "w": "the",
+          "start": 3.379,
+          "end": 3.46
+        },
+        {
+          "w": "CV",
+          "start": 3.506,
+          "end": 3.843
+        },
+        {
+          "w": "each",
+          "start": 4.052,
+          "end": 4.249
+        },
+        {
+          "w": "job",
+          "start": 4.307,
+          "end": 4.54
+        },
+        {
+          "w": "needs",
+          "start": 4.609,
+          "end": 4.83
+        },
+        {
+          "w": "from",
+          "start": 4.865,
+          "end": 5.016
+        },
+        {
+          "w": "it.",
+          "start": 5.062,
+          "end": 5.48
+        }
+      ],
+      "lufs": -23.7
+    },
+    "data": {
+      "file": "audio/vo-data.mp3",
+      "seconds": 9.427302,
+      "hash": "4023a62ae510",
+      "text": "That place is CV Generator. Every role, project and skill, in one structured record. Bring it in from your LinkedIn export, or type it once.",
+      "words": [
+        {
+          "w": "That",
+          "start": 0,
+          "end": 0.255
+        },
+        {
+          "w": "place",
+          "start": 0.313,
+          "end": 0.65
+        },
+        {
+          "w": "is",
+          "start": 0.685,
+          "end": 0.778
+        },
+        {
+          "w": "CV",
+          "start": 0.848,
+          "end": 1.207
+        },
+        {
+          "w": "Generator.",
+          "start": 1.358,
+          "end": 2.043
+        },
+        {
+          "w": "Every",
+          "start": 2.485,
+          "end": 2.786
+        },
+        {
+          "w": "role,",
+          "start": 2.879,
+          "end": 3.216
+        },
+        {
+          "w": "project",
+          "start": 3.251,
+          "end": 3.68
+        },
+        {
+          "w": "and",
+          "start": 3.727,
+          "end": 3.808
+        },
+        {
+          "w": "skill,",
+          "start": 3.878,
+          "end": 4.354
+        },
+        {
+          "w": "in",
+          "start": 4.389,
+          "end": 4.47
+        },
+        {
+          "w": "one",
+          "start": 4.586,
+          "end": 4.83
+        },
+        {
+          "w": "structured",
+          "start": 4.888,
+          "end": 5.352
+        },
+        {
+          "w": "record.",
+          "start": 5.41,
+          "end": 5.851
+        },
+        {
+          "w": "Bring",
+          "start": 6.362,
+          "end": 6.594
+        },
+        {
+          "w": "it",
+          "start": 6.641,
+          "end": 6.711
+        },
+        {
+          "w": "in",
+          "start": 6.757,
+          "end": 6.827
+        },
+        {
+          "w": "from",
+          "start": 6.885,
+          "end": 7.012
+        },
+        {
+          "w": "your",
+          "start": 7.059,
+          "end": 7.175
+        },
+        {
+          "w": "LinkedIn",
+          "start": 7.245,
+          "end": 7.558
+        },
+        {
+          "w": "export,",
+          "start": 7.639,
+          "end": 8.15
+        },
+        {
+          "w": "or",
+          "start": 8.208,
+          "end": 8.359
+        },
+        {
+          "w": "type",
+          "start": 8.417,
+          "end": 8.638
+        },
+        {
+          "w": "it",
+          "start": 8.673,
+          "end": 8.731
+        },
+        {
+          "w": "once.",
+          "start": 8.789,
+          "end": 9.427
+        }
+      ],
+      "lufs": -24.1
+    },
+    "ai": {
+      "file": "audio/vo-ai.mp3",
+      "seconds": 11.702857,
+      "hash": "a78cbcf5811a",
+      "text": "Paste the job you want. The AI works only from your record, and it's told never to invent a title, a skill or a number. It picks what matters for that role, and rewrites the emphasis.",
+      "words": [
+        {
+          "w": "Paste",
+          "start": 0,
+          "end": 0.36
+        },
+        {
+          "w": "the",
+          "start": 0.395,
+          "end": 0.464
+        },
+        {
+          "w": "job",
+          "start": 0.511,
+          "end": 0.731
+        },
+        {
+          "w": "you",
+          "start": 0.778,
+          "end": 0.859
+        },
+        {
+          "w": "want.",
+          "start": 0.929,
+          "end": 1.277
+        },
+        {
+          "w": "The",
+          "start": 1.66,
+          "end": 1.8
+        },
+        {
+          "w": "AI",
+          "start": 1.858,
+          "end": 2.136
+        },
+        {
+          "w": "works",
+          "start": 2.194,
+          "end": 2.438
+        },
+        {
+          "w": "only",
+          "start": 2.519,
+          "end": 2.833
+        },
+        {
+          "w": "from",
+          "start": 2.879,
+          "end": 3.019
+        },
+        {
+          "w": "your",
+          "start": 3.065,
+          "end": 3.181
+        },
+        {
+          "w": "record,",
+          "start": 3.251,
+          "end": 3.704
+        },
+        {
+          "w": "and",
+          "start": 3.762,
+          "end": 4.04
+        },
+        {
+          "w": "it's",
+          "start": 4.11,
+          "end": 4.249
+        },
+        {
+          "w": "told",
+          "start": 4.307,
+          "end": 4.598
+        },
+        {
+          "w": "never",
+          "start": 4.679,
+          "end": 4.911
+        },
+        {
+          "w": "to",
+          "start": 4.969,
+          "end": 5.039
+        },
+        {
+          "w": "invent",
+          "start": 5.132,
+          "end": 5.422
+        },
+        {
+          "w": "a",
+          "start": 5.457,
+          "end": 5.48
+        },
+        {
+          "w": "title,",
+          "start": 5.55,
+          "end": 6.049
+        },
+        {
+          "w": "a",
+          "start": 6.258,
+          "end": 6.339
+        },
+        {
+          "w": "skill",
+          "start": 6.42,
+          "end": 6.769
+        },
+        {
+          "w": "or",
+          "start": 6.85,
+          "end": 6.954
+        },
+        {
+          "w": "a",
+          "start": 7.001,
+          "end": 7.024
+        },
+        {
+          "w": "number.",
+          "start": 7.082,
+          "end": 7.5
+        },
+        {
+          "w": "It",
+          "start": 7.883,
+          "end": 8.046
+        },
+        {
+          "w": "picks",
+          "start": 8.092,
+          "end": 8.324
+        },
+        {
+          "w": "what",
+          "start": 8.359,
+          "end": 8.51
+        },
+        {
+          "w": "matters",
+          "start": 8.591,
+          "end": 8.916
+        },
+        {
+          "w": "for",
+          "start": 8.951,
+          "end": 9.044
+        },
+        {
+          "w": "that",
+          "start": 9.091,
+          "end": 9.242
+        },
+        {
+          "w": "role,",
+          "start": 9.323,
+          "end": 9.752
+        },
+        {
+          "w": "and",
+          "start": 9.961,
+          "end": 10.124
+        },
+        {
+          "w": "rewrites",
+          "start": 10.217,
+          "end": 10.704
+        },
+        {
+          "w": "the",
+          "start": 10.751,
+          "end": 10.832
+        },
+        {
+          "w": "emphasis.",
+          "start": 10.879,
+          "end": 11.703
+        }
+      ],
+      "lufs": -24.2
+    },
+    "history": {
+      "file": "audio/vo-history.mp3",
+      "seconds": 2.972154,
+      "hash": "fcbb857a8147",
+      "text": "Every version is kept, so you can always go back.",
+      "words": [
+        {
+          "w": "Every",
+          "start": 0,
+          "end": 0.302
+        },
+        {
+          "w": "version",
+          "start": 0.372,
+          "end": 0.72
+        },
+        {
+          "w": "is",
+          "start": 0.766,
+          "end": 0.848
+        },
+        {
+          "w": "kept,",
+          "start": 0.917,
+          "end": 1.207
+        },
+        {
+          "w": "so",
+          "start": 1.231,
+          "end": 1.324
+        },
+        {
+          "w": "you",
+          "start": 1.405,
+          "end": 1.486
+        },
+        {
+          "w": "can",
+          "start": 1.533,
+          "end": 1.672
+        },
+        {
+          "w": "always",
+          "start": 1.765,
+          "end": 2.159
+        },
+        {
+          "w": "go",
+          "start": 2.206,
+          "end": 2.31
+        },
+        {
+          "w": "back.",
+          "start": 2.368,
+          "end": 2.972
+        }
+      ],
+      "lufs": -24.5
+    },
+    "design": {
+      "file": "audio/vo-design.mp3",
+      "seconds": 6.919546,
+      "hash": "b9f44c6a3f8d",
+      "text": "How it looks is a separate choice. Eighteen templates, fourteen palettes, four layouts, and the content never moves.",
+      "words": [
+        {
+          "w": "How",
+          "start": 0,
+          "end": 0.209
+        },
+        {
+          "w": "it",
+          "start": 0.279,
+          "end": 0.348
+        },
+        {
+          "w": "looks",
+          "start": 0.395,
+          "end": 0.627
+        },
+        {
+          "w": "is",
+          "start": 0.673,
+          "end": 0.755
+        },
+        {
+          "w": "a",
+          "start": 0.813,
+          "end": 0.848
+        },
+        {
+          "w": "separate",
+          "start": 0.917,
+          "end": 1.265
+        },
+        {
+          "w": "choice.",
+          "start": 1.289,
+          "end": 1.788
+        },
+        {
+          "w": "Eighteen",
+          "start": 2.299,
+          "end": 2.728
+        },
+        {
+          "w": "templates,",
+          "start": 2.786,
+          "end": 3.309
+        },
+        {
+          "w": "fourteen",
+          "start": 3.344,
+          "end": 3.704
+        },
+        {
+          "w": "palettes,",
+          "start": 3.762,
+          "end": 4.203
+        },
+        {
+          "w": "four",
+          "start": 4.249,
+          "end": 4.458
+        },
+        {
+          "w": "layouts,",
+          "start": 4.528,
+          "end": 5.05
+        },
+        {
+          "w": "and",
+          "start": 5.108,
+          "end": 5.259
+        },
+        {
+          "w": "the",
+          "start": 5.294,
+          "end": 5.364
+        },
+        {
+          "w": "content",
+          "start": 5.422,
+          "end": 5.863
+        },
+        {
+          "w": "never",
+          "start": 5.944,
+          "end": 6.165
+        },
+        {
+          "w": "moves.",
+          "start": 6.235,
+          "end": 6.92
+        }
+      ],
+      "lufs": -24.9
+    },
+    "export": {
+      "file": "audio/vo-export.mp3",
+      "seconds": 7.012426,
+      "hash": "d5ce66afabc8",
+      "text": "And when it's done, the download is just a download. A PDF, exactly as you see it, page breaks and all.",
+      "words": [
+        {
+          "w": "And",
+          "start": 0,
+          "end": 0.163
+        },
+        {
+          "w": "when",
+          "start": 0.209,
+          "end": 0.337
+        },
+        {
+          "w": "it's",
+          "start": 0.372,
+          "end": 0.511
+        },
+        {
+          "w": "done,",
+          "start": 0.58,
+          "end": 1.057
+        },
+        {
+          "w": "the",
+          "start": 1.3,
+          "end": 1.405
+        },
+        {
+          "w": "download",
+          "start": 1.474,
+          "end": 1.904
+        },
+        {
+          "w": "is",
+          "start": 1.95,
+          "end": 2.032
+        },
+        {
+          "w": "just",
+          "start": 2.09,
+          "end": 2.287
+        },
+        {
+          "w": "a",
+          "start": 2.334,
+          "end": 2.368
+        },
+        {
+          "w": "download.",
+          "start": 2.426,
+          "end": 3.042
+        },
+        {
+          "w": "A",
+          "start": 3.367,
+          "end": 3.448
+        },
+        {
+          "w": "PDF,",
+          "start": 3.541,
+          "end": 4.249
+        },
+        {
+          "w": "exactly",
+          "start": 4.272,
+          "end": 4.818
+        },
+        {
+          "w": "as",
+          "start": 4.876,
+          "end": 4.946
+        },
+        {
+          "w": "you",
+          "start": 4.992,
+          "end": 5.074
+        },
+        {
+          "w": "see",
+          "start": 5.155,
+          "end": 5.341
+        },
+        {
+          "w": "it,",
+          "start": 5.387,
+          "end": 5.561
+        },
+        {
+          "w": "page",
+          "start": 5.712,
+          "end": 6.014
+        },
+        {
+          "w": "breaks",
+          "start": 6.049,
+          "end": 6.351
+        },
+        {
+          "w": "and",
+          "start": 6.385,
+          "end": 6.467
+        },
+        {
+          "w": "all.",
+          "start": 6.513,
+          "end": 7.012
+        }
+      ],
+      "lufs": -24.3
+    },
+    "private": {
+      "file": "audio/vo-private.mp3",
+      "seconds": 7.337506,
+      "hash": "d8e23b5213a8",
+      "text": "There's no account to create. Your record lives in your browser, and if you run it yourself, the AI can be a model on your own machine.",
+      "words": [
+        {
+          "w": "There's",
+          "start": 0,
+          "end": 0.267
+        },
+        {
+          "w": "no",
+          "start": 0.313,
+          "end": 0.406
+        },
+        {
+          "w": "account",
+          "start": 0.464,
+          "end": 0.766
+        },
+        {
+          "w": "to",
+          "start": 0.789,
+          "end": 0.836
+        },
+        {
+          "w": "create.",
+          "start": 0.894,
+          "end": 1.37
+        },
+        {
+          "w": "Your",
+          "start": 1.753,
+          "end": 1.916
+        },
+        {
+          "w": "record",
+          "start": 1.974,
+          "end": 2.241
+        },
+        {
+          "w": "lives",
+          "start": 2.287,
+          "end": 2.461
+        },
+        {
+          "w": "in",
+          "start": 2.496,
+          "end": 2.543
+        },
+        {
+          "w": "your",
+          "start": 2.589,
+          "end": 2.694
+        },
+        {
+          "w": "browser,",
+          "start": 2.74,
+          "end": 3.344
+        },
+        {
+          "w": "and",
+          "start": 3.425,
+          "end": 3.576
+        },
+        {
+          "w": "if",
+          "start": 3.622,
+          "end": 3.692
+        },
+        {
+          "w": "you",
+          "start": 3.727,
+          "end": 3.808
+        },
+        {
+          "w": "run",
+          "start": 3.901,
+          "end": 4.052
+        },
+        {
+          "w": "it",
+          "start": 4.098,
+          "end": 4.168
+        },
+        {
+          "w": "yourself,",
+          "start": 4.214,
+          "end": 4.783
+        },
+        {
+          "w": "the",
+          "start": 4.807,
+          "end": 4.911
+        },
+        {
+          "w": "AI",
+          "start": 4.992,
+          "end": 5.375
+        },
+        {
+          "w": "can",
+          "start": 5.445,
+          "end": 5.561
+        },
+        {
+          "w": "be",
+          "start": 5.608,
+          "end": 5.689
+        },
+        {
+          "w": "a",
+          "start": 5.724,
+          "end": 5.759
+        },
+        {
+          "w": "model",
+          "start": 5.817,
+          "end": 6.095
+        },
+        {
+          "w": "on",
+          "start": 6.142,
+          "end": 6.211
+        },
+        {
+          "w": "your",
+          "start": 6.246,
+          "end": 6.362
+        },
+        {
+          "w": "own",
+          "start": 6.409,
+          "end": 6.525
+        },
+        {
+          "w": "machine.",
+          "start": 6.571,
+          "end": 7.338
+        }
+      ],
+      "lufs": -24.3
+    },
+    "card": {
+      "file": "audio/vo-card.mp3",
+      "seconds": 8.173424,
+      "hash": "bad2390c40ae",
+      "text": "CV Generator. Stop duplicating, start generating. The app is free, and so is the code. cvbuilder dot destbreso dot com.",
+      "words": [
+        {
+          "w": "CV",
+          "start": 0,
+          "end": 0.337
+        },
+        {
+          "w": "Generator.",
+          "start": 0.464,
+          "end": 1.01
+        },
+        {
+          "w": "Stop",
+          "start": 1.219,
+          "end": 1.533
+        },
+        {
+          "w": "duplicating,",
+          "start": 1.602,
+          "end": 2.252
+        },
+        {
+          "w": "start",
+          "start": 2.334,
+          "end": 2.589
+        },
+        {
+          "w": "generating.",
+          "start": 2.647,
+          "end": 3.193
+        },
+        {
+          "w": "The",
+          "start": 3.518,
+          "end": 3.634
+        },
+        {
+          "w": "app",
+          "start": 3.692,
+          "end": 3.831
+        },
+        {
+          "w": "is",
+          "start": 3.878,
+          "end": 3.959
+        },
+        {
+          "w": "free,",
+          "start": 4.017,
+          "end": 4.272
+        },
+        {
+          "w": "and",
+          "start": 4.296,
+          "end": 4.377
+        },
+        {
+          "w": "so",
+          "start": 4.423,
+          "end": 4.516
+        },
+        {
+          "w": "is",
+          "start": 4.574,
+          "end": 4.656
+        },
+        {
+          "w": "the",
+          "start": 4.69,
+          "end": 4.76
+        },
+        {
+          "w": "code.",
+          "start": 4.795,
+          "end": 5.166
+        },
+        {
+          "w": "cvbuilder",
+          "start": 5.608,
+          "end": 6.339
+        },
+        {
+          "w": "dot",
+          "start": 6.397,
+          "end": 6.56
+        },
+        {
+          "w": "destbreso",
+          "start": 6.606,
+          "end": 7.152
+        },
+        {
+          "w": "dot",
+          "start": 7.303,
+          "end": 7.488
+        },
+        {
+          "w": "com.",
+          "start": 7.535,
+          "end": 8.173
+        }
+      ],
+      "lufs": -24.5
+    },
+    "catch": {
+      "file": "audio/vo-catch.mp3",
+      "seconds": 7.894785,
+      "hash": "d6c571581cd2",
+      "text": "And the online builders? You fill in every field, pick a design, press download, and only then does it ask for an account, or a card.",
+      "words": [
+        {
+          "w": "And",
+          "start": 0,
+          "end": 0.151
+        },
+        {
+          "w": "the",
+          "start": 0.197,
+          "end": 0.267
+        },
+        {
+          "w": "online",
+          "start": 0.348,
+          "end": 0.743
+        },
+        {
+          "w": "builders?",
+          "start": 0.778,
+          "end": 1.347
+        },
+        {
+          "w": "You",
+          "start": 1.73,
+          "end": 1.846
+        },
+        {
+          "w": "fill",
+          "start": 1.904,
+          "end": 2.055
+        },
+        {
+          "w": "in",
+          "start": 2.101,
+          "end": 2.148
+        },
+        {
+          "w": "every",
+          "start": 2.194,
+          "end": 2.357
+        },
+        {
+          "w": "field,",
+          "start": 2.415,
+          "end": 2.786
+        },
+        {
+          "w": "pick",
+          "start": 2.995,
+          "end": 3.193
+        },
+        {
+          "w": "a",
+          "start": 3.239,
+          "end": 3.262
+        },
+        {
+          "w": "design,",
+          "start": 3.332,
+          "end": 3.982
+        },
+        {
+          "w": "press",
+          "start": 4.133,
+          "end": 4.389
+        },
+        {
+          "w": "download,",
+          "start": 4.447,
+          "end": 5.05
+        },
+        {
+          "w": "and",
+          "start": 5.097,
+          "end": 5.236
+        },
+        {
+          "w": "only",
+          "start": 5.294,
+          "end": 5.48
+        },
+        {
+          "w": "then",
+          "start": 5.538,
+          "end": 5.7
+        },
+        {
+          "w": "does",
+          "start": 5.759,
+          "end": 5.909
+        },
+        {
+          "w": "it",
+          "start": 5.944,
+          "end": 6.014
+        },
+        {
+          "w": "ask",
+          "start": 6.049,
+          "end": 6.2
+        },
+        {
+          "w": "for",
+          "start": 6.258,
+          "end": 6.351
+        },
+        {
+          "w": "an",
+          "start": 6.385,
+          "end": 6.444
+        },
+        {
+          "w": "account,",
+          "start": 6.467,
+          "end": 6.896
+        },
+        {
+          "w": "or",
+          "start": 6.954,
+          "end": 7.117
+        },
+        {
+          "w": "a",
+          "start": 7.163,
+          "end": 7.198
+        },
+        {
+          "w": "card.",
+          "start": 7.245,
+          "end": 7.895
+        }
+      ],
+      "lufs": -24.6
+    },
+    "stance": {
+      "file": "audio/vo-stance.mp3",
+      "seconds": 7.755465,
+      "hash": "ac18ca31f93a",
+      "text": "It's your real history, and you keep it. It doesn't need embellishing: it's already true. It only needs the right emphasis for each role.",
+      "words": [
+        {
+          "w": "It's",
+          "start": 0,
+          "end": 0.209
+        },
+        {
+          "w": "your",
+          "start": 0.244,
+          "end": 0.383
+        },
+        {
+          "w": "real",
+          "start": 0.453,
+          "end": 0.65
+        },
+        {
+          "w": "history,",
+          "start": 0.731,
+          "end": 1.08
+        },
+        {
+          "w": "and",
+          "start": 1.103,
+          "end": 1.173
+        },
+        {
+          "w": "you",
+          "start": 1.219,
+          "end": 1.3
+        },
+        {
+          "w": "keep",
+          "start": 1.37,
+          "end": 1.567
+        },
+        {
+          "w": "it.",
+          "start": 1.614,
+          "end": 1.8
+        },
+        {
+          "w": "It",
+          "start": 2.241,
+          "end": 2.368
+        },
+        {
+          "w": "doesn't",
+          "start": 2.415,
+          "end": 2.694
+        },
+        {
+          "w": "need",
+          "start": 2.752,
+          "end": 2.949
+        },
+        {
+          "w": "embellishing:",
+          "start": 2.995,
+          "end": 3.773
+        },
+        {
+          "w": "it's",
+          "start": 3.843,
+          "end": 4.029
+        },
+        {
+          "w": "already",
+          "start": 4.063,
+          "end": 4.331
+        },
+        {
+          "w": "true.",
+          "start": 4.377,
+          "end": 4.818
+        },
+        {
+          "w": "It",
+          "start": 5.259,
+          "end": 5.399
+        },
+        {
+          "w": "only",
+          "start": 5.457,
+          "end": 5.654
+        },
+        {
+          "w": "needs",
+          "start": 5.7,
+          "end": 5.898
+        },
+        {
+          "w": "the",
+          "start": 5.933,
+          "end": 6.002
+        },
+        {
+          "w": "right",
+          "start": 6.06,
+          "end": 6.246
+        },
+        {
+          "w": "emphasis",
+          "start": 6.304,
+          "end": 6.757
+        },
+        {
+          "w": "for",
+          "start": 6.803,
+          "end": 6.908
+        },
+        {
+          "w": "each",
+          "start": 6.954,
+          "end": 7.105
+        },
+        {
+          "w": "role.",
+          "start": 7.163,
+          "end": 7.755
+        }
+      ],
+      "lufs": -23.7
+    },
+    "review": {
+      "file": "audio/vo-review.mp3",
+      "seconds": 8.405624,
+      "hash": "024d280458b0",
+      "text": "Nothing changes until you've read it. Apply it when it's right, and adjust any line by hand. If it went a step too far, take it out.",
+      "words": [
+        {
+          "w": "Nothing",
+          "start": 0,
+          "end": 0.383
+        },
+        {
+          "w": "changes",
+          "start": 0.453,
+          "end": 0.894
+        },
+        {
+          "w": "until",
+          "start": 0.952,
+          "end": 1.173
+        },
+        {
+          "w": "you've",
+          "start": 1.219,
+          "end": 1.37
+        },
+        {
+          "w": "read",
+          "start": 1.405,
+          "end": 1.579
+        },
+        {
+          "w": "it.",
+          "start": 1.614,
+          "end": 1.846
+        },
+        {
+          "w": "Apply",
+          "start": 2.229,
+          "end": 2.647
+        },
+        {
+          "w": "it",
+          "start": 2.705,
+          "end": 2.763
+        },
+        {
+          "w": "when",
+          "start": 2.798,
+          "end": 2.926
+        },
+        {
+          "w": "it's",
+          "start": 2.961,
+          "end": 3.077
+        },
+        {
+          "w": "right,",
+          "start": 3.135,
+          "end": 3.529
+        },
+        {
+          "w": "and",
+          "start": 3.599,
+          "end": 3.75
+        },
+        {
+          "w": "adjust",
+          "start": 3.796,
+          "end": 4.156
+        },
+        {
+          "w": "any",
+          "start": 4.249,
+          "end": 4.481
+        },
+        {
+          "w": "line",
+          "start": 4.551,
+          "end": 4.783
+        },
+        {
+          "w": "by",
+          "start": 4.818,
+          "end": 4.946
+        },
+        {
+          "w": "hand.",
+          "start": 5.004,
+          "end": 5.445
+        },
+        {
+          "w": "If",
+          "start": 5.828,
+          "end": 5.968
+        },
+        {
+          "w": "it",
+          "start": 6.014,
+          "end": 6.072
+        },
+        {
+          "w": "went",
+          "start": 6.118,
+          "end": 6.269
+        },
+        {
+          "w": "a",
+          "start": 6.304,
+          "end": 6.327
+        },
+        {
+          "w": "step",
+          "start": 6.385,
+          "end": 6.606
+        },
+        {
+          "w": "too",
+          "start": 6.653,
+          "end": 6.815
+        },
+        {
+          "w": "far,",
+          "start": 6.885,
+          "end": 7.372
+        },
+        {
+          "w": "take",
+          "start": 7.523,
+          "end": 7.755
+        },
+        {
+          "w": "it",
+          "start": 7.79,
+          "end": 7.848
+        },
+        {
+          "w": "out.",
+          "start": 7.895,
+          "end": 8.406
+        }
+      ],
+      "lufs": -24.3
+    },
+    "control": {
+      "file": "audio/vo-control.mp3",
+      "seconds": 7.151746,
+      "hash": "82f1446c5b4d",
+      "text": "Export your record as JSON and import it whenever you want, in another browser or on another computer. It stays yours.",
+      "words": [
+        {
+          "w": "Export",
+          "start": 0,
+          "end": 0.453
+        },
+        {
+          "w": "your",
+          "start": 0.488,
+          "end": 0.604
+        },
+        {
+          "w": "record",
+          "start": 0.65,
+          "end": 0.906
+        },
+        {
+          "w": "as",
+          "start": 0.94,
+          "end": 1.01
+        },
+        {
+          "w": "JSON",
+          "start": 1.091,
+          "end": 1.521
+        },
+        {
+          "w": "and",
+          "start": 1.672,
+          "end": 1.846
+        },
+        {
+          "w": "import",
+          "start": 1.904,
+          "end": 2.218
+        },
+        {
+          "w": "it",
+          "start": 2.241,
+          "end": 2.299
+        },
+        {
+          "w": "whenever",
+          "start": 2.334,
+          "end": 2.612
+        },
+        {
+          "w": "you",
+          "start": 2.67,
+          "end": 2.752
+        },
+        {
+          "w": "want,",
+          "start": 2.833,
+          "end": 3.193
+        },
+        {
+          "w": "in",
+          "start": 3.274,
+          "end": 3.413
+        },
+        {
+          "w": "another",
+          "start": 3.471,
+          "end": 3.773
+        },
+        {
+          "w": "browser",
+          "start": 3.82,
+          "end": 4.214
+        },
+        {
+          "w": "or",
+          "start": 4.261,
+          "end": 4.331
+        },
+        {
+          "w": "on",
+          "start": 4.447,
+          "end": 4.609
+        },
+        {
+          "w": "another",
+          "start": 4.656,
+          "end": 4.911
+        },
+        {
+          "w": "computer.",
+          "start": 4.957,
+          "end": 5.445
+        },
+        {
+          "w": "It",
+          "start": 5.886,
+          "end": 6.037
+        },
+        {
+          "w": "stays",
+          "start": 6.095,
+          "end": 6.374
+        },
+        {
+          "w": "yours.",
+          "start": 6.42,
+          "end": 7.152
+        }
+      ],
+      "lufs": -24.2
+    }
+  },
+  "music": {
+    "file": "audio/music.mp3",
+    "seconds": 125,
+    "hash": "129bbd392465",
+    "source": "sound-generation loop",
+    "lufs": -11.5
+  },
+  "sfx": {
+    "pop": {
+      "file": "audio/sfx-pop.mp3",
+      "seconds": 0.48,
+      "hash": "2b0229fd3308",
+      "lufs": -56.1
+    },
+    "whoosh": {
+      "file": "audio/sfx-whoosh.mp3",
+      "seconds": 1,
+      "hash": "4112727df182",
+      "lufs": -21
+    },
+    "click": {
+      "file": "audio/sfx-click.mp3",
+      "seconds": 0.48,
+      "hash": "62f1cc104903",
+      "lufs": -27.5
+    },
+    "shimmer": {
+      "file": "audio/sfx-shimmer.mp3",
+      "seconds": 2.48,
+      "hash": "62e2d47d2282",
+      "lufs": -17.6
+    },
+    "flip": {
+      "file": "audio/sfx-flip.mp3",
+      "seconds": 0.6,
+      "hash": "e388ae95e7ef",
+      "lufs": -25.8
+    },
+    "ding": {
+      "file": "audio/sfx-ding.mp3",
+      "seconds": 1.2,
+      "hash": "9a0ebef1b04c",
+      "lufs": -13.7
+    },
+    "riser": {
+      "file": "audio/sfx-riser.mp3",
+      "seconds": 4,
+      "hash": "4970fc220044",
+      "lufs": -12.1
+    },
+    "bloom": {
+      "file": "audio/sfx-bloom.mp3",
+      "seconds": 3,
+      "hash": "65b4171723f7",
+      "lufs": -19.9
+    }
+  }
+}
