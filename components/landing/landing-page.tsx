@@ -2082,9 +2082,9 @@ export function LandingPage() {
                   },
                   {
                     icon: Shield,
-                    title: "100% Private",
+                    title: "Private by Default",
                     description:
-                      "Your data never leaves your device. Zero server tracking, zero data selling.",
+                      "Your CV lives in your browser and is never stored on a server. No account, no tracking cookies, no data selling.",
                   },
                   {
                     icon: Palette,
@@ -2402,7 +2402,7 @@ export function LandingPage() {
                 iconBg: "bg-green-500/10",
                 hoverBorder: "hover:border-green-500/30",
                 title: "Version History & Diff",
-                desc: "Every AI generation is saved. Compare versions side-by-side with our diff viewer. Pick exactly what you want to keep.",
+                desc: "Every AI generation is saved as its own version, ready to load back. Side-by-side comparison and selective merging are on the way.",
                 badge: "WIP",
                 checks: [
                   {
@@ -2575,7 +2575,7 @@ export function LandingPage() {
                   {[
                     "Test connection & auto-discover available models",
                     "Custom system prompts for fine-tuned output",
-                    "AI generation history with diff viewer",
+                    "Every AI generation kept in your history",
                     "Works great without AI too - it's optional",
                   ].map((point) => (
                     <div
@@ -2967,9 +2967,9 @@ export function LandingPage() {
                     },
                     {
                       icon: Lock,
-                      title: "Nothing hidden — ever",
+                      title: "Nothing hidden, ever",
                       description:
-                        "No cookies, no analytics, no tracking pixels. The storage manager even detects unknown keys from other sources.",
+                        "No tracking cookies or pixels, and analytics never see your CV. The storage manager even detects unknown keys from other sources.",
                     },
                   ].map((item) => (
                     <div
@@ -3308,11 +3308,12 @@ export function LandingPage() {
                 Privacy First
               </Badge>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-4">
-                Your data never leaves your device
+                Your CV stays in your browser
               </h2>
               <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-                Unlike other resume builders, we don&apos;t store your personal
-                information on any server. Everything stays in your browser.
+                Unlike other resume builders, we don&apos;t keep your personal
+                information on any server. It is saved in your browser, and it
+                only goes out when you send it to an AI provider.
               </p>
             </div>
           </ScrollReveal>
@@ -3860,7 +3861,7 @@ const AI_PROVIDERS = [
   {
     name: "Ollama",
     description:
-      "Run models locally on your machine — 100% private, completely free",
+      "Run models on your own machine with a self-hosted copy: private and free",
     icon: Cpu,
     badge: "LOCAL",
   },
@@ -3992,9 +3993,9 @@ const FEATURES = [
   },
   {
     icon: History,
-    title: "Version History & Diff",
+    title: "Version History",
     description:
-      "Every AI generation is saved. Compare iterations side-by-side with a built-in diff viewer to pick the best version.",
+      "Every AI generation is saved as its own version. Load any of them back into the editor whenever you want.",
   },
   {
     icon: Linkedin,
@@ -4018,13 +4019,13 @@ const FEATURES = [
     icon: Shield,
     title: "Privacy by Design",
     description:
-      "All data stored in localStorage. No accounts, no servers, no tracking. Your resume stays on your device — always.",
+      "All data stored in localStorage. No accounts and no tracking cookies. Your resume stays on your device unless you send it to an AI provider.",
   },
   {
     icon: WifiOff,
-    title: "Works Offline",
+    title: "Offline-Friendly",
     description:
-      "No installation needed. Works fully offline after first load. Zero loading screens, instant startup.",
+      "No installation needed. Once the editor is open, editing, templates and PDF export keep working without a connection.",
   },
   {
     icon: Globe,
@@ -4072,13 +4073,13 @@ const PRIVACY_POINTS = [
     icon: HardDrive,
     title: "Browser-Only Storage",
     description:
-      "All data lives in localStorage. Never uploaded, never shared, never sold.",
+      "All data lives in localStorage. Never stored on a server, never shared, never sold.",
   },
   {
     icon: Cpu,
     title: "Local AI Processing",
     description:
-      "Run Ollama on your machine. Your data never touches an external server.",
+      "Self-host it with Ollama and your data never touches an external server.",
   },
   {
     icon: Globe,
@@ -4092,16 +4093,16 @@ const COMPARISON = [
   { feature: "Completely free", us: true, others: false },
   { feature: "No sign-up required", us: true, others: false },
   { feature: "Data stays on your device", us: true, others: false },
-  { feature: "Local AI (Ollama)", us: true, others: false },
+  { feature: "Local AI (Ollama, self-hosted)", us: true, others: false },
   { feature: "8 AI provider options", us: true, others: false },
   { feature: "18 templates × 4 layouts × ∞ palettes", us: true, others: false },
   { feature: "4 layout structures", us: true, others: false },
   { feature: "Real-time preview", us: true, others: true },
-  { feature: "Version history & diff", us: true, others: false },
+  { feature: "Version history", us: true, others: false },
   { feature: "Storage transparency", us: true, others: false },
   { feature: "LinkedIn PDF import", us: true, others: true },
   { feature: "Open source (MIT)", us: true, others: false },
-  { feature: "Works offline", us: true, others: false },
+  { feature: "Works offline once open", us: true, others: false },
 ];
 
 // Palette samples for the landing page (mirrors COLOR_PALETTES from cv-store)

@@ -54,7 +54,7 @@ export function PrivacyContent() {
             </h1>
           </div>
           <p className="text-muted-foreground">
-            Last updated: February 8, 2026
+            Last updated: October 10, 2026
           </p>
           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
             CV Generator is an open-source, privacy-first application. This
@@ -67,10 +67,11 @@ export function PrivacyContent() {
         <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 mb-10">
           <p className="text-sm font-medium text-center">
             <strong>TL;DR:</strong> Your data stays in your browser. Your CV
-            content is never sent anywhere unless you explicitly use a cloud AI
-            provider. The site counts anonymous page views, with no cookies and
-            no identifier that could link visits to you. You have full control
-            to inspect, export, or delete everything at any time.
+            only leaves it when you use an AI feature, and then it goes through
+            the app&apos;s own server to the AI provider you chose, without
+            being stored on the way. The site counts anonymous visits, with no
+            cookies and no identifier that could link visits to you. You have
+            full control to inspect, export, or delete everything at any time.
           </p>
         </div>
 
@@ -80,7 +81,7 @@ export function PrivacyContent() {
           <PolicySection
             icon={Lock}
             number={1}
-            title="No Accounts, No Tracking"
+            title="No Accounts, No Tracking Cookies"
           >
             <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
               <li>
@@ -89,16 +90,25 @@ export function PrivacyContent() {
                 sign-up, login, or any form of authentication.
               </li>
               <li>
-                There are{" "}
-                <strong className="text-foreground">no analytics</strong>,{" "}
-                <strong className="text-foreground">no tracking pixels</strong>,{" "}
-                <strong className="text-foreground">no cookies</strong> (beyond
-                what your browser manages natively), and{" "}
-                <strong className="text-foreground">no telemetry</strong>.
+                The site counts visits with{" "}
+                <strong className="text-foreground">Google Analytics 4</strong>{" "}
+                in its cookieless mode:{" "}
+                <strong className="text-foreground">no cookies</strong>, no
+                advertising features, and no identifier that could link one
+                visit to the next.
               </li>
               <li>
-                The application does not collect, transmit, or store your data
-                on any external server.
+                Besides page views, it counts a few actions (generating a CV,
+                importing a LinkedIn PDF, exporting a file), tagged at most with
+                the AI provider or the file type.{" "}
+                <strong className="text-foreground">
+                  Nothing from your CV, your job descriptions or your prompts is
+                  ever sent to analytics.
+                </strong>
+              </li>
+              <li>
+                There are no tracking pixels and no other telemetry, and no
+                server keeps a copy of your data.
               </li>
             </ul>
           </PolicySection>
@@ -203,9 +213,10 @@ export function PrivacyContent() {
               <p>
                 •{" "}
                 <strong className="text-foreground">
-                  No data leaves your device
+                  Your data is saved only in your browser.
                 </strong>{" "}
-                unless you explicitly use a cloud AI provider.
+                It leaves your device only when you use an AI feature:
+                generating a CV or importing a LinkedIn PDF (Sections 4 and 6).
               </p>
               <p>
                 • Data persists until you clear it manually or clear your
@@ -275,15 +286,37 @@ export function PrivacyContent() {
             <div className="space-y-4 text-sm text-muted-foreground">
               <div>
                 <h4 className="font-medium text-foreground mb-1">
-                  Local AI (Ollama) — Fully Private
+                  How a request travels
                 </h4>
                 <p>
-                  When using Ollama, all AI processing happens on your local
-                  machine. Your CV data is sent to{" "}
+                  When you click &ldquo;Generate&rdquo;, your browser sends your
+                  CV data, the job context, the system prompt and your provider
+                  settings (including the API key, if your provider needs one)
+                  to CV Generator&apos;s own API route, on the server that runs
+                  the app. The route forwards the request to the provider you
+                  chose and streams the answer back to your browser.{" "}
+                  <strong className="text-foreground">
+                    It keeps no copy of your CV, your job context or your key.
+                  </strong>{" "}
+                  Testing a connection or listing models sends only the provider
+                  settings, never your CV.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-medium text-foreground mb-1">
+                  Local AI (Ollama)
+                </h4>
+                <p>
+                  When you run CV Generator on your own computer, its API route
+                  runs there too and talks to Ollama on{" "}
                   <code className="bg-muted px-1 py-0.5 rounded text-xs">
                     localhost
-                  </code>{" "}
-                  and never leaves your computer.
+                  </code>
+                  , so your data never leaves your machine. The hosted site
+                  cannot reach an Ollama running on your computer, so it offers
+                  cloud providers only; for local AI, run your own copy (the
+                  code is open source).
                 </p>
               </div>
 
@@ -297,20 +330,15 @@ export function PrivacyContent() {
                 </p>
                 <ol className="list-decimal list-inside space-y-1.5">
                   <li>
-                    Your CV data and job context are sent directly from your
-                    browser to the provider&apos;s API.
-                  </li>
-                  <li>
-                    <strong className="text-foreground">
-                      No data passes through any intermediary server.
-                    </strong>
+                    Your CV data and job context reach the provider through the
+                    app&apos;s API route, as described above.
                   </li>
                   <li>
                     Data is sent{" "}
                     <strong className="text-foreground">
                       only when you explicitly click &ldquo;Generate&rdquo;
-                    </strong>
-                    .
+                    </strong>{" "}
+                    or import a LinkedIn PDF.
                   </li>
                   <li>
                     The provider processes your data according to their privacy
@@ -331,10 +359,11 @@ export function PrivacyContent() {
                   </li>
                 </ul>
                 <p className="mt-2">
-                  API keys are stored in localStorage and sent directly to the
-                  provider. They are{" "}
-                  <strong className="text-foreground">never</strong> transmitted
-                  to any other server.
+                  API keys are stored in your browser&apos;s localStorage and
+                  travel with each request, through the app&apos;s API route, to
+                  the provider. The server{" "}
+                  <strong className="text-foreground">never</strong> stores
+                  them.
                 </p>
               </div>
             </div>
@@ -345,21 +374,33 @@ export function PrivacyContent() {
           {/* Section 5 */}
           <PolicySection icon={Globe} number={5} title="Third-Party Services">
             <p className="text-sm text-muted-foreground mb-3">
-              CV Generator does <strong className="text-foreground">not</strong>{" "}
-              use any third-party services by default:
+              CV Generator relies on these outside services, and no others:
             </p>
+            <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground mb-4">
+              <li>
+                <strong className="text-foreground">Cloudflare</strong> hosts
+                the site and runs its API routes.
+              </li>
+              <li>
+                <strong className="text-foreground">Google Analytics 4</strong>
+                , in its cookieless mode, counts anonymous visits and actions
+                (Section 1). Its script loads from Google when the page opens.
+              </li>
+              <li>
+                <strong className="text-foreground">
+                  The AI provider you choose
+                </strong>
+                , only when you use an AI feature.
+              </li>
+            </ul>
             <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-              <p>❌ No Google Analytics</p>
+              <p>❌ No advertising or tracking cookies</p>
               <p>❌ No Facebook Pixel</p>
               <p>❌ No Sentry / error reporting</p>
               <p>❌ No CDN-hosted fonts</p>
-              <p>❌ No external API calls on load</p>
               <p>❌ No server-side data storage</p>
+              <p>❌ No data selling</p>
             </div>
-            <p className="text-sm text-muted-foreground mt-3">
-              The only external network requests occur when you explicitly use a
-              cloud AI provider.
-            </p>
           </PolicySection>
 
           <Separator />
@@ -368,20 +409,21 @@ export function PrivacyContent() {
           <PolicySection icon={FileText} number={6} title="LinkedIn PDF Import">
             <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground">
               <li>
-                The PDF file is processed{" "}
+                The PDF is read{" "}
                 <strong className="text-foreground">server-side</strong> by the
-                Next.js API route.
+                app&apos;s API route, which extracts its text.
               </li>
-              <li>If running locally, processing happens on your machine.</li>
               <li>
-                If deployed, the PDF is processed on the hosting server and
-                extracted data is returned.
+                That text is sent, through the same route, to the AI provider
+                you configured, which turns it into structured CV data. When you
+                run the app yourself with Ollama, all of this happens on your
+                machine.
               </li>
               <li>
                 <strong className="text-foreground">
-                  The PDF file is not stored
+                  Neither the PDF nor its text is stored:
                 </strong>{" "}
-                — processed in memory and discarded immediately.
+                both are processed in memory and discarded.
               </li>
               <li>
                 Extracted CV data is stored only in your browser&apos;s

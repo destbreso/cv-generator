@@ -1,16 +1,17 @@
 # Privacy Policy — CV Generator
 
-**Last updated:** February 8, 2026
+**Last updated:** October 10, 2026
 
 CV Generator is an open-source, privacy-first application. This document explains what data is collected, how it is stored, and what control you have over it.
 
 ---
 
-## 1. No Accounts, No Tracking
+## 1. No Accounts, No Tracking Cookies
 
 - CV Generator does **not** require sign-up, login, or any form of authentication.
-- There are **no analytics**, **no tracking pixels**, **no cookies** (beyond what your browser manages natively), and **no telemetry**.
-- The application does not collect, transmit, or store your data on any external server.
+- The site counts visits with **Google Analytics 4** in its cookieless mode: **no cookies**, no advertising features, and no identifier that could link one visit to the next.
+- Besides page views, it counts a few actions (generating a CV, importing a LinkedIn PDF, exporting a file), tagged at most with the AI provider or the file type. **Nothing from your CV, your job descriptions or your prompts is ever sent to analytics.**
+- There are no tracking pixels and no other telemetry, and no server keeps a copy of your data.
 
 ---
 
@@ -28,7 +29,7 @@ All application data is stored exclusively in your browser's **localStorage**. T
 
 ### Important facts:
 
-- **No data leaves your device** unless you explicitly use a cloud AI provider (see Section 4).
+- **Your data is saved only in your browser.** It leaves your device only when you use an AI feature: generating a CV or importing a LinkedIn PDF (see Sections 4 and 6).
 - Data persists until you clear it manually or clear your browser's storage.
 - Each browser profile has its own independent storage — data is not synced across devices.
 - localStorage has a ~5 MB limit per origin. The Storage Manager panel shows your current usage.
@@ -55,18 +56,21 @@ You are always in full control of your data.
 
 CV Generator supports AI-powered CV optimization. How your data is handled depends on the provider you choose:
 
-### Local AI (Ollama) — Fully Private
+### How a request travels
 
-When using **Ollama**, all AI processing happens on your local machine. Your CV data is sent to `localhost` and never leaves your computer. This is the most private option.
+When you click "Generate", your browser sends your CV data, the job context, the system prompt and your provider settings (including the API key, if your provider needs one) to CV Generator's own API route (`/api/generate-cv`), on the server that runs the app. The route forwards the request to the provider you chose and streams the answer back to your browser. **It keeps no copy of your CV, your job context or your key.** Testing a connection or listing models sends only the provider settings, never your CV.
+
+### Local AI (Ollama)
+
+When you run CV Generator on your own computer, its API route runs there too and talks to **Ollama** on `localhost`, so your data never leaves your machine. This is the most private option. The hosted site cannot reach an Ollama running on your computer, so it offers cloud providers only; for local AI, run your own copy (the code is open source).
 
 ### Cloud AI Providers
 
 When using cloud providers (**OpenAI**, **Anthropic**, **Groq**, or a custom endpoint), the following happens:
 
-1. Your CV data and job context are sent directly from your browser to the provider's API.
-2. **No data passes through any intermediary server** — the request goes straight from your browser to the provider.
-3. Data is sent **only when you explicitly click "Generate"** — never automatically or in the background.
-4. The provider processes your data according to **their** privacy policy:
+1. Your CV data and job context reach the provider through the app's API route, as described above.
+2. Data is sent **only when you explicitly click "Generate"** or import a LinkedIn PDF, never automatically or in the background.
+3. The provider processes your data according to **their** privacy policy:
    - [OpenAI Privacy Policy](https://openai.com/privacy)
    - [Anthropic Privacy Policy](https://www.anthropic.com/privacy)
    - [Groq Privacy Policy](https://groq.com/privacy-policy/)
@@ -79,22 +83,26 @@ Only the following data is sent when you trigger generation:
 - The job description / context you entered
 - The system prompt (visible and editable in AI Configuration)
 
-API keys are stored in your browser's localStorage and sent directly to the provider. They are **never** transmitted to any other server.
+API keys are stored in your browser's localStorage and travel with each request, through the app's API route, to the provider. The server **never** stores them.
 
 ---
 
 ## 5. Third-Party Services
 
-CV Generator does **not** use any third-party services by default:
+CV Generator relies on these outside services, and no others:
 
-- ❌ No Google Analytics
+- **Cloudflare** hosts the site and runs its API routes.
+- **Google Analytics 4**, in its cookieless mode, counts anonymous visits and actions (Section 1). Its script loads from Google when the page opens.
+- **The AI provider you choose**, only when you use an AI feature.
+
+And it does not use:
+
+- ❌ No advertising or tracking cookies
 - ❌ No Facebook Pixel
 - ❌ No Sentry or error reporting
-- ❌ No CDN-hosted fonts (Geist fonts are bundled locally)
-- ❌ No external API calls on page load
+- ❌ No CDN-hosted fonts (the Geist fonts are served with the app)
 - ❌ No server-side data storage
-
-The only external network requests occur when you explicitly use a cloud AI provider.
+- ❌ No data selling
 
 ---
 
@@ -102,10 +110,9 @@ The only external network requests occur when you explicitly use a cloud AI prov
 
 When you import a LinkedIn PDF:
 
-- The PDF file is processed **server-side** by the Next.js API route (`/api/parse-linkedin-pdf`).
-- If running locally (development mode), this processing happens on your machine.
-- If deployed, the PDF is processed on the hosting server and the extracted data is returned to your browser.
-- **The PDF file is not stored** — it is processed in memory and discarded immediately.
+- The PDF is read **server-side** by the app's API route (`/api/parse-linkedin-pdf`), which extracts its text.
+- That text is sent, through the same route, to the AI provider you configured, which turns it into structured CV data. When you run the app yourself with Ollama, all of this happens on your machine.
+- **Neither the PDF nor its text is stored:** both are processed in memory and discarded.
 - The extracted CV data is stored only in your browser's localStorage, like all other data.
 
 ---
@@ -153,5 +160,5 @@ For privacy-related questions or concerns, please open an issue on the [GitHub r
 ---
 
 <p align="center">
-  <strong>TL;DR:</strong> Your data stays in your browser. Nothing is tracked. Nothing is sent anywhere unless you explicitly use a cloud AI provider. You have full control to inspect, export, or delete everything at any time.
+  <strong>TL;DR:</strong> Your data stays in your browser. Your CV only leaves it when you use an AI feature, and then it goes through the app's own server to the AI provider you chose, without being stored on the way. The site counts anonymous visits, with no cookies and no identifier that could link visits to you. You have full control to inspect, export, or delete everything at any time.
 </p>

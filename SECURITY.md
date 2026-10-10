@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in CV Generator, please **do not** open a public GitHub issue. Instead, please email **sdev.destbreso@gmail.com** with the following information:
+If you discover a security vulnerability in CV Generator, please **do not** open a public GitHub issue. Instead, please email **dev.destbreso@gmail.com** with the following information:
 
 1. **Description** — What is the vulnerability and how could it be exploited?
 2. **Location** — Which file(s) or component(s) are affected?
@@ -21,11 +21,11 @@ If you discover a security vulnerability in CV Generator, please **do not** open
 
 CV Generator is designed with privacy and security as core principles:
 
-- **No external servers** — All data stays in your browser (localStorage)
-- **No tracking** — No analytics, cookies, or telemetry
-- **Local-first AI** — You can run AI models locally with Ollama
-- **Open source** — Code is publicly auditable
-- **MIT License** — You can fork and self-host
+- **No server-side storage**: all data is stored in your browser (localStorage); the app's API routes only relay AI requests and keep no copy
+- **No tracking cookies**: the site counts anonymous visits with cookieless Google Analytics 4, which never receives CV content
+- **Local AI when self-hosted**: run your own copy and use Ollama, and your data never leaves your machine
+- **Open source**: the code is publicly auditable
+- **MIT License**: you can fork and self-host
 
 ## Known Limitations
 

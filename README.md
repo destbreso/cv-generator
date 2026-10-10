@@ -28,7 +28,7 @@ Think about it: your professional history — your experience, skills, education
 
 4. **AI assists, you decide.** The AI can draft, suggest, and optimize — but you always have the final word. Review every change, edit any detail, tweak the wording until it feels right. Run multiple iterations until you're satisfied. Or skip AI entirely and write everything yourself — the editor, templates, and export work perfectly without it. The tool adapts to your workflow, not the other way around.
 
-5. **Your data stays yours.** Everything lives in your browser. No accounts, no cloud sync, no vendor lock-in. Export your data as JSON anytime. If you use AI, you can run it locally with Ollama — your professional history never leaves your machine.
+5. **Your data stays yours.** Everything lives in your browser. No accounts, no cloud sync, no vendor lock-in. Export your data as JSON anytime. If you run CV Generator yourself, the AI can be a local model through Ollama, and then your professional history never leaves your machine.
 
 This is what CV Generator does. It's not a "prettier resume template" — it's the workflow that makes maintaining and tailoring your CV a solved problem instead of a recurring chore.
 
@@ -57,7 +57,7 @@ This is what CV Generator does. It's not a "prettier resume template" — it's t
   - **DeepSeek** — DeepSeek Chat
   - **Custom** — Any OpenAI-compatible API
 - Apply AI suggestions directly to your editor
-- Version history with diff viewer
+- Version history: every generation is kept and loads back into the editor
 
 ### 🎨 18 Templates
 Minimal, Professional, Modern, Creative, Executive, Tech, Compact, Academic, Elegant, Swiss, Editorial, Startup, Harvard, Oxford, Cambridge, Princeton, Yale, and MIT.
@@ -83,7 +83,7 @@ Single Column, Sidebar Left, Sidebar Right, and Two Column.
 ### 🌓 Theming & Offline
 - Light, Dark, and System theme modes
 - Multiple built-in color themes (Console Light, Console Dark, Modern)
-- Works completely offline after first load — no servers needed
+- Once the editor is open, editing, templates and PDF export keep working without a connection; only AI generation and the LinkedIn import need one
 - Consistent design across all components
 
 ### 🗄️ Storage Manager
@@ -197,7 +197,7 @@ cv-generator/
 │   │   ├── preview-panel.tsx          # Live preview with pagination & export
 │   │   ├── template-panel.tsx         # Template, color, layout, favorites selectors
 │   │   ├── generate-panel.tsx         # AI generation interface
-│   │   ├── history-panel.tsx          # Version history with diffs
+│   │   ├── history-panel.tsx          # Generation history, load any version
 │   │   ├── faq-panel.tsx              # Built-in FAQ section
 │   │   └── storage-manager-panel.tsx  # Storage transparency & management UI
 │   ├── sheets/
@@ -315,7 +315,7 @@ Yes! The editor, templates, palettes, layouts, and export work completely indepe
 <details>
 <summary><strong>Is my data sent to any server?</strong></summary>
 
-No. All CV data stays in your browser (localStorage). If you use Ollama, AI processing also stays on your machine. Cloud providers (OpenAI, etc.) only receive data when you explicitly generate.
+Your CV data is stored only in your browser (localStorage); no server keeps a copy. When you generate (or import a LinkedIn PDF), the data goes through the app's own API route to the AI provider you chose. If you run CV Generator yourself with Ollama, it never leaves your machine. The site counts anonymous visits with cookieless Google Analytics, which never receives anything from your CV. Details in the [Privacy Policy](PRIVACY.md).
 </details>
 
 <details>

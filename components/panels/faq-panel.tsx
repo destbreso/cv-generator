@@ -38,11 +38,11 @@ const FAQ_SECTIONS = [
     items: [
       {
         q: "Where is my CV data stored?",
-        a: "All your CV data is stored locally in your browser's localStorage. Nothing is sent to any server unless you explicitly use a cloud AI provider to generate content.",
+        a: "All your CV data is stored locally in your browser's localStorage, and no server keeps a copy. It only goes out when you use an AI feature: generating a CV or importing a LinkedIn PDF.",
       },
       {
         q: "Is my data safe with AI generation?",
-        a: "If you use Ollama (local), your data never leaves your machine. If you use cloud providers (OpenAI, Anthropic, Groq), your CV data is sent to their API only during generation — we don't store or relay it through any intermediary server.",
+        a: "When you generate, your CV data goes through the app's own API route to the provider you chose (OpenAI, Anthropic, Groq and others), only for that request, and nothing is stored on the way. If you run CV Generator yourself with Ollama, your data never leaves your machine.",
       },
       {
         q: "How do I delete all my data?",
@@ -61,11 +61,11 @@ const FAQ_SECTIONS = [
       },
       {
         q: "How do I set up Ollama (local AI)?",
-        a: "1) Install Ollama from ollama.ai\n2) Pull a model: ollama pull llama3.2\n3) Ollama runs on http://localhost:11434 by default\n4) In the app, click ⚙️ → select Ollama → Test Connection\n\nAll processing happens on your machine — no data leaves your computer.",
+        a: "Ollama works when you run CV Generator on your own machine; the hosted site offers cloud providers only.\n\n1) Install Ollama from ollama.ai\n2) Pull a model: ollama pull llama3.2\n3) Ollama runs on http://localhost:11434 by default\n4) Run CV Generator locally (see \"Can I self-host this?\"), click ⚙️ → select Ollama → Test Connection\n\nAll processing then happens on your machine, and no data leaves your computer.",
       },
       {
         q: "Which AI providers are supported?",
-        a: "Ollama (local, free), OpenAI (GPT-4o, GPT-4), Anthropic (Claude 3.5+), Google Gemini (Gemini 2.0 Flash), Groq (fast inference), Mistral (Mistral Small/Large), DeepSeek (DeepSeek Chat), and any OpenAI-compatible custom endpoint.",
+        a: "Ollama (local and free, when you run the app yourself), OpenAI (GPT-4o, GPT-4), Anthropic (Claude 3.5+), Google Gemini (Gemini 2.0 Flash), Groq (fast inference), Mistral (Mistral Small/Large), DeepSeek (DeepSeek Chat), and any OpenAI-compatible custom endpoint.",
       },
       {
         q: "Why is AI generation slow?",
