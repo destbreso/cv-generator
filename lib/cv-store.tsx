@@ -1,5 +1,6 @@
 "use client";
 
+import { stripInlineMarkdown } from "@/lib/plain-text";
 import {
   createContext,
   useContext,
@@ -1523,8 +1524,9 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
         try {
           const parsed = JSON.parse(raw);
           if (parsed.personalInfo) {
-            // Normalize: ensure all required arrays exist
-            return {
+            // Normalize: ensure all required arrays exist, and drop the
+            // Markdown emphasis models add (the CV is plain text).
+            return stripInlineMarkdown({
               personalInfo: {
                 name: "",
                 email: "",
@@ -1543,7 +1545,7 @@ export function CVStoreProvider({ children }: { children: ReactNode }) {
               volunteerWork: parsed.volunteerWork || [],
               awards: parsed.awards || [],
               interests: parsed.interests || [],
-            } as CVData;
+            } as CVData);
           }
         } catch {
           // Not valid JSON

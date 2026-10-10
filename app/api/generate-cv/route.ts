@@ -399,10 +399,22 @@ function buildMessages(
   const formatRules = `
 OUTPUT FORMAT RULES (always follow these):
 - You MUST return ONLY a single valid JSON object — no markdown, no explanation, no code fences.
+- Every text value is plain text: no Markdown inside the strings (no **bold**, no _italics_, no backticks). The CV is rendered as plain text.
 - The JSON must match the exact structure of the input CV data.
 - Keep all existing array fields (experience, education, skills, languages, projects, certifications, publications, volunteerWork, awards, interests).
 - Preserve all "id" fields exactly as they are.
 - Do NOT add or remove top-level keys.`;
+
+  // ── 2b. Integrity rules (always enforced, whatever the writing prompt) ──
+  // The record is the candidate's real history; the job is to present it for
+  // a role, not to improve on it. A custom prompt cannot switch this off.
+  const integrityRules = `
+
+INTEGRITY RULES (always follow these):
+- Use only facts present in the input CV data. The CV describes a real person's real history.
+- Never invent or inflate employers, job titles, dates, degrees, certifications, skills, tools, projects, responsibilities, team sizes, metrics or any other number.
+- You may rephrase, reorder, emphasize, condense or leave out what is less relevant to the target role. You may not add facts.
+- If a number or achievement is not in the input data, do not create one. Mirror the job's wording only where the candidate's own experience supports it.`;
 
   // ── 3. Language override (appended when not "auto") ──
   const languageRule =
@@ -410,7 +422,7 @@ OUTPUT FORMAT RULES (always follow these):
       ? `\n\nOUTPUT LANGUAGE: Write ALL text content (summary, descriptions, achievements, skill categories, etc.) in ${outputLanguage}. Translate everything except proper nouns (company names, institution names, technologies, certifications). JSON field keys must remain in English.`
       : "";
 
-  const systemMessage = `${writingInstructions}\n${formatRules}${languageRule}`;
+  const systemMessage = `${writingInstructions}\n${formatRules}${integrityRules}${languageRule}`;
 
   // ── 4. User message — job context + CV data ──
   const userMessage = `JOB CONTEXT / TARGET ROLE:
