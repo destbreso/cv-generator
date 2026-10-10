@@ -20,7 +20,6 @@ import {
   Target,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { es } from "date-fns/locale";
 
 export function HistoryPanel() {
   const { state, dispatch } = useCVStore();
@@ -75,7 +74,6 @@ export function HistoryPanel() {
                         <Clock className="h-3 w-3" />
                         {formatDistanceToNow(iteration.timestamp, {
                           addSuffix: true,
-                          locale: es,
                         })}
                       </CardDescription>
                     </div>
